@@ -19,6 +19,7 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
   const [isCompiling, setIsCompiling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
+  const [previewNonce, setPreviewNonce] = useState<number>(0);
 
   const isDirty = useMemo(() => sourceTex !== persistedSourceTex, [persistedSourceTex, sourceTex]);
 
@@ -63,6 +64,7 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
         draftVersion,
       });
       setCompileResult(result);
+      setPreviewNonce(Date.now());
     } catch (compileError) {
       setError(compileError instanceof Error ? compileError.message : "Failed to compile draft.");
     } finally {
@@ -112,10 +114,17 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
           </div>
           <div style={previewCardStyle}>
             <strong style={{ fontSize: 15 }}>Preview</strong>
-            <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
-              Real PDF rendering lands in Section 2B. This panel is now wired to the compile contract and ready to
-              consume a generated artifact.
-            </p>
+            {compileResult?.pdfUrl ? (
+              <iframe
+                src={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"}${compileResult.pdfUrl}?t=${previewNonce}`}
+                style={previewFrameStyle}
+                title="Compiled PDF Preview"
+              />
+            ) : (
+              <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+                Run a successful compile to render the latest generated PDF here.
+              </p>
+            )}
           </div>
           <div style={logsCardStyle}>
             <strong style={{ fontSize: 15 }}>Compile Logs</strong>
@@ -224,6 +233,14 @@ const previewCardStyle: CSSProperties = {
   border: "1px solid #262b36",
   borderRadius: 14,
   background: "#171a21"
+};
+
+const previewFrameStyle: CSSProperties = {
+  width: "100%",
+  minHeight: 440,
+  border: "1px solid #262b36",
+  borderRadius: 12,
+  background: "#0f1115"
 };
 
 const logsCardStyle: CSSProperties = {

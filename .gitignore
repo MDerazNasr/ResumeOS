@@ -6,4 +6,4 @@ __pycache__
 *.pyc
 *.sqlite3
 apps/api/resumeos.db
-
+apps/api/artifacts

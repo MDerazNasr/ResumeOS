@@ -133,6 +133,30 @@ Verified:
 - stale compile versions return `409`
 - frontend production build passes after the workspace changes
 
+### 2026-03-29: Section 2B Real Compile and PDF Preview
+
+Implemented the real compile loop against the locally installed TeX toolchain.
+
+Added:
+
+- real `latexmk` subprocess execution
+- temp-directory compile workflow
+- compile timeout boundary
+- local PDF artifact persistence
+- `GET /resumes/{resume_id}/compile/latest.pdf`
+- preview pane wiring to the generated PDF
+
+Verified:
+
+- starter resume compiles successfully
+- latest PDF route returns a real PDF artifact
+- broken LaTeX returns real compile failure logs
+- frontend production build still passes
+
+Open follow-up:
+
+- Monaco is still the main remaining editor upgrade before Section 2 is fully complete
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

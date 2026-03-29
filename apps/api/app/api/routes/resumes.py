@@ -11,6 +11,7 @@ from app.models.schemas import (
     WorkingDraftDto,
 )
 from app.services.compile import compile_resume_source_for_user
+from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
 from app.services.resumes import (
     create_resume_for_user,
@@ -68,3 +69,8 @@ def compile_resume(
         input_data.sourceTex,
         input_data.draftVersion,
     )
+
+
+@router.get("/{resume_id}/compile/latest.pdf")
+def get_latest_pdf(resume_id: str, current_user: UserDto = Depends(get_current_user)):
+    return get_latest_pdf_for_user(current_user.id, resume_id)
