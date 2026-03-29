@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -35,3 +37,21 @@ class UpdateDraftInput(BaseModel):
     sourceTex: str
     version: int = Field(ge=1)
 
+
+class CompileRequestInput(BaseModel):
+    sourceTex: str
+    draftVersion: int = Field(ge=1)
+
+
+class CompileLogEntryDto(BaseModel):
+    level: Literal["info", "error"]
+    message: str
+    line: int | None = None
+
+
+class CompileResultDto(BaseModel):
+    status: Literal["success", "error"]
+    draftVersion: int
+    logs: list[CompileLogEntryDto]
+    pdfUrl: str | None = None
+    compiledAt: str

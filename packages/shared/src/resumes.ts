@@ -26,3 +26,22 @@ export type UpdateDraftInput = {
   sourceTex: string;
   version: number;
 };
+
+export type CompileRequestInput = {
+  sourceTex: string;
+  draftVersion: number;
+};
+
+export type CompileLogEntryDto = {
+  level: "info" | "error";
+  message: string;
+  line: number | null;
+};
+
+export type CompileResultDto = {
+  status: "success" | "error";
+  draftVersion: number;
+  logs: CompileLogEntryDto[];
+  pdfUrl: string | null;
+  compiledAt: string;
+};

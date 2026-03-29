@@ -6,6 +6,7 @@ ResumeOS is an AI-assisted resume IDE for technical job seekers. The product is 
 
 - [Product Architecture and Production Plan](./docs/product-architecture.md)
 - [Implementation Log](./docs/implementation-log.md)
+- [Section 2 Blueprint](./docs/section-2-editor-compile.md)
 
 ## Current Status
 

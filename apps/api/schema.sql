@@ -27,3 +27,13 @@ CREATE TABLE IF NOT EXISTS working_drafts (
   FOREIGN KEY(resume_id) REFERENCES resumes(id)
 );
 
+CREATE TABLE IF NOT EXISTS compile_runs (
+  id TEXT PRIMARY KEY,
+  resume_id TEXT NOT NULL,
+  draft_version INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  log_text TEXT NOT NULL,
+  pdf_path TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY(resume_id) REFERENCES resumes(id)
+);

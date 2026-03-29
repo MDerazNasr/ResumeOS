@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from app.models.schemas import (
+    CompileRequestInput,
+    CompileResultDto,
     CreateResumeInput,
     ResumeDto,
     ResumeListResponseDto,
@@ -8,6 +10,7 @@ from app.models.schemas import (
     UserDto,
     WorkingDraftDto,
 )
+from app.services.compile import compile_resume_source_for_user
 from app.services.auth import get_current_user
 from app.services.resumes import (
     create_resume_for_user,
@@ -52,3 +55,16 @@ def update_draft(
 ) -> WorkingDraftDto:
     return save_draft_for_user(current_user.id, resume_id, input_data.sourceTex, input_data.version)
 
+
+@router.post("/{resume_id}/compile", response_model=CompileResultDto)
+def compile_resume(
+    resume_id: str,
+    input_data: CompileRequestInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> CompileResultDto:
+    return compile_resume_source_for_user(
+        current_user.id,
+        resume_id,
+        input_data.sourceTex,
+        input_data.draftVersion,
+    )

@@ -91,6 +91,48 @@ The next planned milestone is Section 2:
 - LaTeX compile loop
 - PDF preview
 
+### 2026-03-29: Section 2 Planning
+
+Section 2 was broken into two controlled sub-slices:
+
+- Sub-slice A: compile contract and workspace
+- Sub-slice B: real TeX compile and PDF preview
+
+Primary planning file:
+
+- [section-2-editor-compile.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-2-editor-compile.md)
+
+### 2026-03-29: Section 2A Compile Contract and Workspace
+
+Implemented the first concrete compile slice without pretending the real TeX backend was finished.
+
+Added:
+
+- `compile_runs` persistence in the backend schema
+- compile request and response DTOs
+- `POST /resumes/{resume_id}/compile`
+- backend compile contract validation for:
+  - missing `\documentclass`
+  - missing `\begin{document}`
+  - missing `\end{document}`
+  - unbalanced braces
+- editor workspace layout with:
+  - source pane
+  - compile panel
+  - compile logs
+  - preview placeholder for Section 2B
+
+Also fixed:
+
+- draft dirty-state tracking now compares against the last saved draft instead of the initially loaded draft
+
+Verified:
+
+- compile success path returns a `success` result
+- invalid source returns an `error` result with logs
+- stale compile versions return `409`
+- frontend production build passes after the workspace changes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

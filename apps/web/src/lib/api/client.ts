@@ -1,4 +1,6 @@
 import type {
+  CompileRequestInput,
+  CompileResultDto,
   CreateResumeInput,
   ResumeDto,
   ResumeListResponseDto,
@@ -56,3 +58,9 @@ export function saveDraft(resumeId: string, input: UpdateDraftInput): Promise<Wo
   });
 }
 
+export function compileDraft(resumeId: string, input: CompileRequestInput): Promise<CompileResultDto> {
+  return apiFetch<CompileResultDto>(`/resumes/${resumeId}/compile`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
