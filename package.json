@@ -1,0 +1,14 @@
+{
+  "name": "resumeos",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @resumeos/web run dev",
+    "build:web": "npm --workspace @resumeos/web run build",
+    "lint:web": "npm --workspace @resumeos/web run lint"
+  }
+}
+

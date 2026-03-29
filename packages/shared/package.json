@@ -1,0 +1,11 @@
+{
+  "name": "@resumeos/shared",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./resumes": "./src/resumes.ts",
+    "./users": "./src/users.ts"
+  }
+}
+
