@@ -190,6 +190,18 @@ Added:
 
 This gives a reliable frontend start path on `127.0.0.1:3000` without relying on broken npm argument forwarding.
 
+### 2026-03-29: App Router Error Boundary Hardening
+
+After live reproduction, added explicit Next.js app-router error boundaries:
+
+- `app/error.tsx`
+- `app/global-error.tsx`
+
+Reason:
+
+- the browser was showing a missing required error components refresh loop
+- explicit error boundaries give the app router the required fallback surface and prevent that failure mode from degrading into a blank page
+
 ## Open Notes
 
 - local dev persistence is SQLite for now
