@@ -4,14 +4,16 @@ import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { compileDraft, saveDraft } from "@/lib/api/client";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
-import type { CompileResultDto, ResumeDto, WorkingDraftDto } from "@/lib/api/types";
+import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
+import type { CompileResultDto, ResumeDto, SnapshotDto, WorkingDraftDto } from "@/lib/api/types";
 
 type ResumeEditorProps = {
   draft: WorkingDraftDto;
+  initialSnapshots: SnapshotDto[];
   resume: ResumeDto;
 };
 
-export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
+export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorProps) {
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
   const [version, setVersion] = useState(draft.version);
@@ -73,6 +75,15 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
     }
   }
 
+  function handleSnapshotRestore(restoredDraft: WorkingDraftDto) {
+    setPersistedSourceTex(restoredDraft.sourceTex);
+    setSourceTex(restoredDraft.sourceTex);
+    setVersion(restoredDraft.version);
+    setUpdatedAt(restoredDraft.updatedAt);
+    setCompileResult(null);
+    setError(null);
+  }
+
   return (
     <section style={shellStyle}>
       <div style={headerStyle}>
@@ -97,6 +108,7 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
       <div style={workspaceStyle}>
         <LatexEditor onChange={setSourceTex} value={sourceTex} />
         <aside style={panelStyle}>
+          <SnapshotPanel initialSnapshots={initialSnapshots} onRestore={handleSnapshotRestore} resumeId={resume.id} />
           <div style={{ display: "grid", gap: 6 }}>
             <strong style={{ fontSize: 16 }}>Compile Panel</strong>
             <span style={{ color: "#9ba3b4", fontSize: 13 }}>

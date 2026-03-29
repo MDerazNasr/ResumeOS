@@ -55,3 +55,23 @@ class CompileResultDto(BaseModel):
     logs: list[CompileLogEntryDto]
     pdfUrl: str | None = None
     compiledAt: str
+
+
+class SnapshotDto(BaseModel):
+    id: str
+    resumeId: str
+    name: str
+    sourceVersion: int
+    createdAt: str
+
+
+class SnapshotListResponseDto(BaseModel):
+    items: list[SnapshotDto]
+
+
+class CreateSnapshotInput(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+
+
+class RestoreSnapshotInput(BaseModel):
+    snapshotId: str

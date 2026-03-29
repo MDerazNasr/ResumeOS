@@ -51,3 +51,23 @@ export type CompileResultDto = {
   pdfUrl: string | null;
   compiledAt: string;
 };
+
+export type SnapshotDto = {
+  id: string;
+  resumeId: string;
+  name: string;
+  sourceVersion: number;
+  createdAt: string;
+};
+
+export type SnapshotListResponseDto = {
+  items: SnapshotDto[];
+};
+
+export type CreateSnapshotInput = {
+  name: string;
+};
+
+export type RestoreSnapshotInput = {
+  snapshotId: string;
+};

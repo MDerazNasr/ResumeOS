@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ResumeEditor } from "@/components/resumes/ResumeEditor";
-import { getDraft, getResume } from "@/lib/api/client";
+import { getDraft, getResume, listSnapshots } from "@/lib/api/client";
 
 type ResumeEditorPageProps = {
   params: {
@@ -10,15 +10,18 @@ type ResumeEditorPageProps = {
 
 export default async function ResumeEditorPage({ params }: ResumeEditorPageProps) {
   try {
-    const [resume, draft] = await Promise.all([getResume(params.resumeId), getDraft(params.resumeId)]);
+    const [resume, draft, snapshots] = await Promise.all([
+      getResume(params.resumeId),
+      getDraft(params.resumeId),
+      listSnapshots(params.resumeId),
+    ]);
 
     return (
       <main>
-        <ResumeEditor draft={draft} resume={resume} />
+        <ResumeEditor draft={draft} initialSnapshots={snapshots.items} resume={resume} />
       </main>
     );
   } catch {
     notFound();
   }
 }
-

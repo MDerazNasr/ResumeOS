@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 3 planning: snapshots and recovery
+- Section 3: snapshots and recovery
 
 ## Completed Milestones
 
@@ -37,14 +37,14 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Plan Section 3: snapshots and recovery, so resume edits and future AI operations are reversible and safe.
+Implement and verify snapshot create, list, and restore so draft editing becomes reversible and safe.
 
 ## Definition of Success for the Current Slice
 
 - named snapshots can be created from the working draft
 - the current working draft remains separate from snapshots
 - a prior snapshot can be restored safely
-- snapshot compare behavior is defined and working at least in a minimal form
+- the snapshot flow is verified with backend tests
 
 ## Known Risks
 

@@ -3,9 +3,13 @@ from fastapi import APIRouter, Depends
 from app.models.schemas import (
     CompileRequestInput,
     CompileResultDto,
+    CreateSnapshotInput,
     CreateResumeInput,
+    RestoreSnapshotInput,
     ResumeDto,
     ResumeListResponseDto,
+    SnapshotDto,
+    SnapshotListResponseDto,
     UpdateDraftInput,
     UserDto,
     WorkingDraftDto,
@@ -19,6 +23,11 @@ from app.services.resumes import (
     get_resume_for_user,
     list_resumes_for_user,
     save_draft_for_user,
+)
+from app.services.snapshots import (
+    create_snapshot_for_user,
+    list_snapshots_for_user,
+    restore_snapshot_for_user,
 )
 
 
@@ -74,3 +83,26 @@ def compile_resume(
 @router.get("/{resume_id}/compile/latest.pdf")
 def get_latest_pdf(resume_id: str, current_user: UserDto = Depends(get_current_user)):
     return get_latest_pdf_for_user(current_user.id, resume_id)
+
+
+@router.get("/{resume_id}/snapshots", response_model=SnapshotListResponseDto)
+def list_snapshots(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> SnapshotListResponseDto:
+    return list_snapshots_for_user(current_user.id, resume_id)
+
+
+@router.post("/{resume_id}/snapshots", response_model=SnapshotDto)
+def create_snapshot(
+    resume_id: str,
+    input_data: CreateSnapshotInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> SnapshotDto:
+    return create_snapshot_for_user(current_user.id, resume_id, input_data)
+
+
+@router.post("/{resume_id}/snapshots/restore", response_model=WorkingDraftDto)
+def restore_snapshot(
+    resume_id: str,
+    input_data: RestoreSnapshotInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> WorkingDraftDto:
+    return restore_snapshot_for_user(current_user.id, resume_id, input_data.snapshotId)

@@ -217,6 +217,26 @@ Verified:
 - PDF route now returns `application/pdf`
 - content disposition is `inline`
 
+### 2026-03-29: Section 3 Snapshot Foundation
+
+Started the first versioning and recovery slice on the dedicated feature branch.
+
+Added:
+
+- `snapshots` table
+- backend snapshot DTOs and routes
+- snapshot create/list/restore service layer
+- frontend snapshot panel in the editor workspace
+- backend snapshot tests
+
+Verified:
+
+- snapshot creation works from the current draft
+- snapshot listing returns saved snapshots
+- restoring a snapshot updates the working draft correctly
+- backend tests pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

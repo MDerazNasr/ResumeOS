@@ -1,9 +1,13 @@
 import type {
   CompileRequestInput,
   CompileResultDto,
+  CreateSnapshotInput,
   CreateResumeInput,
+  RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
+  SnapshotDto,
+  SnapshotListResponseDto,
   UpdateDraftInput,
   UserDto,
   WorkingDraftDto
@@ -60,6 +64,24 @@ export function saveDraft(resumeId: string, input: UpdateDraftInput): Promise<Wo
 
 export function compileDraft(resumeId: string, input: CompileRequestInput): Promise<CompileResultDto> {
   return apiFetch<CompileResultDto>(`/resumes/${resumeId}/compile`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function listSnapshots(resumeId: string): Promise<SnapshotListResponseDto> {
+  return apiFetch<SnapshotListResponseDto>(`/resumes/${resumeId}/snapshots`);
+}
+
+export function createSnapshot(resumeId: string, input: CreateSnapshotInput): Promise<SnapshotDto> {
+  return apiFetch<SnapshotDto>(`/resumes/${resumeId}/snapshots`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function restoreSnapshot(resumeId: string, input: RestoreSnapshotInput): Promise<WorkingDraftDto> {
+  return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/snapshots/restore`, {
     method: "POST",
     body: JSON.stringify(input)
   });
