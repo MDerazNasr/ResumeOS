@@ -202,6 +202,21 @@ Reason:
 - the browser was showing a missing required error components refresh loop
 - explicit error boundaries give the app router the required fallback surface and prevent that failure mode from degrading into a blank page
 
+### 2026-03-29: PDF Preview Header Fix
+
+Found a real preview issue during live usage:
+
+- the compiled PDF route worked, but the browser treated the PDF as a download instead of rendering it inline
+
+Fix:
+
+- changed the PDF file response to use `Content-Disposition: inline`
+
+Verified:
+
+- PDF route now returns `application/pdf`
+- content disposition is `inline`
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

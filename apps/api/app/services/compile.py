@@ -136,7 +136,12 @@ def get_latest_pdf_for_user(user_id: str, resume_id: str) -> FileResponse:
     if not pdf_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Compiled PDF artifact missing.")
 
-    return FileResponse(pdf_path, media_type="application/pdf", filename=pdf_path.name)
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf",
+        filename=pdf_path.name,
+        content_disposition_type="inline",
+    )
 
 
 def _persist_pdf_artifact(resume_id: str, draft_version: int, pdf_candidate: Path) -> Path:
