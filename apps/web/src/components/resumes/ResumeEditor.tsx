@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { compileDraft, saveDraft } from "@/lib/api/client";
+import { LatexEditor } from "@/components/resumes/LatexEditor";
 import type { CompileResultDto, ResumeDto, WorkingDraftDto } from "@/lib/api/types";
 
 type ResumeEditorProps = {
@@ -94,7 +95,7 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
         </div>
       </div>
       <div style={workspaceStyle}>
-        <textarea onChange={(event) => setSourceTex(event.target.value)} style={textareaStyle} value={sourceTex} />
+        <LatexEditor onChange={setSourceTex} value={sourceTex} />
         <aside style={panelStyle}>
           <div style={{ display: "grid", gap: 6 }}>
             <strong style={{ fontSize: 16 }}>Compile Panel</strong>
@@ -192,20 +193,6 @@ const workspaceStyle: CSSProperties = {
   gridTemplateColumns: "minmax(0, 1.65fr) minmax(320px, 0.85fr)",
   gap: 16,
   alignItems: "start"
-};
-
-const textareaStyle: CSSProperties = {
-  minHeight: "70vh",
-  width: "100%",
-  padding: 20,
-  border: "1px solid #262b36",
-  borderRadius: 16,
-  background: "#12151c",
-  color: "#eef1f6",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  fontSize: 14,
-  lineHeight: 1.6,
-  resize: "vertical"
 };
 
 const panelStyle: CSSProperties = {

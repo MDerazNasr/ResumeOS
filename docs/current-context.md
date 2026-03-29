@@ -4,13 +4,15 @@
 
 Active milestone:
 
-- Section 2 wrap-up: Monaco integration and test hardening
+- Section 3 planning: snapshots and recovery
 
 ## Completed Milestones
 
 - project architecture and production planning documented
 - Section 1: resume document core scaffolded and verified
 - Section 2A: compile contract and editor workspace scaffolded and verified
+- Section 2B: real TeX compile execution and PDF preview implemented and verified
+- Section 2C: Monaco integration and compile test hardening implemented and verified
 
 ## Current Constraints
 
@@ -29,22 +31,20 @@ Active milestone:
 ## Current Frontend Reality
 
 - editor page is a two-pane workspace
-- left pane: raw LaTeX source editor
+- left pane: Monaco-based LaTeX editor
 - right pane: compile status, logs, and real PDF preview
 - dirty-state tracking now follows the last saved draft
 
 ## Immediate Next Goal
 
-Close out Section 2 by replacing the temporary textarea editor with Monaco and by adding checked-in verification around the now-working compile flow.
+Plan Section 3: snapshots and recovery, so resume edits and future AI operations are reversible and safe.
 
 ## Definition of Success for the Current Slice
 
-- valid LaTeX compiles successfully
-- resulting PDF is served to the frontend
-- preview pane renders the latest PDF
-- invalid LaTeX returns readable real compile logs
-- compile failure does not corrupt the draft
-- Monaco replaces the temporary textarea editor
+- named snapshots can be created from the working draft
+- the current working draft remains separate from snapshots
+- a prior snapshot can be restored safely
+- snapshot compare behavior is defined and working at least in a minimal form
 
 ## Known Risks
 

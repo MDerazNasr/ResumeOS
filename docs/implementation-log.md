@@ -157,6 +157,27 @@ Open follow-up:
 
 - Monaco is still the main remaining editor upgrade before Section 2 is fully complete
 
+### 2026-03-29: Section 2C Monaco and Compile Tests
+
+Closed out the remaining editor and verification work for Section 2.
+
+Added:
+
+- Monaco-based LaTeX editor component
+- backend compile tests checked into the repo
+- README command for running backend tests
+
+Verified:
+
+- backend compile success test passes
+- backend compile failure test passes
+- backend compile conflict test passes
+- frontend production build passes with Monaco integrated
+
+Section 2 outcome:
+
+- ResumeOS now has a real LaTeX editing workspace, real compile loop, real PDF preview, and checked-in compile regression tests
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

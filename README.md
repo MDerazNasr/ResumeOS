@@ -33,6 +33,14 @@ The API uses a local SQLite file for the initial Section 1 slice. The schema liv
 
 Note: the backend requirements are pinned to versions that work with the currently installed Python 3.14 on this machine.
 
+Run backend tests:
+
+```bash
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS/apps/api
+source .venv/bin/activate
+python -m unittest discover -s tests
+```
+
 ### Web
 
 ```bash
