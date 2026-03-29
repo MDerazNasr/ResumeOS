@@ -7,8 +7,8 @@
   ],
   "scripts": {
     "dev:web": "npm --workspace @resumeos/web run dev",
+    "dev:web:local": "cd apps/web && npx next dev --hostname 127.0.0.1 --port 3000",
     "build:web": "npm --workspace @resumeos/web run build",
     "lint:web": "npm --workspace @resumeos/web run lint"
   }
 }
-

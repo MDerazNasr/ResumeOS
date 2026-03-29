@@ -49,4 +49,11 @@ npm install
 npm run dev:web
 ```
 
+If you want to force the frontend onto `127.0.0.1:3000`, use:
+
+```bash
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS
+npm run dev:web:local
+```
+
 Set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` if needed. By default the web app expects the API on `http://localhost:8000`.

@@ -178,6 +178,18 @@ Section 2 outcome:
 
 - ResumeOS now has a real LaTeX editing workspace, real compile loop, real PDF preview, and checked-in compile regression tests
 
+### 2026-03-29: Local Run Command Fix
+
+Found a concrete local-dev issue during live reproduction:
+
+- the forwarded host/port command shape I used with `npm run dev:web -- ...` was wrong for this workspace setup
+
+Added:
+
+- `npm run dev:web:local`
+
+This gives a reliable frontend start path on `127.0.0.1:3000` without relying on broken npm argument forwarding.
+
 ## Open Notes
 
 - local dev persistence is SQLite for now
