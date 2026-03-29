@@ -37,7 +37,7 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Implement and verify snapshot create, list, and restore so draft editing becomes reversible and safe.
+Add autosave on top of the snapshot foundation so the working draft persists automatically and snapshot creation can use the latest saved state without a manual save step.
 
 ## Definition of Success for the Current Slice
 
@@ -45,6 +45,7 @@ Implement and verify snapshot create, list, and restore so draft editing becomes
 - the current working draft remains separate from snapshots
 - a prior snapshot can be restored safely
 - the snapshot flow is verified with backend tests
+- the editor autosaves changes after a short idle delay
 
 ## Known Risks
 

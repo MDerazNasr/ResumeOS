@@ -20,6 +20,8 @@ Add snapshots and recovery so the working draft can be saved as named versions a
 - [x] add frontend snapshot panel to create and list snapshots
 - [x] add restore action from snapshot to current working draft
 - [x] add backend tests for snapshot creation and restore
+- [x] add debounced autosave for the working draft
+- [x] ensure snapshot creation waits for the latest persisted draft
 
 ## Verification Checklist
 
@@ -34,3 +36,4 @@ Add snapshots and recovery so the working draft can be saved as named versions a
 
 - keep the snapshot implementation minimal and safe
 - do not start compare/diff UI until the base snapshot flow is solid
+- autosave belongs to the editor-state workflow and should remove the need to manually save before snapshot creation

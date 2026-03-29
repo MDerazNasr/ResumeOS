@@ -6,12 +6,13 @@ import { createSnapshot, restoreSnapshot } from "@/lib/api/client";
 import type { SnapshotDto, WorkingDraftDto } from "@/lib/api/types";
 
 type SnapshotPanelProps = {
+  ensureLatestDraft: () => Promise<boolean>;
   initialSnapshots: SnapshotDto[];
   resumeId: string;
   onRestore: (draft: WorkingDraftDto) => void;
 };
 
-export function SnapshotPanel({ initialSnapshots, resumeId, onRestore }: SnapshotPanelProps) {
+export function SnapshotPanel({ ensureLatestDraft, initialSnapshots, resumeId, onRestore }: SnapshotPanelProps) {
   const [snapshots, setSnapshots] = useState(initialSnapshots);
   const [snapshotName, setSnapshotName] = useState("Manual Snapshot");
   const [isSavingSnapshot, setIsSavingSnapshot] = useState(false);
@@ -24,6 +25,11 @@ export function SnapshotPanel({ initialSnapshots, resumeId, onRestore }: Snapsho
     setError(null);
 
     try {
+      const draftReady = await ensureLatestDraft();
+      if (!draftReady) {
+        return;
+      }
+
       const snapshot = await createSnapshot(resumeId, { name: snapshotName });
       setSnapshots((current) => [snapshot, ...current]);
       setSnapshotName(`Snapshot ${snapshots.length + 2}`);

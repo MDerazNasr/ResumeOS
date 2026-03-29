@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { compileDraft, saveDraft } from "@/lib/api/client";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
@@ -23,15 +23,38 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
   const [error, setError] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
+  const saveQueueRef = useRef(Promise.resolve<WorkingDraftDto | null>(null));
+  const sourceTexRef = useRef(sourceTex);
+  const persistedSourceTexRef = useRef(persistedSourceTex);
+  const versionRef = useRef(version);
 
   const isDirty = useMemo(() => sourceTex !== persistedSourceTex, [persistedSourceTex, sourceTex]);
 
-  async function handleSave() {
+  useEffect(() => {
+    sourceTexRef.current = sourceTex;
+  }, [sourceTex]);
+
+  useEffect(() => {
+    persistedSourceTexRef.current = persistedSourceTex;
+  }, [persistedSourceTex]);
+
+  useEffect(() => {
+    versionRef.current = version;
+  }, [version]);
+
+  async function saveLatestDraft() {
+    if (sourceTexRef.current === persistedSourceTexRef.current) {
+      return null;
+    }
+
     setIsSaving(true);
     setError(null);
 
     try {
-      const savedDraft = await saveDraft(resume.id, { sourceTex, version });
+      const savedDraft = await saveDraft(resume.id, {
+        sourceTex: sourceTexRef.current,
+        version: versionRef.current,
+      });
       setPersistedSourceTex(savedDraft.sourceTex);
       setVersion(savedDraft.version);
       setUpdatedAt(savedDraft.updatedAt);
@@ -42,6 +65,27 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function enqueueSave() {
+    saveQueueRef.current = saveQueueRef.current.then(() => saveLatestDraft());
+    return saveQueueRef.current;
+  }
+
+  useEffect(() => {
+    if (!isDirty) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void enqueueSave();
+    }, 800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isDirty, sourceTex]);
+
+  async function handleSave() {
+    return enqueueSave();
   }
 
   async function handleCompile() {
@@ -94,21 +138,33 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
         <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
           <div style={{ display: "flex", gap: 10 }}>
             <button disabled={isSaving || !isDirty || isCompiling} onClick={handleSave} style={buttonStyle} type="button">
-              {isSaving ? "Saving..." : "Save Draft"}
+              {isSaving ? "Saving..." : "Save Now"}
             </button>
             <button disabled={isSaving || isCompiling} onClick={handleCompile} style={secondaryButtonStyle} type="button">
               {isCompiling ? "Compiling..." : "Compile"}
             </button>
           </div>
           <span style={{ color: isDirty ? "#f6d36e" : "#9ba3b4", fontSize: 13 }}>
-            {isDirty ? "Unsaved changes" : `Saved ${new Date(updatedAt).toLocaleString()}`}
+            {isSaving
+              ? "Saving..."
+              : isDirty
+                ? "Autosave pending..."
+                : `Saved ${new Date(updatedAt).toLocaleString()}`}
           </span>
         </div>
       </div>
       <div style={workspaceStyle}>
         <LatexEditor onChange={setSourceTex} value={sourceTex} />
         <aside style={panelStyle}>
-          <SnapshotPanel initialSnapshots={initialSnapshots} onRestore={handleSnapshotRestore} resumeId={resume.id} />
+          <SnapshotPanel
+            ensureLatestDraft={async () => {
+              const savedDraft = await enqueueSave();
+              return sourceTexRef.current === persistedSourceTexRef.current || savedDraft !== null;
+            }}
+            initialSnapshots={initialSnapshots}
+            onRestore={handleSnapshotRestore}
+            resumeId={resume.id}
+          />
           <div style={{ display: "grid", gap: 6 }}>
             <strong style={{ fontSize: 16 }}>Compile Panel</strong>
             <span style={{ color: "#9ba3b4", fontSize: 13 }}>

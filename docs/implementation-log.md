@@ -237,6 +237,21 @@ Verified:
 - backend tests pass
 - frontend production build passes
 
+### 2026-03-29: Section 3 Autosave
+
+Added autosave behavior on top of the snapshot foundation.
+
+Behavior:
+
+- the working draft saves automatically after a short idle delay while typing
+- manual save remains available as a fallback
+- snapshot creation waits for the latest persisted draft before saving the snapshot
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now
