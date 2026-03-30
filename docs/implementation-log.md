@@ -364,6 +364,31 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-03-30: Section 4 Mocked Patch Flow
+
+Added the first end-to-end patch review exercise without introducing a model yet.
+
+Added:
+
+- documented mocked patch proposal contract
+- backend DTOs for mocked patch proposals
+- `GET /resumes/{resume_id}/patches/mock`
+- deterministic backend proposal generation from editable blocks
+- backend self-validation of each mocked proposal through the exact patch gate
+- backend tests for mocked proposal generation
+- minimal frontend review cards for mocked before/after proposals
+
+Why this shape:
+
+- it proves the future AI patch path end to end
+- it keeps proposal generation deterministic and easy to debug
+- it exercises the real validation boundary instead of bypassing it
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

@@ -49,6 +49,29 @@ export type DocumentModelDto = {
   editableBlocks: EditableBlockDto[];
 };
 
+export type PatchValidationResultDto = {
+  isValid: boolean;
+  targetBlockId: string;
+  matchedCurrentText: string | null;
+  reason: string | null;
+};
+
+export type MockPatchProposalDto = {
+  id: string;
+  targetBlockId: string;
+  label: string;
+  startLine: number;
+  endLine: number;
+  beforeText: string;
+  afterText: string;
+  rationale: string;
+  validation: PatchValidationResultDto;
+};
+
+export type MockPatchProposalListDto = {
+  items: MockPatchProposalDto[];
+};
+
 export type CreateResumeInput = {
   title: string;
 };

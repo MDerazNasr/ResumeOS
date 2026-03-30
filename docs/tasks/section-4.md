@@ -24,6 +24,11 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] add backend validation that only allows exact editable-block targets
 - [x] add a route to validate a proposed patch target against the current draft
 - [x] add backend tests for valid and invalid patch validation cases
+- [x] document the mocked patch proposal contract
+- [x] add backend DTOs for patch proposals and suggestion sets
+- [x] add backend mocked patch proposal endpoint that validates its own proposals
+- [x] add backend tests for mocked patch proposal generation
+- [x] expose mocked patch proposals in a minimal review surface
 
 ## Verification Checklist
 
@@ -35,6 +40,8 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] a valid exact block-targeted edit is accepted
 - [x] a stale or mismatched edit is rejected
 - [x] an unknown block target is rejected
+- [x] mocked proposals target only validated editable blocks
+- [x] mocked proposals are visible in the editor UI
 
 ## Notes
 

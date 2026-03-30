@@ -2,11 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { compileDraft, getDocumentModel, saveDraft } from "@/lib/api/client";
+import { compileDraft, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
+import { MockPatchPanel } from "@/components/resumes/MockPatchPanel";
 import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
-import type { CompileResultDto, DocumentModelDto, ResumeDto, SnapshotDto, WorkingDraftDto } from "@/lib/api/types";
+import type {
+  CompileResultDto,
+  DocumentModelDto,
+  MockPatchProposalDto,
+  ResumeDto,
+  SnapshotDto,
+  WorkingDraftDto,
+} from "@/lib/api/types";
 
 type ResumeEditorProps = {
   documentModel: DocumentModelDto;
@@ -17,6 +25,7 @@ type ResumeEditorProps = {
 
 export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
   const [documentModelState, setDocumentModelState] = useState(documentModel);
+  const [mockPatches, setMockPatches] = useState<MockPatchProposalDto[]>([]);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
   const [version, setVersion] = useState(draft.version);
@@ -63,8 +72,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setPersistedSourceTex(savedDraft.sourceTex);
       setVersion(savedDraft.version);
       setUpdatedAt(savedDraft.updatedAt);
-      const nextDocumentModel = await getDocumentModel(resume.id);
+      const [nextDocumentModel, nextMockPatches] = await Promise.all([
+        getDocumentModel(resume.id),
+        getMockPatches(resume.id),
+      ]);
       setDocumentModelState(nextDocumentModel);
+      setMockPatches(nextMockPatches.items);
       return savedDraft;
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save draft.");
@@ -141,10 +154,19 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     setUpdatedAt(restoredDraft.updatedAt);
     setCompileResult(null);
     setError(null);
-    void getDocumentModel(resume.id)
-      .then((nextDocumentModel) => setDocumentModelState(nextDocumentModel))
+    void Promise.all([getDocumentModel(resume.id), getMockPatches(resume.id)])
+      .then(([nextDocumentModel, nextMockPatches]) => {
+        setDocumentModelState(nextDocumentModel);
+        setMockPatches(nextMockPatches.items);
+      })
       .catch(() => null);
   }
+
+  useEffect(() => {
+    void getMockPatches(resume.id)
+      .then((result) => setMockPatches(result.items))
+      .catch(() => null);
+  }, [resume.id]);
 
   return (
     <section style={shellStyle}>
@@ -222,6 +244,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
             </div>
           </div>
           <DocumentModelPanel documentModel={documentModelState} />
+          <MockPatchPanel proposals={mockPatches} />
           <SnapshotPanel
             currentSourceTex={sourceTex}
             ensureLatestDraft={ensureLatestDraftSaved}

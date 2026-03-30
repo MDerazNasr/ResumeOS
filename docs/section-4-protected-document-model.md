@@ -76,3 +76,23 @@ A proposed edit is valid only when:
 - the proposed `beforeText` still matches the current draft text for that block
 
 This is narrower than the final system will be, but it is the right starting point because it gives the backend a trustworthy acceptance gate before patch generation exists.
+
+## Mocked Patch Flow Before AI
+
+Before connecting a model, ResumeOS should exercise the future patch workflow with deterministic mocked proposals.
+
+The mocked flow should:
+
+- pick a few editable blocks from the current document model
+- build concrete patch proposals against those blocks
+- validate each proposal through the same patch-validation gate
+- only return proposals that pass validation
+
+This is useful because it proves the architecture end to end:
+
+- document model extraction
+- block-targeted proposal generation
+- server-side validation
+- frontend review surface
+
+without introducing model variability yet.

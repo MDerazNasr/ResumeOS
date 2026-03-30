@@ -72,6 +72,22 @@ class PatchValidationResultDto(BaseModel):
     reason: str | None = None
 
 
+class MockPatchProposalDto(BaseModel):
+    id: str
+    targetBlockId: str
+    label: str
+    startLine: int
+    endLine: int
+    beforeText: str
+    afterText: str
+    rationale: str
+    validation: PatchValidationResultDto
+
+
+class MockPatchProposalListDto(BaseModel):
+    items: list[MockPatchProposalDto]
+
+
 class UpdateDraftInput(BaseModel):
     sourceTex: str
     version: int = Field(ge=1)
