@@ -267,6 +267,27 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-03-30: Section 3 Minimal Snapshot Compare
+
+Added a lightweight comparison view so snapshots are not just restorable, but inspectable.
+
+Added:
+
+- lazy snapshot detail API for fetching a snapshot's saved source only when requested
+- minimal line-based snapshot compare view against the current working draft
+- backend regression test for fetching snapshot detail
+
+Why this shape:
+
+- compare is intentionally lightweight for now
+- snapshot list payloads stay small because source text is fetched on demand
+- the goal was clarity and version history usefulness, not a full IDE diff product yet
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

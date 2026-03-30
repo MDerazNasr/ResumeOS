@@ -37,9 +37,8 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Decide the next Section 3 step after snapshot safety polish. The main candidates are:
+Close out Section 3 after the minimal snapshot compare slice. The main candidates after this are:
 
-- minimal snapshot compare view
 - snapshot metadata/organization improvements
 - or moving on to the protected document model before AI editing
 
@@ -48,6 +47,7 @@ Decide the next Section 3 step after snapshot safety polish. The main candidates
 - named snapshots can be created from the working draft
 - the current working draft remains separate from snapshots
 - a prior snapshot can be restored safely
+- a selected snapshot can be compared against the current working draft
 - the snapshot flow is verified with backend tests
 - the editor autosaves changes after a short idle delay
 - restore actions are explicit and clearly communicated to the user

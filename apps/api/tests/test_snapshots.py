@@ -30,6 +30,24 @@ class SnapshotFlowTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["items"]), 1)
 
+    def test_get_snapshot_returns_snapshot_source(self) -> None:
+        draft = self.client.get(f"/resumes/{self.resume_id}/draft").json()
+        updated_source = draft["sourceTex"] + "\n% snapshot compare marker\n"
+        self.client.put(
+            f"/resumes/{self.resume_id}/draft",
+            json={"sourceTex": updated_source, "version": draft["version"]},
+        )
+
+        snapshot = self.client.post(
+            f"/resumes/{self.resume_id}/snapshots",
+            json={"name": "Compare target"},
+        ).json()
+
+        response = self.client.get(f"/resumes/{self.resume_id}/snapshots/{snapshot['id']}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["id"], snapshot["id"])
+        self.assertIn("% snapshot compare marker", response.json()["sourceTex"])
+
     def test_restore_snapshot_updates_working_draft(self) -> None:
         draft = self.client.get(f"/resumes/{self.resume_id}/draft").json()
 

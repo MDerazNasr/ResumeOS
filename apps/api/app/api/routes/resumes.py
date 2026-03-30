@@ -9,6 +9,7 @@ from app.models.schemas import (
     ResumeDto,
     ResumeListResponseDto,
     SnapshotDto,
+    SnapshotDetailDto,
     SnapshotListResponseDto,
     UpdateDraftInput,
     UserDto,
@@ -26,6 +27,7 @@ from app.services.resumes import (
 )
 from app.services.snapshots import (
     create_snapshot_for_user,
+    get_snapshot_for_user,
     list_snapshots_for_user,
     restore_snapshot_for_user,
 )
@@ -97,6 +99,15 @@ def create_snapshot(
     current_user: UserDto = Depends(get_current_user),
 ) -> SnapshotDto:
     return create_snapshot_for_user(current_user.id, resume_id, input_data)
+
+
+@router.get("/{resume_id}/snapshots/{snapshot_id}", response_model=SnapshotDetailDto)
+def get_snapshot(
+    resume_id: str,
+    snapshot_id: str,
+    current_user: UserDto = Depends(get_current_user),
+) -> SnapshotDetailDto:
+    return get_snapshot_for_user(current_user.id, resume_id, snapshot_id)
 
 
 @router.post("/{resume_id}/snapshots/restore", response_model=WorkingDraftDto)

@@ -2,21 +2,31 @@
 
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import { createSnapshot, restoreSnapshot } from "@/lib/api/client";
-import type { SnapshotDto, WorkingDraftDto } from "@/lib/api/types";
+import { createSnapshot, getSnapshot, restoreSnapshot } from "@/lib/api/client";
+import { SnapshotCompareView } from "@/components/resumes/SnapshotCompareView";
+import type { SnapshotDetailDto, SnapshotDto, WorkingDraftDto } from "@/lib/api/types";
 
 type SnapshotPanelProps = {
+  currentSourceTex: string;
   ensureLatestDraft: () => Promise<boolean>;
   initialSnapshots: SnapshotDto[];
   resumeId: string;
   onRestore: (draft: WorkingDraftDto) => void;
 };
 
-export function SnapshotPanel({ ensureLatestDraft, initialSnapshots, resumeId, onRestore }: SnapshotPanelProps) {
+export function SnapshotPanel({
+  currentSourceTex,
+  ensureLatestDraft,
+  initialSnapshots,
+  resumeId,
+  onRestore,
+}: SnapshotPanelProps) {
   const [snapshots, setSnapshots] = useState(initialSnapshots);
   const [snapshotName, setSnapshotName] = useState("Manual Snapshot");
   const [isSavingSnapshot, setIsSavingSnapshot] = useState(false);
   const [isRestoringSnapshot, setIsRestoringSnapshot] = useState<string | null>(null);
+  const [isLoadingCompare, setIsLoadingCompare] = useState<string | null>(null);
+  const [compareSnapshot, setCompareSnapshot] = useState<SnapshotDetailDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -68,6 +78,21 @@ export function SnapshotPanel({ ensureLatestDraft, initialSnapshots, resumeId, o
     }
   }
 
+  async function handleCompareSnapshot(snapshotId: string) {
+    setIsLoadingCompare(snapshotId);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const snapshot = await getSnapshot(resumeId, snapshotId);
+      setCompareSnapshot(snapshot);
+    } catch (compareError) {
+      setError(compareError instanceof Error ? compareError.message : "Failed to load snapshot comparison.");
+    } finally {
+      setIsLoadingCompare(null);
+    }
+  }
+
   return (
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
@@ -97,18 +122,36 @@ export function SnapshotPanel({ ensureLatestDraft, initialSnapshots, resumeId, o
                   v{snapshot.sourceVersion} • {new Date(snapshot.createdAt).toLocaleString()}
                 </span>
               </div>
-              <button
-                disabled={isRestoringSnapshot !== null}
-                onClick={() => handleRestoreSnapshot(snapshot.id)}
-                style={secondaryButtonStyle}
-                type="button"
-              >
-                {isRestoringSnapshot === snapshot.id ? "Restoring..." : "Restore"}
-              </button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  disabled={isLoadingCompare !== null || isRestoringSnapshot !== null}
+                  onClick={() => handleCompareSnapshot(snapshot.id)}
+                  style={secondaryButtonStyle}
+                  type="button"
+                >
+                  {isLoadingCompare === snapshot.id ? "Loading..." : "Compare"}
+                </button>
+                <button
+                  disabled={isRestoringSnapshot !== null || isLoadingCompare !== null}
+                  onClick={() => handleRestoreSnapshot(snapshot.id)}
+                  style={secondaryButtonStyle}
+                  type="button"
+                >
+                  {isRestoringSnapshot === snapshot.id ? "Restoring..." : "Restore"}
+                </button>
+              </div>
             </div>
           ))
         )}
       </div>
+      {compareSnapshot ? (
+        <SnapshotCompareView
+          currentSource={currentSourceTex}
+          onClose={() => setCompareSnapshot(null)}
+          snapshotName={compareSnapshot.name}
+          snapshotSource={compareSnapshot.sourceTex}
+        />
+      ) : null}
       {error ? <p style={errorStyle}>{error}</p> : null}
       {message ? <p style={messageStyle}>{message}</p> : null}
     </section>

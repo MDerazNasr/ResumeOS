@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from app.db.database import get_connection
 from app.models.schemas import (
     CreateSnapshotInput,
+    SnapshotDetailDto,
     SnapshotDto,
     SnapshotListResponseDto,
     WorkingDraftDto,
@@ -63,6 +64,25 @@ def create_snapshot_for_user(user_id: str, resume_id: str, input_data: CreateSna
         ).fetchone()
 
     return _row_to_snapshot(row)
+
+
+def get_snapshot_for_user(user_id: str, resume_id: str, snapshot_id: str) -> SnapshotDetailDto:
+    _ensure_resume_access(user_id, resume_id)
+
+    with get_connection() as connection:
+        row = connection.execute(
+            """
+            SELECT id, resume_id, name, source_tex, source_version, created_at
+            FROM snapshots
+            WHERE id = ? AND resume_id = ?
+            """,
+            (snapshot_id, resume_id),
+        ).fetchone()
+
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Snapshot not found.")
+
+    return _row_to_snapshot_detail(row)
 
 
 def restore_snapshot_for_user(user_id: str, resume_id: str, snapshot_id: str) -> WorkingDraftDto:
@@ -137,6 +157,17 @@ def _row_to_snapshot(row: sqlite3.Row) -> SnapshotDto:
         id=row["id"],
         resumeId=row["resume_id"],
         name=row["name"],
+        sourceVersion=row["source_version"],
+        createdAt=row["created_at"],
+    )
+
+
+def _row_to_snapshot_detail(row: sqlite3.Row) -> SnapshotDetailDto:
+    return SnapshotDetailDto(
+        id=row["id"],
+        resumeId=row["resume_id"],
+        name=row["name"],
+        sourceTex=row["source_tex"],
         sourceVersion=row["source_version"],
         createdAt=row["created_at"],
     )

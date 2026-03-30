@@ -6,6 +6,7 @@ import type {
   RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
+  SnapshotDetailDto,
   SnapshotDto,
   SnapshotListResponseDto,
   UpdateDraftInput,
@@ -78,6 +79,10 @@ export function createSnapshot(resumeId: string, input: CreateSnapshotInput): Pr
     method: "POST",
     body: JSON.stringify(input)
   });
+}
+
+export function getSnapshot(resumeId: string, snapshotId: string): Promise<SnapshotDetailDto> {
+  return apiFetch<SnapshotDetailDto>(`/resumes/${resumeId}/snapshots/${snapshotId}`);
 }
 
 export function restoreSnapshot(resumeId: string, input: RestoreSnapshotInput): Promise<WorkingDraftDto> {

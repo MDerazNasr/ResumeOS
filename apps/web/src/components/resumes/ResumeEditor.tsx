@@ -164,6 +164,7 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
         <LatexEditor onChange={setSourceTex} value={sourceTex} />
         <aside style={panelStyle}>
           <SnapshotPanel
+            currentSourceTex={sourceTex}
             ensureLatestDraft={ensureLatestDraftSaved}
             initialSnapshots={initialSnapshots}
             onRestore={handleSnapshotRestore}

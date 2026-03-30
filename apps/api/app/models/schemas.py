@@ -65,6 +65,10 @@ class SnapshotDto(BaseModel):
     createdAt: str
 
 
+class SnapshotDetailDto(SnapshotDto):
+    sourceTex: str
+
+
 class SnapshotListResponseDto(BaseModel):
     items: list[SnapshotDto]
 

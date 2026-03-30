@@ -60,6 +60,10 @@ export type SnapshotDto = {
   createdAt: string;
 };
 
+export type SnapshotDetailDto = SnapshotDto & {
+  sourceTex: string;
+};
+
 export type SnapshotListResponseDto = {
   items: SnapshotDto[];
 };
