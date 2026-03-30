@@ -304,6 +304,30 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-03-30: Section 4 Protected Document Model Foundation
+
+Started the next major feature area by making the resume structure explicit instead of treating the LaTeX source as an undifferentiated text blob.
+
+Added:
+
+- documented protected-vs-editable contract for the first heuristic document model
+- backend document-model DTOs
+- backend extraction service for protected regions and editable blocks
+- `GET /resumes/{resume_id}/document-model`
+- backend tests covering protected preamble/scaffold detection and editable summary/bullet extraction
+- editor-side document model panel showing the extracted boundary
+
+Why this shape:
+
+- this is a concrete safety foundation for later AI patch validation
+- the parser is intentionally conservative and biases ambiguous lines toward protected
+- the feature is visible in the product instead of being invisible backend plumbing
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

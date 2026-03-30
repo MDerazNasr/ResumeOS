@@ -2,18 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { compileDraft, saveDraft } from "@/lib/api/client";
+import { compileDraft, getDocumentModel, saveDraft } from "@/lib/api/client";
+import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
-import type { CompileResultDto, ResumeDto, SnapshotDto, WorkingDraftDto } from "@/lib/api/types";
+import type { CompileResultDto, DocumentModelDto, ResumeDto, SnapshotDto, WorkingDraftDto } from "@/lib/api/types";
 
 type ResumeEditorProps = {
+  documentModel: DocumentModelDto;
   draft: WorkingDraftDto;
   initialSnapshots: SnapshotDto[];
   resume: ResumeDto;
 };
 
-export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorProps) {
+export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
+  const [documentModelState, setDocumentModelState] = useState(documentModel);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
   const [version, setVersion] = useState(draft.version);
@@ -60,6 +63,8 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
       setPersistedSourceTex(savedDraft.sourceTex);
       setVersion(savedDraft.version);
       setUpdatedAt(savedDraft.updatedAt);
+      const nextDocumentModel = await getDocumentModel(resume.id);
+      setDocumentModelState(nextDocumentModel);
       return savedDraft;
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save draft.");
@@ -136,6 +141,9 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
     setUpdatedAt(restoredDraft.updatedAt);
     setCompileResult(null);
     setError(null);
+    void getDocumentModel(resume.id)
+      .then((nextDocumentModel) => setDocumentModelState(nextDocumentModel))
+      .catch(() => null);
   }
 
   return (
@@ -163,6 +171,7 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
       <div style={workspaceStyle}>
         <LatexEditor onChange={setSourceTex} value={sourceTex} />
         <aside style={panelStyle}>
+          <DocumentModelPanel documentModel={documentModelState} />
           <SnapshotPanel
             currentSourceTex={sourceTex}
             ensureLatestDraft={ensureLatestDraftSaved}

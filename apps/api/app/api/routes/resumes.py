@@ -5,6 +5,7 @@ from app.models.schemas import (
     CompileResultDto,
     CreateSnapshotInput,
     CreateResumeInput,
+    DocumentModelDto,
     RestoreSnapshotInput,
     ResumeDto,
     ResumeListResponseDto,
@@ -18,6 +19,7 @@ from app.models.schemas import (
 from app.services.compile import compile_resume_source_for_user
 from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
+from app.services.document_model import get_document_model_for_user
 from app.services.resumes import (
     create_resume_for_user,
     get_draft_for_user,
@@ -57,6 +59,11 @@ def get_resume(resume_id: str, current_user: UserDto = Depends(get_current_user)
 @router.get("/{resume_id}/draft", response_model=WorkingDraftDto)
 def get_draft(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> WorkingDraftDto:
     return get_draft_for_user(current_user.id, resume_id)
+
+
+@router.get("/{resume_id}/document-model", response_model=DocumentModelDto)
+def get_document_model(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> DocumentModelDto:
+    return get_document_model_for_user(current_user.id, resume_id)
 
 
 @router.put("/{resume_id}/draft", response_model=WorkingDraftDto)

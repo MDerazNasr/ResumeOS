@@ -3,6 +3,7 @@ import type {
   CompileResultDto,
   CreateSnapshotInput,
   CreateResumeInput,
+  DocumentModelDto,
   RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
@@ -54,6 +55,10 @@ export function getResume(resumeId: string): Promise<ResumeDto> {
 
 export function getDraft(resumeId: string): Promise<WorkingDraftDto> {
   return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/draft`);
+}
+
+export function getDocumentModel(resumeId: string): Promise<DocumentModelDto> {
+  return apiFetch<DocumentModelDto>(`/resumes/${resumeId}/document-model`);
 }
 
 export function saveDraft(resumeId: string, input: UpdateDraftInput): Promise<WorkingDraftDto> {

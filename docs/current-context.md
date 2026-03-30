@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 3: snapshots and recovery
+- Section 4: protected document model
 
 ## Completed Milestones
 
@@ -32,32 +32,30 @@ Active milestone:
 
 - editor page is a two-pane workspace
 - left pane: Monaco-based LaTeX editor
-- right pane: compile status, logs, and real PDF preview
+- right pane: document model summary, snapshots, compile status, logs, and real PDF preview
 - dirty-state tracking now follows the last saved draft
 
 ## Immediate Next Goal
 
-Start the protected document model as the next major feature area.
+Build the next protected-document slice on top of the new extraction model.
 
-That work should:
+That likely means:
 
-- define protected vs editable LaTeX regions
-- parse enough resume structure to identify safe editable blocks
-- create validation boundaries the future AI patch system must respect
+- tighten editable-block coverage for common resume constructs
+- add server-side validation helpers that can check whether a proposed edit touches protected regions
+- prepare the patch schema around block IDs and source ranges
 
 ## Definition of Success for the Current Slice
 
-- named snapshots can be created from the working draft
-- the current working draft remains separate from snapshots
-- a prior snapshot can be restored safely
-- a selected snapshot can be compared against the current working draft
-- snapshot naming and metadata are clear enough for routine use
-- the snapshot flow is verified with backend tests
-- the editor autosaves changes after a short idle delay
-- restore actions are explicit and clearly communicated to the user
+- protected regions are extracted from the current working draft
+- editable blocks are extracted from the current working draft
+- the editor shows the model in a visible way
+- document-model backend tests pass
+- frontend production build passes
 
 ## Known Risks
 
 - local TeX tooling may differ from the intended production container
 - compile subprocesses need timeouts and temp-directory isolation
 - PDF serving needs a clean local artifact strategy before later migration to object storage
+- the current document-model parser is heuristic and intentionally conservative

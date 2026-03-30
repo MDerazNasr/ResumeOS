@@ -33,6 +33,31 @@ class WorkingDraftDto(BaseModel):
     updatedAt: str
 
 
+class ProtectedRegionDto(BaseModel):
+    id: str
+    kind: Literal["preamble", "scaffold", "command"]
+    label: str
+    startLine: int
+    endLine: int
+
+
+class EditableBlockDto(BaseModel):
+    id: str
+    kind: Literal["paragraph", "bullet"]
+    label: str
+    text: str
+    startLine: int
+    startColumn: int
+    endLine: int
+    endColumn: int
+
+
+class DocumentModelDto(BaseModel):
+    resumeId: str
+    protectedRegions: list[ProtectedRegionDto]
+    editableBlocks: list[EditableBlockDto]
+
+
 class UpdateDraftInput(BaseModel):
     sourceTex: str
     version: int = Field(ge=1)

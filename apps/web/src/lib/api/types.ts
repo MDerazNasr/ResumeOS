@@ -24,6 +24,31 @@ export type WorkingDraftDto = {
   updatedAt: string;
 };
 
+export type ProtectedRegionDto = {
+  id: string;
+  kind: "preamble" | "scaffold" | "command";
+  label: string;
+  startLine: number;
+  endLine: number;
+};
+
+export type EditableBlockDto = {
+  id: string;
+  kind: "paragraph" | "bullet";
+  label: string;
+  text: string;
+  startLine: number;
+  startColumn: number;
+  endLine: number;
+  endColumn: number;
+};
+
+export type DocumentModelDto = {
+  resumeId: string;
+  protectedRegions: ProtectedRegionDto[];
+  editableBlocks: EditableBlockDto[];
+};
+
 export type CreateResumeInput = {
   title: string;
 };
