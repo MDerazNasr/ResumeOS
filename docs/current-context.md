@@ -37,7 +37,11 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Add autosave on top of the snapshot foundation so the working draft persists automatically and snapshot creation can use the latest saved state without a manual save step.
+Decide the next Section 3 step after snapshot safety polish. The main candidates are:
+
+- minimal snapshot compare view
+- snapshot metadata/organization improvements
+- or moving on to the protected document model before AI editing
 
 ## Definition of Success for the Current Slice
 
@@ -46,6 +50,7 @@ Add autosave on top of the snapshot foundation so the working draft persists aut
 - a prior snapshot can be restored safely
 - the snapshot flow is verified with backend tests
 - the editor autosaves changes after a short idle delay
+- restore actions are explicit and clearly communicated to the user
 
 ## Known Risks
 
