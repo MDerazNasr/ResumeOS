@@ -23,7 +23,7 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
   const [error, setError] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
-  const saveQueueRef = useRef(Promise.resolve<WorkingDraftDto | null>(null));
+  const saveInFlightRef = useRef<Promise<WorkingDraftDto | null> | null>(null);
   const sourceTexRef = useRef(sourceTex);
   const persistedSourceTexRef = useRef(persistedSourceTex);
   const versionRef = useRef(version);
@@ -55,6 +55,8 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
         sourceTex: sourceTexRef.current,
         version: versionRef.current,
       });
+      persistedSourceTexRef.current = savedDraft.sourceTex;
+      versionRef.current = savedDraft.version;
       setPersistedSourceTex(savedDraft.sourceTex);
       setVersion(savedDraft.version);
       setUpdatedAt(savedDraft.updatedAt);
@@ -67,9 +69,29 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
     }
   }
 
-  function enqueueSave() {
-    saveQueueRef.current = saveQueueRef.current.then(() => saveLatestDraft());
-    return saveQueueRef.current;
+  async function ensureLatestDraftSaved() {
+    if (saveInFlightRef.current) {
+      await saveInFlightRef.current;
+      if (sourceTexRef.current === persistedSourceTexRef.current) {
+        return true;
+      }
+    }
+
+    if (sourceTexRef.current === persistedSourceTexRef.current) {
+      return true;
+    }
+
+    const savePromise = saveLatestDraft();
+    saveInFlightRef.current = savePromise;
+
+    try {
+      const savedDraft = await savePromise;
+      return sourceTexRef.current === persistedSourceTexRef.current || savedDraft !== null;
+    } finally {
+      if (saveInFlightRef.current === savePromise) {
+        saveInFlightRef.current = null;
+      }
+    }
   }
 
   useEffect(() => {
@@ -78,37 +100,25 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
     }
 
     const timeoutId = window.setTimeout(() => {
-      void enqueueSave();
+      void ensureLatestDraftSaved();
     }, 800);
 
     return () => window.clearTimeout(timeoutId);
   }, [isDirty, sourceTex]);
-
-  async function handleSave() {
-    return enqueueSave();
-  }
 
   async function handleCompile() {
     setIsCompiling(true);
     setError(null);
 
     try {
-      let draftVersion = version;
-      let compileSource = sourceTex;
-
-      if (isDirty) {
-        const savedDraft = await handleSave();
-        if (!savedDraft) {
-          return;
-        }
-
-        draftVersion = savedDraft.version;
-        compileSource = savedDraft.sourceTex;
+      const draftReady = await ensureLatestDraftSaved();
+      if (!draftReady) {
+        return;
       }
 
       const result = await compileDraft(resume.id, {
-        sourceTex: compileSource,
-        draftVersion,
+        sourceTex: sourceTexRef.current,
+        draftVersion: versionRef.current,
       });
       setCompileResult(result);
       setPreviewNonce(Date.now());
@@ -137,9 +147,6 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
         </div>
         <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
           <div style={{ display: "flex", gap: 10 }}>
-            <button disabled={isSaving || !isDirty || isCompiling} onClick={handleSave} style={buttonStyle} type="button">
-              {isSaving ? "Saving..." : "Save Now"}
-            </button>
             <button disabled={isSaving || isCompiling} onClick={handleCompile} style={secondaryButtonStyle} type="button">
               {isCompiling ? "Compiling..." : "Compile"}
             </button>
@@ -157,10 +164,7 @@ export function ResumeEditor({ draft, initialSnapshots, resume }: ResumeEditorPr
         <LatexEditor onChange={setSourceTex} value={sourceTex} />
         <aside style={panelStyle}>
           <SnapshotPanel
-            ensureLatestDraft={async () => {
-              const savedDraft = await enqueueSave();
-              return sourceTexRef.current === persistedSourceTexRef.current || savedDraft !== null;
-            }}
+            ensureLatestDraft={ensureLatestDraftSaved}
             initialSnapshots={initialSnapshots}
             onRestore={handleSnapshotRestore}
             resumeId={resume.id}
@@ -241,19 +245,13 @@ const headerStyle: CSSProperties = {
   alignItems: "flex-start"
 };
 
-const buttonStyle: CSSProperties = {
+const secondaryButtonStyle: CSSProperties = {
   padding: "10px 14px",
   border: "1px solid #3b4254",
   borderRadius: 12,
-  background: "#eef1f6",
-  color: "#0f1115",
-  cursor: "pointer"
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  ...buttonStyle,
   background: "#171a21",
-  color: "#eef1f6"
+  color: "#eef1f6",
+  cursor: "pointer"
 };
 
 const workspaceStyle: CSSProperties = {
