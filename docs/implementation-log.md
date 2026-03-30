@@ -288,6 +288,22 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-03-30: Section 3 Snapshot Metadata Polish
+
+Closed out the snapshot slice with a small UX cleanup instead of letting the panel accumulate avoidable friction.
+
+Added:
+
+- sensible default snapshot naming (`Snapshot N`)
+- automatic reset to the next default name after creating a snapshot
+- clearer panel metadata showing saved snapshot count
+- a small `Latest` badge on the newest snapshot
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

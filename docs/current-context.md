@@ -37,10 +37,13 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Close out Section 3 after the minimal snapshot compare slice. The main candidates after this are:
+Start the protected document model as the next major feature area.
 
-- snapshot metadata/organization improvements
-- or moving on to the protected document model before AI editing
+That work should:
+
+- define protected vs editable LaTeX regions
+- parse enough resume structure to identify safe editable blocks
+- create validation boundaries the future AI patch system must respect
 
 ## Definition of Success for the Current Slice
 
@@ -48,6 +51,7 @@ Close out Section 3 after the minimal snapshot compare slice. The main candidate
 - the current working draft remains separate from snapshots
 - a prior snapshot can be restored safely
 - a selected snapshot can be compared against the current working draft
+- snapshot naming and metadata are clear enough for routine use
 - the snapshot flow is verified with backend tests
 - the editor autosaves changes after a short idle delay
 - restore actions are explicit and clearly communicated to the user

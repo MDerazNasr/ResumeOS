@@ -27,6 +27,7 @@ Add snapshots and recovery so the working draft can be saved as named versions a
 - [x] add minimal snapshot compare action against the current working draft
 - [x] fetch snapshot source lazily instead of bloating the snapshot list payload
 - [x] render a simple line-based diff for snapshot vs current draft
+- [x] tighten snapshot naming and metadata presentation
 
 ## Verification Checklist
 
@@ -38,6 +39,7 @@ Add snapshots and recovery so the working draft can be saved as named versions a
 - [x] frontend production build passes
 - [x] snapshot compare can load a selected snapshot
 - [x] snapshot compare shows added/removed/unchanged lines against the current draft
+- [x] snapshot creation resets to a sensible next default name
 
 ## Notes
 

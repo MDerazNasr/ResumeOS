@@ -22,7 +22,7 @@ export function SnapshotPanel({
   onRestore,
 }: SnapshotPanelProps) {
   const [snapshots, setSnapshots] = useState(initialSnapshots);
-  const [snapshotName, setSnapshotName] = useState("Manual Snapshot");
+  const [snapshotName, setSnapshotName] = useState(nextSnapshotName(initialSnapshots.length));
   const [isSavingSnapshot, setIsSavingSnapshot] = useState(false);
   const [isRestoringSnapshot, setIsRestoringSnapshot] = useState<string | null>(null);
   const [isLoadingCompare, setIsLoadingCompare] = useState<string | null>(null);
@@ -43,8 +43,9 @@ export function SnapshotPanel({
       }
 
       const snapshot = await createSnapshot(resumeId, { name: snapshotName });
-      setSnapshots((current) => [snapshot, ...current]);
-      setSnapshotName(`Snapshot ${snapshots.length + 2}`);
+      const nextSnapshots = [snapshot, ...snapshots];
+      setSnapshots(nextSnapshots);
+      setSnapshotName(nextSnapshotName(nextSnapshots.length));
       setMessage(`Snapshot "${snapshot.name}" created.`);
     } catch (snapshotError) {
       setError(snapshotError instanceof Error ? snapshotError.message : "Failed to create snapshot.");
@@ -97,12 +98,16 @@ export function SnapshotPanel({
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
         <strong style={{ fontSize: 16 }}>Snapshots</strong>
-        <span style={{ color: "#9ba3b4", fontSize: 13 }}>Save named versions of the current working draft.</span>
+        <span style={{ color: "#9ba3b4", fontSize: 13 }}>
+          {snapshots.length === 0
+            ? "Save named versions of the current working draft."
+            : `${snapshots.length} saved ${snapshots.length === 1 ? "snapshot" : "snapshots"}.`}
+        </span>
       </div>
       <form onSubmit={handleCreateSnapshot} style={formStyle}>
         <input
           onChange={(event) => setSnapshotName(event.target.value)}
-          placeholder="Manual Snapshot"
+          placeholder={nextSnapshotName(snapshots.length)}
           style={inputStyle}
           value={snapshotName}
         />
@@ -117,7 +122,10 @@ export function SnapshotPanel({
           snapshots.map((snapshot) => (
             <div key={snapshot.id} style={snapshotItemStyle}>
               <div style={{ display: "grid", gap: 4 }}>
-                <strong style={{ fontSize: 14 }}>{snapshot.name}</strong>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <strong style={{ fontSize: 14 }}>{snapshot.name}</strong>
+                  {snapshot === snapshots[0] ? <span style={badgeStyle}>Latest</span> : null}
+                </div>
                 <span style={{ color: "#9ba3b4", fontSize: 12 }}>
                   v{snapshot.sourceVersion} • {new Date(snapshot.createdAt).toLocaleString()}
                 </span>
@@ -222,3 +230,18 @@ const messageStyle: CSSProperties = {
   margin: 0,
   color: "#9fe0b0",
 };
+
+const badgeStyle: CSSProperties = {
+  padding: "2px 8px",
+  borderRadius: 999,
+  background: "#1f2937",
+  color: "#cfe2ff",
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+};
+
+function nextSnapshotName(existingSnapshotCount: number) {
+  return `Snapshot ${existingSnapshotCount + 1}`;
+}
