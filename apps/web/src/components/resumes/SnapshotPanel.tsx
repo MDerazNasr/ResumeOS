@@ -18,11 +18,13 @@ export function SnapshotPanel({ ensureLatestDraft, initialSnapshots, resumeId, o
   const [isSavingSnapshot, setIsSavingSnapshot] = useState(false);
   const [isRestoringSnapshot, setIsRestoringSnapshot] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   async function handleCreateSnapshot(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSavingSnapshot(true);
     setError(null);
+    setMessage(null);
 
     try {
       const draftReady = await ensureLatestDraft();
@@ -33,6 +35,7 @@ export function SnapshotPanel({ ensureLatestDraft, initialSnapshots, resumeId, o
       const snapshot = await createSnapshot(resumeId, { name: snapshotName });
       setSnapshots((current) => [snapshot, ...current]);
       setSnapshotName(`Snapshot ${snapshots.length + 2}`);
+      setMessage(`Snapshot "${snapshot.name}" created.`);
     } catch (snapshotError) {
       setError(snapshotError instanceof Error ? snapshotError.message : "Failed to create snapshot.");
     } finally {
@@ -41,12 +44,23 @@ export function SnapshotPanel({ ensureLatestDraft, initialSnapshots, resumeId, o
   }
 
   async function handleRestoreSnapshot(snapshotId: string) {
+    const snapshot = snapshots.find((item) => item.id === snapshotId);
+    const confirmed = window.confirm(
+      `Restore "${snapshot?.name ?? "this snapshot"}"? This will replace the current working draft.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     setIsRestoringSnapshot(snapshotId);
     setError(null);
+    setMessage(null);
 
     try {
       const restoredDraft = await restoreSnapshot(resumeId, { snapshotId });
       onRestore(restoredDraft);
+      setMessage(`Restored "${snapshot?.name ?? "snapshot"}" into the working draft.`);
     } catch (restoreError) {
       setError(restoreError instanceof Error ? restoreError.message : "Failed to restore snapshot.");
     } finally {
@@ -96,6 +110,7 @@ export function SnapshotPanel({ ensureLatestDraft, initialSnapshots, resumeId, o
         )}
       </div>
       {error ? <p style={errorStyle}>{error}</p> : null}
+      {message ? <p style={messageStyle}>{message}</p> : null}
     </section>
   );
 }
@@ -158,4 +173,9 @@ const snapshotItemStyle: CSSProperties = {
 const errorStyle: CSSProperties = {
   margin: 0,
   color: "#ff8d8d",
+};
+
+const messageStyle: CSSProperties = {
+  margin: 0,
+  color: "#9fe0b0",
 };

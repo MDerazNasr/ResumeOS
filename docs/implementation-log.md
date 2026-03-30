@@ -252,6 +252,21 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-03-29: Section 3 Snapshot Safety Polish
+
+Improved the safety and clarity of destructive snapshot actions.
+
+Added:
+
+- restore confirmation before replacing the working draft
+- visible success feedback after snapshot creation
+- visible success feedback after snapshot restore
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now
