@@ -6,6 +6,7 @@ from app.models.schemas import (
     CreateSnapshotInput,
     CreateResumeInput,
     DocumentModelDto,
+    PatchValidationResultDto,
     RestoreSnapshotInput,
     ResumeDto,
     ResumeListResponseDto,
@@ -14,12 +15,14 @@ from app.models.schemas import (
     SnapshotListResponseDto,
     UpdateDraftInput,
     UserDto,
+    ValidatePatchInput,
     WorkingDraftDto,
 )
 from app.services.compile import compile_resume_source_for_user
 from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
 from app.services.document_model import get_document_model_for_user
+from app.services.patch_validation import validate_patch_for_user
 from app.services.resumes import (
     create_resume_for_user,
     get_draft_for_user,
@@ -64,6 +67,15 @@ def get_draft(resume_id: str, current_user: UserDto = Depends(get_current_user))
 @router.get("/{resume_id}/document-model", response_model=DocumentModelDto)
 def get_document_model(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> DocumentModelDto:
     return get_document_model_for_user(current_user.id, resume_id)
+
+
+@router.post("/{resume_id}/patches/validate", response_model=PatchValidationResultDto)
+def validate_patch(
+    resume_id: str,
+    input_data: ValidatePatchInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> PatchValidationResultDto:
+    return validate_patch_for_user(current_user.id, resume_id, input_data)
 
 
 @router.put("/{resume_id}/draft", response_model=WorkingDraftDto)

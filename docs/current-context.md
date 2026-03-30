@@ -37,18 +37,19 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Build the next protected-document slice on top of the new extraction model.
+Build the next protected-document slice on top of the new extraction and validation model.
 
 That likely means:
 
 - tighten editable-block coverage for common resume constructs
-- add server-side validation helpers that can check whether a proposed edit touches protected regions
 - prepare the patch schema around block IDs and source ranges
+- add a small mocked patch payload flow that exercises the validator before real AI generation
 
 ## Definition of Success for the Current Slice
 
 - protected regions are extracted from the current working draft
 - editable blocks are extracted from the current working draft
+- exact block-targeted patch validation is enforced server-side
 - the editor shows the model in a visible way
 - document-model backend tests pass
 - frontend production build passes

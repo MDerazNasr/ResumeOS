@@ -328,6 +328,29 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-03-30: Section 4 Exact Patch Validation Gate
+
+Built the first real acceptance gate that future AI patch proposals will need to pass.
+
+Added:
+
+- documented v1 patch-validation contract
+- backend patch-validation DTOs
+- `POST /resumes/{resume_id}/patches/validate`
+- strict server-side validation that only accepts edits targeting one current editable block exactly
+- backend tests covering valid, stale, and unknown-target cases
+
+Why this shape:
+
+- it creates a trustworthy backend gate before any generated patches exist
+- it keeps the first validator easy to reason about
+- it forces later patch flows to anchor themselves to the extracted document model instead of raw freeform text edits
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

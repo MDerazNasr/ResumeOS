@@ -58,6 +58,20 @@ class DocumentModelDto(BaseModel):
     editableBlocks: list[EditableBlockDto]
 
 
+class ValidatePatchInput(BaseModel):
+    targetBlockId: str
+    startLine: int = Field(ge=1)
+    endLine: int = Field(ge=1)
+    beforeText: str
+
+
+class PatchValidationResultDto(BaseModel):
+    isValid: bool
+    targetBlockId: str
+    matchedCurrentText: str | None = None
+    reason: str | None = None
+
+
 class UpdateDraftInput(BaseModel):
     sourceTex: str
     version: int = Field(ge=1)

@@ -30,6 +30,9 @@ export function DocumentModelPanel({ documentModel }: DocumentModelPanelProps) {
       </div>
       <div style={{ display: "grid", gap: 10 }}>
         <strong style={{ fontSize: 14 }}>Detected Editable Blocks</strong>
+        <span style={{ color: "#9ba3b4", fontSize: 12 }}>
+          Validation is currently strict: future patch targets must match one editable block exactly.
+        </span>
         {previewBlocks.length === 0 ? (
           <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
             No editable blocks were detected for the current draft.

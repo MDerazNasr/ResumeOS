@@ -64,3 +64,15 @@ Once this exists, later AI and patch slices can:
 - target editable blocks by id
 - reject patches that touch protected ranges
 - explain to the user why some parts of the resume are not AI-editable yet
+
+## First Patch-Validation Contract
+
+The first validator should be intentionally strict.
+
+A proposed edit is valid only when:
+
+- it targets one existing editable block by id
+- the proposed line range exactly matches that block's extracted range
+- the proposed `beforeText` still matches the current draft text for that block
+
+This is narrower than the final system will be, but it is the right starting point because it gives the backend a trustworthy acceptance gate before patch generation exists.
