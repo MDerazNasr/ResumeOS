@@ -351,6 +351,19 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-03-30: Preview Layout Restoration
+
+After the Section 4 panels were added, the PDF preview was pushed too far down the right-hand column and stopped feeling like a first-class part of the editor workspace.
+
+Fix:
+
+- restored compile status, preview, and logs ahead of the newer document-model and snapshot panels in the right-hand layout
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

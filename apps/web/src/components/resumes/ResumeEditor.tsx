@@ -171,14 +171,6 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       <div style={workspaceStyle}>
         <LatexEditor onChange={setSourceTex} value={sourceTex} />
         <aside style={panelStyle}>
-          <DocumentModelPanel documentModel={documentModelState} />
-          <SnapshotPanel
-            currentSourceTex={sourceTex}
-            ensureLatestDraft={ensureLatestDraftSaved}
-            initialSnapshots={initialSnapshots}
-            onRestore={handleSnapshotRestore}
-            resumeId={resume.id}
-          />
           <div style={{ display: "grid", gap: 6 }}>
             <strong style={{ fontSize: 16 }}>Compile Panel</strong>
             <span style={{ color: "#9ba3b4", fontSize: 13 }}>
@@ -229,6 +221,14 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
               )}
             </div>
           </div>
+          <DocumentModelPanel documentModel={documentModelState} />
+          <SnapshotPanel
+            currentSourceTex={sourceTex}
+            ensureLatestDraft={ensureLatestDraftSaved}
+            initialSnapshots={initialSnapshots}
+            onRestore={handleSnapshotRestore}
+            resumeId={resume.id}
+          />
         </aside>
       </div>
       <div style={footerStyle}>
