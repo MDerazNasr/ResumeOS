@@ -116,3 +116,15 @@ The backend should:
 - persist the updated working draft immediately
 
 This keeps the first apply mechanic easy to reason about and avoids mixing optimistic client-side editing with safety-critical server-side validation.
+
+## Grouped Suggestion Sets Before AI
+
+The next step after single mocked proposals is to group related patches into suggestion sets.
+
+A suggestion set should:
+
+- have its own id, title, and summary rationale
+- contain one or more validated patch proposals
+- support retry/regenerate at the set level
+
+This matters because the eventual AI UX should feel like reviewing a coherent edit pass, not a pile of unrelated isolated cards.

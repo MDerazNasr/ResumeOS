@@ -412,6 +412,29 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-04-08: Section 4 Grouped Suggestion Sets
+
+Moved the mocked review flow closer to the eventual AI UX by grouping related patches into coherent suggestion sets.
+
+Added:
+
+- documented grouped suggestion-set contract
+- backend grouped suggestion-set DTOs
+- grouped mocked suggestion generation instead of a flat patch list
+- simple retry/regenerate behavior driven by a deterministic seed
+- grouped review UI with set-level retry
+
+Why this shape:
+
+- the eventual AI UX should present coherent edit passes, not unrelated isolated cards
+- retry behavior now exists at the set level, which maps better to future model-generated suggestion batches
+- the flow is still deterministic and still uses the same strict validation boundary
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

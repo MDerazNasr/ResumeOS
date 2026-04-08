@@ -68,8 +68,16 @@ export type MockPatchProposalDto = {
   validation: PatchValidationResultDto;
 };
 
-export type MockPatchProposalListDto = {
+export type MockSuggestionSetDto = {
+  id: string;
+  title: string;
+  summary: string;
+  retrySeed: number;
   items: MockPatchProposalDto[];
+};
+
+export type MockSuggestionSetListDto = {
+  items: MockSuggestionSetDto[];
 };
 
 export type ApplyPatchInput = {

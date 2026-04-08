@@ -7,7 +7,7 @@ from app.models.schemas import (
     CreateSnapshotInput,
     CreateResumeInput,
     DocumentModelDto,
-    MockPatchProposalListDto,
+    MockSuggestionSetListDto,
     PatchValidationResultDto,
     RestoreSnapshotInput,
     ResumeDto,
@@ -82,12 +82,13 @@ def validate_patch(
     return validate_patch_for_user(current_user.id, resume_id, input_data)
 
 
-@router.get("/{resume_id}/patches/mock", response_model=MockPatchProposalListDto)
+@router.get("/{resume_id}/patches/mock", response_model=MockSuggestionSetListDto)
 def list_mock_patches(
     resume_id: str,
+    seed: int = 0,
     current_user: UserDto = Depends(get_current_user),
-) -> MockPatchProposalListDto:
-    return list_mock_patch_proposals_for_user(current_user.id, resume_id)
+) -> MockSuggestionSetListDto:
+    return list_mock_patch_proposals_for_user(current_user.id, resume_id, seed)
 
 
 @router.post("/{resume_id}/patches/apply", response_model=WorkingDraftDto)

@@ -84,8 +84,16 @@ class MockPatchProposalDto(BaseModel):
     validation: PatchValidationResultDto
 
 
-class MockPatchProposalListDto(BaseModel):
+class MockSuggestionSetDto(BaseModel):
+    id: str
+    title: str
+    summary: str
+    retrySeed: int
     items: list[MockPatchProposalDto]
+
+
+class MockSuggestionSetListDto(BaseModel):
+    items: list[MockSuggestionSetDto]
 
 
 class ApplyPatchInput(BaseModel):

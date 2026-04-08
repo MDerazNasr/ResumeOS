@@ -34,6 +34,11 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] add backend apply logic for exact validated block replacements
 - [x] add backend tests for valid and invalid patch apply cases
 - [x] add minimal apply and dismiss mechanics to the mocked patch review UI
+- [x] document grouped suggestion-set contract
+- [x] add backend DTOs for grouped suggestion sets
+- [x] return grouped mocked suggestions instead of a flat patch list
+- [x] add retry/regenerate behavior for mocked suggestion sets
+- [x] update the review UI to operate on grouped suggestion sets
 
 ## Verification Checklist
 
@@ -49,6 +54,8 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] mocked proposals are visible in the editor UI
 - [x] a valid mocked proposal can be applied into the working draft
 - [x] an invalid or stale proposal is rejected by the backend
+- [x] mocked suggestions are grouped into coherent sets
+- [x] a suggestion set can be retried/regenerated
 
 ## Notes
 

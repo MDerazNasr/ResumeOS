@@ -11,6 +11,7 @@ import type {
   CompileResultDto,
   DocumentModelDto,
   MockPatchProposalDto,
+  MockSuggestionSetDto,
   ResumeDto,
   SnapshotDto,
   WorkingDraftDto,
@@ -25,7 +26,8 @@ type ResumeEditorProps = {
 
 export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
   const [documentModelState, setDocumentModelState] = useState(documentModel);
-  const [mockPatches, setMockPatches] = useState<MockPatchProposalDto[]>([]);
+  const [mockSuggestionSets, setMockSuggestionSets] = useState<MockSuggestionSetDto[]>([]);
+  const [mockPatchSeed, setMockPatchSeed] = useState(0);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
   const [version, setVersion] = useState(draft.version);
@@ -74,10 +76,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setUpdatedAt(savedDraft.updatedAt);
       const [nextDocumentModel, nextMockPatches] = await Promise.all([
         getDocumentModel(resume.id),
-        getMockPatches(resume.id),
+        getMockPatches(resume.id, mockPatchSeed),
       ]);
       setDocumentModelState(nextDocumentModel);
-      setMockPatches(nextMockPatches.items);
+      setMockSuggestionSets(nextMockPatches.items);
       return savedDraft;
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save draft.");
@@ -170,10 +172,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
       const [nextDocumentModel, nextMockPatches] = await Promise.all([
         getDocumentModel(resume.id),
-        getMockPatches(resume.id),
+        getMockPatches(resume.id, mockPatchSeed),
       ]);
       setDocumentModelState(nextDocumentModel);
-      setMockPatches(nextMockPatches.items);
+      setMockSuggestionSets(nextMockPatches.items);
       return true;
     } catch (applyError) {
       setError(applyError instanceof Error ? applyError.message : "Failed to apply patch.");
@@ -188,19 +190,24 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     setUpdatedAt(restoredDraft.updatedAt);
     setCompileResult(null);
     setError(null);
-    void Promise.all([getDocumentModel(resume.id), getMockPatches(resume.id)])
+    void Promise.all([getDocumentModel(resume.id), getMockPatches(resume.id, mockPatchSeed)])
       .then(([nextDocumentModel, nextMockPatches]) => {
         setDocumentModelState(nextDocumentModel);
-        setMockPatches(nextMockPatches.items);
+        setMockSuggestionSets(nextMockPatches.items);
       })
       .catch(() => null);
   }
 
   useEffect(() => {
-    void getMockPatches(resume.id)
-      .then((result) => setMockPatches(result.items))
+    void getMockPatches(resume.id, mockPatchSeed)
+      .then((result) => setMockSuggestionSets(result.items))
       .catch(() => null);
-  }, [resume.id]);
+  }, [mockPatchSeed, resume.id]);
+
+  async function handleRetrySuggestionSet(suggestionSet: MockSuggestionSetDto) {
+    const nextSeed = suggestionSet.retrySeed;
+    setMockPatchSeed(nextSeed);
+  }
 
   return (
     <section style={shellStyle}>
@@ -278,7 +285,11 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
             </div>
           </div>
           <DocumentModelPanel documentModel={documentModelState} />
-          <MockPatchPanel onApply={handleApplyMockPatch} proposals={mockPatches} />
+          <MockPatchPanel
+            onApply={handleApplyMockPatch}
+            onRetrySet={handleRetrySuggestionSet}
+            suggestionSets={mockSuggestionSets}
+          />
           <SnapshotPanel
             currentSourceTex={sourceTex}
             ensureLatestDraft={ensureLatestDraftSaved}

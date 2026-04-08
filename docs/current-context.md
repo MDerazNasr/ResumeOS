@@ -43,7 +43,7 @@ That likely means:
 
 - tighten editable-block coverage for common resume constructs
 - prepare the patch schema around block IDs and source ranges
-- move from the first apply mechanics to grouped suggestions and retry behavior
+- move from grouped mocked suggestion sets to a more realistic patch schema and diff-centric review flow
 
 ## Definition of Success for the Current Slice
 
@@ -53,6 +53,7 @@ That likely means:
 - the editor shows the model in a visible way
 - mocked patch proposals exercise the same validation gate before any AI integration
 - mocked patch proposals can be applied directly into the working draft
+- mocked patch proposals are grouped into suggestion sets with retry behavior
 - document-model backend tests pass
 - frontend production build passes
 

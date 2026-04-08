@@ -11,7 +11,7 @@ class PatchApplyTests(unittest.TestCase):
         created = self.client.post("/resumes", json={"title": "Patch Apply Test"})
         self.assertEqual(created.status_code, 200)
         self.resume_id = created.json()["id"]
-        self.proposal = self.client.get(f"/resumes/{self.resume_id}/patches/mock").json()["items"][0]
+        self.proposal = self.client.get(f"/resumes/{self.resume_id}/patches/mock").json()["items"][0]["items"][0]
 
     def test_valid_mock_patch_can_be_applied(self) -> None:
         response = self.client.post(
