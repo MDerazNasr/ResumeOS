@@ -40,6 +40,24 @@ class TailorSuggestionsTestCase(unittest.TestCase):
                 self.assertEqual(proposal["status"], "validated")
                 self.assertTrue(proposal["validation"]["isValid"])
 
+    def test_generate_tailor_suggestions_creates_pre_tailor_snapshot(self) -> None:
+        before = self.client.get(f"/resumes/{self.resume_id}/snapshots").json()
+        self.assertEqual(len(before["items"]), 0)
+
+        response = self.client.post(
+            f"/resumes/{self.resume_id}/suggestions/tailor",
+            json={
+                "jobDescription": "Senior Backend Engineer focused on Python, API design, and distributed systems.",
+                "instruction": "Tailor the resume toward the role.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        after = self.client.get(f"/resumes/{self.resume_id}/snapshots").json()
+        self.assertEqual(len(after["items"]), 1)
+        self.assertIn("Before tailoring:", after["items"][0]["name"])
+
 
 if __name__ == "__main__":
     unittest.main()

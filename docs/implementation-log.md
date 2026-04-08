@@ -293,6 +293,21 @@ Verified:
 - backend test suite passes with the new tailoring suggestion flow
 - frontend production build passes after wiring tailoring generation into the editor workspace
 
+### 2026-04-08: Section 4 Tailoring Safety Snapshot
+
+Added the first safety behavior for tailoring so users do not lose the base draft while generating JD-focused suggestions.
+
+Added:
+
+- backend automatic snapshot creation before tailoring suggestions are generated
+- backend regression coverage that verifies the tailoring flow creates a pre-tailor snapshot
+- frontend snapshot panel refresh after tailoring so the new safeguard is visible immediately
+
+Verified:
+
+- backend test suite passes with the automatic snapshot behavior
+- frontend production build passes with the snapshot refresh wiring
+
 ### 2026-03-29: Section 3 Snapshot Safety Polish
 
 Improved the safety and clarity of destructive snapshot actions.

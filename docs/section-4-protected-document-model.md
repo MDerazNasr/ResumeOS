@@ -172,6 +172,7 @@ After multi-block review generation works, the next safe expansion is a narrow t
 The first tailor mode should:
 
 - accept one job description input and one tailoring instruction
+- create a snapshot of the current draft before generating suggestions
 - select a limited number of editable blocks from the current draft
 - generate replacement candidates that better align those blocks to the target role
 - return them as grouped suggestion sets

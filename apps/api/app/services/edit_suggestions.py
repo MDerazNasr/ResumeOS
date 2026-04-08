@@ -4,6 +4,7 @@ from app.models.schemas import GenerateEditSuggestionsInput, GenerateReviewSugge
 from app.services.document_model import get_document_model_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
 from app.services.patch_validation import validate_patch_for_user
+from app.services.snapshots import create_automatic_snapshot_for_user
 
 
 def generate_edit_suggestions_for_user(
@@ -151,6 +152,11 @@ def generate_tailor_suggestions_for_user(
     resume_id: str,
     input_data: GenerateTailorSuggestionsInput,
 ) -> MockSuggestionSetListDto:
+    create_automatic_snapshot_for_user(
+        user_id,
+        resume_id,
+        _build_tailor_snapshot_name(input_data.jobDescription),
+    )
     document_model = get_document_model_for_user(user_id, resume_id)
     provider = get_edit_suggestion_provider()
     selected_blocks = document_model.editableBlocks[:3]
@@ -219,3 +225,9 @@ def generate_tailor_suggestions_for_user(
             )
 
     return MockSuggestionSetListDto(items=suggestion_sets)
+
+
+def _build_tailor_snapshot_name(job_description: str) -> str:
+    lines = [line.strip() for line in job_description.splitlines() if line.strip()]
+    headline = lines[0] if lines else "Untitled role"
+    return f"Before tailoring: {headline[:60]}"

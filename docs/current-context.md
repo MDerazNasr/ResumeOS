@@ -34,6 +34,7 @@ Active milestone:
 - left pane: Monaco-based LaTeX editor
 - right pane: compile status, real PDF preview, snapshots, document model summary, and suggestion review
 - the workspace now also includes a first tailoring input for job descriptions
+- tailoring now creates a pre-tailor snapshot before suggestions are generated
 - dirty-state tracking now follows the last saved draft
 
 ## Immediate Next Goal
@@ -60,6 +61,7 @@ That likely means:
 - block-level generated edits are now user-directed instead of using one fixed prompt
 - the workspace can now request multi-block review suggestions through the same review/apply flow
 - the workspace can now request first-pass tailoring suggestions from a pasted job description through the same review/apply flow
+- the snapshot panel now refreshes after tailoring so the pre-tailor snapshot is visible immediately
 - document-model backend tests pass
 - frontend production build passes
 

@@ -41,6 +41,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
   const [jobDescription, setJobDescription] = useState("");
+  const [snapshotRefreshToken, setSnapshotRefreshToken] = useState(0);
   const saveInFlightRef = useRef<Promise<WorkingDraftDto | null> | null>(null);
   const sourceTexRef = useRef(sourceTex);
   const persistedSourceTexRef = useRef(persistedSourceTex);
@@ -265,6 +266,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         instruction: "Tailor the resume wording toward the most important requirements in this job description.",
       });
       setMockSuggestionSets(generated.items);
+      setSnapshotRefreshToken((current) => current + 1);
     } catch (tailorError) {
       setError(tailorError instanceof Error ? tailorError.message : "Failed to generate tailoring suggestions.");
     } finally {
@@ -391,6 +393,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
             ensureLatestDraft={ensureLatestDraftSaved}
             initialSnapshots={initialSnapshots}
             onRestore={handleSnapshotRestore}
+            refreshToken={snapshotRefreshToken}
             resumeId={resume.id}
           />
         </aside>

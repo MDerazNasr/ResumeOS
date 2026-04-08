@@ -200,6 +200,7 @@ Purpose:
 Initial safe shape:
 
 - accept one pasted job description
+- create a snapshot automatically before generating tailored suggestions
 - generate suggestions only across a small set of editable blocks
 - route those suggestions through the same validation, diff review, and apply flow as Edit and Review
 

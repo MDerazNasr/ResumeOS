@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
 import type { CSSProperties } from "react";
-import { createSnapshot, getSnapshot, restoreSnapshot } from "@/lib/api/client";
+import { createSnapshot, getSnapshot, listSnapshots, restoreSnapshot } from "@/lib/api/client";
 import { SnapshotCompareView } from "@/components/resumes/SnapshotCompareView";
 import type { SnapshotDetailDto, SnapshotDto, WorkingDraftDto } from "@/lib/api/types";
 
@@ -10,6 +11,7 @@ type SnapshotPanelProps = {
   currentSourceTex: string;
   ensureLatestDraft: () => Promise<boolean>;
   initialSnapshots: SnapshotDto[];
+  refreshToken: number;
   resumeId: string;
   onRestore: (draft: WorkingDraftDto) => void;
 };
@@ -18,6 +20,7 @@ export function SnapshotPanel({
   currentSourceTex,
   ensureLatestDraft,
   initialSnapshots,
+  refreshToken,
   resumeId,
   onRestore,
 }: SnapshotPanelProps) {
@@ -29,6 +32,15 @@ export function SnapshotPanel({
   const [compareSnapshot, setCompareSnapshot] = useState<SnapshotDetailDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    void listSnapshots(resumeId)
+      .then((result) => {
+        setSnapshots(result.items);
+        setSnapshotName(nextSnapshotName(result.items.length));
+      })
+      .catch(() => null);
+  }, [refreshToken, resumeId]);
 
   async function handleCreateSnapshot(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

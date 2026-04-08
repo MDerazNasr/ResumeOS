@@ -34,6 +34,15 @@ def list_snapshots_for_user(user_id: str, resume_id: str) -> SnapshotListRespons
 
 def create_snapshot_for_user(user_id: str, resume_id: str, input_data: CreateSnapshotInput) -> SnapshotDto:
     draft = get_draft_for_user(user_id, resume_id)
+    return _create_snapshot_from_draft(resume_id, draft.sourceTex, draft.version, input_data.name.strip())
+
+
+def create_automatic_snapshot_for_user(user_id: str, resume_id: str, name: str) -> SnapshotDto:
+    draft = get_draft_for_user(user_id, resume_id)
+    return _create_snapshot_from_draft(resume_id, draft.sourceTex, draft.version, name.strip())
+
+
+def _create_snapshot_from_draft(resume_id: str, source_tex: str, source_version: int, name: str) -> SnapshotDto:
     snapshot_id = f"snap_{uuid.uuid4().hex[:12]}"
     created_at = utc_now_iso()
 
@@ -46,9 +55,9 @@ def create_snapshot_for_user(user_id: str, resume_id: str, input_data: CreateSna
             (
                 snapshot_id,
                 resume_id,
-                input_data.name.strip(),
-                draft.sourceTex,
-                draft.version,
+                name,
+                source_tex,
+                source_version,
                 created_at,
             ),
         )
