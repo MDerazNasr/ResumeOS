@@ -34,6 +34,8 @@ def list_mock_patch_proposals_for_user(user_id: str, resume_id: str, seed: int =
             proposals.append(
                 MockPatchProposalDto(
                     id=f"mock-patch-{group_index}-{index}",
+                    operation="replace",
+                    status="validated",
                     targetBlockId=block.id,
                     label=block.label,
                     startLine=block.startLine,

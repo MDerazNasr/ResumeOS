@@ -128,3 +128,15 @@ A suggestion set should:
 - support retry/regenerate at the set level
 
 This matters because the eventual AI UX should feel like reviewing a coherent edit pass, not a pile of unrelated isolated cards.
+
+## Suggestion Review Refinement
+
+After grouped suggestion sets exist, the next refinement is presentation and schema clarity.
+
+The review surface should emphasize:
+
+- patch-like before/after hunks
+- operation metadata such as `replace`
+- validation status that reads like a review system, not a mock-only scaffold
+
+The point of this step is to make the workflow feel closer to the final product without changing the strict backend safety rules underneath.

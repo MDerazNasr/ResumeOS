@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 import { applyPatch, compileDraft, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
-import { MockPatchPanel } from "@/components/resumes/MockPatchPanel";
+import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
 import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
 import type {
   CompileResultDto,
@@ -285,7 +285,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
             </div>
           </div>
           <DocumentModelPanel documentModel={documentModelState} />
-          <MockPatchPanel
+          <SuggestionReviewPanel
             onApply={handleApplyMockPatch}
             onRetrySet={handleRetrySuggestionSet}
             suggestionSets={mockSuggestionSets}

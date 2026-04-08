@@ -39,6 +39,10 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] return grouped mocked suggestions instead of a flat patch list
 - [x] add retry/regenerate behavior for mocked suggestion sets
 - [x] update the review UI to operate on grouped suggestion sets
+- [x] document the suggestion-schema refinement for the review UI
+- [x] add clearer patch metadata for suggestion review
+- [x] replace the mock review panel with a diff-centric suggestion review surface
+- [x] keep apply/dismiss/retry behavior working in the new review surface
 
 ## Verification Checklist
 
@@ -56,6 +60,7 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] an invalid or stale proposal is rejected by the backend
 - [x] mocked suggestions are grouped into coherent sets
 - [x] a suggestion set can be retried/regenerated
+- [x] suggestion review feels diff-centric rather than card-centric
 
 ## Notes
 

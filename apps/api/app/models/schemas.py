@@ -74,6 +74,8 @@ class PatchValidationResultDto(BaseModel):
 
 class MockPatchProposalDto(BaseModel):
     id: str
+    operation: Literal["replace"]
+    status: Literal["validated"]
     targetBlockId: str
     label: str
     startLine: int

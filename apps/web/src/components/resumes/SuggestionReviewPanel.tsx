@@ -4,13 +4,13 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import type { MockPatchProposalDto, MockSuggestionSetDto } from "@/lib/api/types";
 
-type MockPatchPanelProps = {
+type SuggestionReviewPanelProps = {
   onRetrySet: (suggestionSet: MockSuggestionSetDto) => Promise<void>;
   onApply: (proposal: MockPatchProposalDto) => Promise<boolean>;
   suggestionSets: MockSuggestionSetDto[];
 };
 
-export function MockPatchPanel({ onApply, onRetrySet, suggestionSets }: MockPatchPanelProps) {
+export function SuggestionReviewPanel({ onApply, onRetrySet, suggestionSets }: SuggestionReviewPanelProps) {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [retryingSetId, setRetryingSetId] = useState<string | null>(null);
@@ -48,14 +48,14 @@ export function MockPatchPanel({ onApply, onRetrySet, suggestionSets }: MockPatc
   return (
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
-        <strong style={{ fontSize: 16 }}>Mock Patch Review</strong>
+        <strong style={{ fontSize: 16 }}>Suggestions</strong>
         <span style={{ color: "#9ba3b4", fontSize: 13 }}>
-          Deterministic patch proposals generated from editable blocks and pre-validated on the backend.
+          Structured suggestion sets rendered as validated patch hunks against the current draft.
         </span>
       </div>
       {visibleSuggestionSets.length === 0 ? (
         <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
-          No mocked patch proposals are available for the current draft.
+          No suggestions are available for the current draft.
         </p>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
@@ -72,27 +72,29 @@ export function MockPatchPanel({ onApply, onRetrySet, suggestionSets }: MockPatc
                   style={secondaryButtonStyle}
                   type="button"
                 >
-                  {retryingSetId === suggestionSet.id ? "Retrying..." : "Retry Set"}
+                  {retryingSetId === suggestionSet.id ? "Retrying..." : "Regenerate"}
                 </button>
               </div>
               <div style={{ display: "grid", gap: 12 }}>
                 {suggestionSet.items.map((proposal) => (
                   <div key={proposal.id} style={proposalCardStyle}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-                      <strong style={{ fontSize: 14 }}>{proposal.label}</strong>
-                      <span style={badgeStyle}>validated</span>
-                    </div>
-                    <span style={{ color: "#9ba3b4", fontSize: 12 }}>
-                      Lines {proposal.startLine}-{proposal.endLine}
-                    </span>
-                    <div style={diffBlockStyle}>
-                      <div style={removedStyle}>
-                        <span style={diffLabelStyle}>Before</span>
-                        <p style={diffTextStyle}>{proposal.beforeText}</p>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
+                      <div style={{ display: "grid", gap: 4 }}>
+                        <strong style={{ fontSize: 14 }}>{proposal.label}</strong>
+                        <span style={{ color: "#9ba3b4", fontSize: 12 }}>
+                          {proposal.operation} • lines {proposal.startLine}-{proposal.endLine}
+                        </span>
                       </div>
-                      <div style={addedStyle}>
-                        <span style={diffLabelStyle}>After</span>
-                        <p style={diffTextStyle}>{proposal.afterText}</p>
+                      <span style={badgeStyle}>{proposal.status}</span>
+                    </div>
+                    <div style={diffHunkStyle}>
+                      <div style={diffLineStyle("removed")}>
+                        <span style={lineMarkerStyle("removed")}>-</span>
+                        <code style={diffCodeStyle}>{proposal.beforeText}</code>
+                      </div>
+                      <div style={diffLineStyle("added")}>
+                        <span style={lineMarkerStyle("added")}>+</span>
+                        <code style={diffCodeStyle}>{proposal.afterText}</code>
                       </div>
                     </div>
                     <p style={rationaleStyle}>{proposal.rationale}</p>
@@ -170,39 +172,12 @@ const badgeStyle: CSSProperties = {
   textTransform: "uppercase",
 };
 
-const diffBlockStyle: CSSProperties = {
+const diffHunkStyle: CSSProperties = {
   display: "grid",
   gap: 8,
-};
-
-const removedStyle: CSSProperties = {
-  display: "grid",
-  gap: 4,
-  padding: 10,
-  borderRadius: 10,
-  background: "#2a1417",
-};
-
-const addedStyle: CSSProperties = {
-  display: "grid",
-  gap: 4,
-  padding: 10,
-  borderRadius: 10,
-  background: "#13261a",
-};
-
-const diffLabelStyle: CSSProperties = {
-  color: "#9ba3b4",
-  fontSize: 11,
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-};
-
-const diffTextStyle: CSSProperties = {
-  margin: 0,
-  color: "#eef1f6",
-  fontSize: 13,
-  lineHeight: 1.5,
+  border: "1px solid #262b36",
+  borderRadius: 12,
+  overflow: "hidden",
 };
 
 const rationaleStyle: CSSProperties = {
@@ -230,4 +205,34 @@ const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
   background: "#171a21",
   color: "#eef1f6",
+};
+
+function diffLineStyle(type: "added" | "removed"): CSSProperties {
+  return {
+    display: "grid",
+    gridTemplateColumns: "18px minmax(0, 1fr)",
+    gap: 10,
+    padding: "10px 12px",
+    background: type === "added" ? "#13261a" : "#2a1417",
+    alignItems: "start",
+  };
+}
+
+function lineMarkerStyle(type: "added" | "removed"): CSSProperties {
+  return {
+    color: type === "added" ? "#8ae6a3" : "#ff9b9b",
+    fontWeight: 700,
+    fontFamily: "var(--font-geist-mono, monospace)",
+    fontSize: 13,
+    paddingTop: 1,
+  };
+}
+
+const diffCodeStyle: CSSProperties = {
+  color: "#eef1f6",
+  fontSize: 12,
+  lineHeight: 1.6,
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
+  fontFamily: "var(--font-geist-mono, monospace)",
 };

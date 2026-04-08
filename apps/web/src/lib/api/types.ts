@@ -58,6 +58,8 @@ export type PatchValidationResultDto = {
 
 export type MockPatchProposalDto = {
   id: string;
+  operation: "replace";
+  status: "validated";
   targetBlockId: string;
   label: string;
   startLine: number;

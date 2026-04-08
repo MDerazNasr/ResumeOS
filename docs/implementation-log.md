@@ -435,6 +435,27 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-04-08: Section 4 Diff-Centric Suggestion Review
+
+Refined the grouped suggestion workflow so it reads more like the final product and less like scaffolding.
+
+Added:
+
+- clearer suggestion metadata such as operation and validation status
+- renamed the review surface around suggestions rather than mock patches
+- diff-centric hunk presentation with explicit removed and added lines
+- preserved apply, dismiss, and regenerate behavior in the refined UI
+
+Why this shape:
+
+- the safety core was already in place, so the leverage here was making the workflow read like a real review system
+- this brings the product closer to the eventual AI editing UX without introducing model variability yet
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now
