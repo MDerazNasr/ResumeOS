@@ -151,3 +151,16 @@ The first real generation path should stay narrow:
 - generated replacements must still pass the same validation and apply gates
 
 This avoids jumping straight from deterministic mocks to unconstrained whole-document generation.
+
+## First Review Mode
+
+After single-block edit generation works, the next safe expansion is review generation across a small set of editable blocks.
+
+The first review mode should:
+
+- select a limited number of editable blocks from the current draft
+- generate replacement candidates for those blocks
+- return them as grouped suggestion sets
+- reuse the same validation and apply mechanics as block-level edit mode
+
+This keeps the expansion incremental while moving closer to the eventual full-resume review workflow.

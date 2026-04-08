@@ -95,6 +95,10 @@ export type GenerateEditSuggestionsInput = {
   instruction: string;
 };
 
+export type GenerateReviewSuggestionsInput = {
+  instruction: string;
+};
+
 export type CreateResumeInput = {
   title: string;
 };

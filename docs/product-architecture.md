@@ -37,10 +37,12 @@ ResumeOS should be split into the following major components.
 The frontend should be a Next.js app responsible for:
 
 - Monaco-based LaTeX editor
+- editor preferences such as standard or Vim keybindings
 - PDF preview pane
 - AI sidebar for Edit, Review, and Tailor modes
 - diff review UI with accept/reject per hunk
 - snapshot and version history UI
+- UI preferences such as light/dark theme switching
 - auth session handling
 
 ### Backend
@@ -369,6 +371,7 @@ Goal:
 Build:
 
 - Monaco editor
+- standard/Vim editing mode toggle
 - compile endpoint
 - TeX container execution
 - compile logs
@@ -382,6 +385,7 @@ Deliverable:
 Acceptance:
 
 - source edits appear in Monaco
+- user can switch between standard and Vim editing modes
 - compile works end to end
 - preview updates on success
 - errors are visible on failure
@@ -579,6 +583,7 @@ Goal:
 Build:
 
 - auth hardening
+- persisted UI preferences such as light/dark theme
 - rate limiting
 - job timeouts
 - compile sandboxing

@@ -1,8 +1,8 @@
 from fastapi import HTTPException, status
 
-from app.models.schemas import GenerateEditSuggestionsInput, MockPatchProposalDto, MockSuggestionSetDto, MockSuggestionSetListDto, ValidatePatchInput
+from app.models.schemas import GenerateEditSuggestionsInput, GenerateReviewSuggestionsInput, MockPatchProposalDto, MockSuggestionSetDto, MockSuggestionSetListDto, ValidatePatchInput
 from app.services.document_model import get_document_model_for_user
-from app.services.llm_provider import EditSuggestionPrompt, get_edit_suggestion_provider
+from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, get_edit_suggestion_provider
 from app.services.patch_validation import validate_patch_for_user
 
 
@@ -70,3 +70,77 @@ def generate_edit_suggestions_for_user(
             )
         ]
     )
+
+
+def generate_review_suggestions_for_user(
+    user_id: str,
+    resume_id: str,
+    input_data: GenerateReviewSuggestionsInput,
+) -> MockSuggestionSetListDto:
+    document_model = get_document_model_for_user(user_id, resume_id)
+    provider = get_edit_suggestion_provider()
+    selected_blocks = document_model.editableBlocks[:3]
+
+    generated = provider.generate_review_rewrites(
+        ReviewSuggestionPrompt(
+            instruction=input_data.instruction,
+            blocks=[
+                EditSuggestionPrompt(
+                    block_kind=block.kind,
+                    block_label=block.label,
+                    instruction=input_data.instruction,
+                    text=block.text,
+                )
+                for block in selected_blocks
+            ],
+        )
+    )
+
+    suggestion_sets: list[MockSuggestionSetDto] = []
+    for index, block in enumerate(selected_blocks, start=1):
+        candidates = generated.get(block.text, [])
+        proposals: list[MockPatchProposalDto] = []
+
+        for candidate_index, after_text in enumerate(candidates[:2], start=1):
+            validation = validate_patch_for_user(
+                user_id,
+                resume_id,
+                ValidatePatchInput(
+                    targetBlockId=block.id,
+                    startLine=block.startLine,
+                    endLine=block.endLine,
+                    beforeText=block.text,
+                ),
+            )
+
+            if not validation.isValid:
+                continue
+
+            proposals.append(
+                MockPatchProposalDto(
+                    id=f"review-edit-{index}-{candidate_index}",
+                    operation="replace",
+                    status="validated",
+                    targetBlockId=block.id,
+                    label=block.label,
+                    startLine=block.startLine,
+                    endLine=block.endLine,
+                    beforeText=block.text,
+                    afterText=after_text,
+                    rationale=f'Review suggestion from instruction: "{input_data.instruction}"',
+                    validation=validation,
+                )
+            )
+
+        if proposals:
+            suggestion_sets.append(
+                MockSuggestionSetDto(
+                    id=f"review-set-{block.id}",
+                    title=f"Review suggestions for {block.label}",
+                    summary=input_data.instruction,
+                    retrySeed=0,
+                    items=proposals,
+                )
+            )
+
+    return MockSuggestionSetListDto(items=suggestion_sets)

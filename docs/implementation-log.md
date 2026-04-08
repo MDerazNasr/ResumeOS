@@ -259,6 +259,23 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-04-08: Section 4 First Review Mode
+
+Expanded the protected-document workflow from single-block edit generation into the first multi-block review path.
+
+Added:
+
+- backend review suggestion route for the current resume draft
+- provider contract support for multi-block review rewrites
+- validation of generated review suggestions through the same exact block gate as edit mode
+- backend regression test coverage for review suggestion generation
+- frontend `Review Resume` action that loads generated review suggestions into the existing diff-style review surface
+
+Verified:
+
+- backend test suite passes with the new review suggestion flow
+- frontend production build passes after wiring review generation into the editor workspace
+
 ### 2026-03-29: Section 3 Snapshot Safety Polish
 
 Improved the safety and clarity of destructive snapshot actions.

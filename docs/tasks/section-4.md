@@ -48,6 +48,11 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] validate generated suggestions through the same patch gate
 - [x] add backend tests for generated edit suggestions
 - [x] expose a per-block "Suggest Edit" action in the editor UI
+- [x] add backend multi-block review suggestion endpoint
+- [x] generate review suggestions across a small set of editable blocks
+- [x] validate review suggestions through the same patch gate
+- [x] add backend tests for review suggestion generation
+- [x] expose a "Review Resume" action that loads review suggestions into the same review surface
 
 ## Verification Checklist
 
@@ -68,6 +73,7 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] suggestion review feels diff-centric rather than card-centric
 - [x] a selected editable block can request generated edit suggestions
 - [x] generated edit suggestions appear in the same review/apply flow
+- [x] multi-block review suggestions appear in the same review/apply flow
 
 ## Notes
 

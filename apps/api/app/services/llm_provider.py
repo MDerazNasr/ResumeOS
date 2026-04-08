@@ -13,8 +13,17 @@ class EditSuggestionPrompt:
     text: str
 
 
+@dataclass
+class ReviewSuggestionPrompt:
+    instruction: str
+    blocks: list[EditSuggestionPrompt]
+
+
 class EditSuggestionProvider:
     def generate_rewrites(self, prompt: EditSuggestionPrompt) -> list[str]:
+        raise NotImplementedError
+
+    def generate_review_rewrites(self, prompt: ReviewSuggestionPrompt) -> dict[str, list[str]]:
         raise NotImplementedError
 
 
@@ -34,6 +43,21 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
             f"{cleaned} with {base_suffix}.",
             f"{cleaned} with {alternate_suffix}.",
         ]
+
+    def generate_review_rewrites(self, prompt: ReviewSuggestionPrompt) -> dict[str, list[str]]:
+        result: dict[str, list[str]] = {}
+
+        for block in prompt.blocks:
+            result[block.text] = self.generate_rewrites(
+                EditSuggestionPrompt(
+                    block_kind=block.block_kind,
+                    block_label=block.block_label,
+                    instruction=prompt.instruction,
+                    text=block.text,
+                )
+            )
+
+        return result
 
 
 class OpenAIEditSuggestionProvider(EditSuggestionProvider):
@@ -79,6 +103,60 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
         payload = json.loads(content)
         candidates = payload.get("candidates", [])
         return [candidate.strip() for candidate in candidates if isinstance(candidate, str) and candidate.strip()]
+
+    def generate_review_rewrites(self, prompt: ReviewSuggestionPrompt) -> dict[str, list[str]]:
+        response = httpx.post(
+            f"{self.base_url}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self.model,
+                "temperature": 0.5,
+                "response_format": {"type": "json_object"},
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You review a small set of resume blocks. "
+                            "Return strict JSON with a single key 'items'. "
+                            "Each item must include 'original' and 'candidates', where candidates is an array of 1-2 rewritten strings."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": json.dumps(
+                            {
+                                "instruction": prompt.instruction,
+                                "blocks": [
+                                    {
+                                        "label": block.block_label,
+                                        "kind": block.block_kind,
+                                        "text": block.text,
+                                    }
+                                    for block in prompt.blocks
+                                ],
+                            }
+                        ),
+                    },
+                ],
+            },
+            timeout=20.0,
+        )
+        response.raise_for_status()
+        content = response.json()["choices"][0]["message"]["content"]
+        payload = json.loads(content)
+        items = payload.get("items", [])
+
+        result: dict[str, list[str]] = {}
+        for item in items:
+            original = item.get("original")
+            candidates = item.get("candidates", [])
+            if isinstance(original, str):
+                result[original] = [candidate.strip() for candidate in candidates if isinstance(candidate, str) and candidate.strip()]
+
+        return result
 
 
 def get_edit_suggestion_provider() -> EditSuggestionProvider:

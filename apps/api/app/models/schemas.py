@@ -111,6 +111,10 @@ class GenerateEditSuggestionsInput(BaseModel):
     instruction: str = Field(min_length=1, max_length=300)
 
 
+class GenerateReviewSuggestionsInput(BaseModel):
+    instruction: str = Field(min_length=1, max_length=300)
+
+
 class UpdateDraftInput(BaseModel):
     sourceTex: str
     version: int = Field(ge=1)

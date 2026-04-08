@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
@@ -35,6 +35,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const [updatedAt, setUpdatedAt] = useState(draft.updatedAt);
   const [isSaving, setIsSaving] = useState(false);
   const [isCompiling, setIsCompiling] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
@@ -224,6 +225,22 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     }
   }
 
+  async function handleReviewResume() {
+    setError(null);
+    setIsReviewing(true);
+
+    try {
+      const generated = await generateReviewSuggestions(resume.id, {
+        instruction: "Review the current resume and suggest stronger wording for the weakest editable blocks.",
+      });
+      setMockSuggestionSets(generated.items);
+    } catch (reviewError) {
+      setError(reviewError instanceof Error ? reviewError.message : "Failed to generate review suggestions.");
+    } finally {
+      setIsReviewing(false);
+    }
+  }
+
   return (
     <section style={shellStyle}>
       <div style={headerStyle}>
@@ -233,6 +250,14 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         </div>
         <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
           <div style={{ display: "flex", gap: 10 }}>
+            <button
+              disabled={isSaving || isCompiling || isReviewing}
+              onClick={handleReviewResume}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              {isReviewing ? "Reviewing..." : "Review Resume"}
+            </button>
             <button disabled={isSaving || isCompiling} onClick={handleCompile} style={secondaryButtonStyle} type="button">
               {isCompiling ? "Compiling..." : "Compile"}
             </button>

@@ -32,18 +32,18 @@ Active milestone:
 
 - editor page is a two-pane workspace
 - left pane: Monaco-based LaTeX editor
-- right pane: document model summary, snapshots, compile status, logs, and real PDF preview
+- right pane: compile status, real PDF preview, snapshots, document model summary, and suggestion review
 - dirty-state tracking now follows the last saved draft
 
 ## Immediate Next Goal
 
-Build the next protected-document slice on top of the new extraction, validation, and mocked patch flow.
+Build the next protected-document slice on top of the new extraction, validation, and first generated suggestion flows.
 
 That likely means:
 
 - tighten editable-block coverage for common resume constructs
 - prepare a cleaner patch schema around block IDs and source ranges
-- expand from the first real block-level edit generation path into richer suggestion generation modes
+- expand from the first real block-level edit and review generation paths into richer suggestion generation modes
 
 ## Definition of Success for the Current Slice
 
@@ -57,6 +57,7 @@ That likely means:
 - suggestion review now reads like a diff workflow instead of a mock card list
 - selected editable blocks can now request generated edit suggestions through a provider abstraction
 - block-level generated edits are now user-directed instead of using one fixed prompt
+- the workspace can now request multi-block review suggestions through the same review/apply flow
 - document-model backend tests pass
 - frontend production build passes
 
