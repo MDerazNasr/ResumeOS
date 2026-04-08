@@ -137,6 +137,7 @@ The review surface should emphasize:
 
 - patch-like before/after hunks
 - operation metadata such as `replace`
+- suggestion mode metadata such as `edit`, `review`, or `tailor`
 - validation status that reads like a review system, not a mock-only scaffold
 
 The point of this step is to make the workflow feel closer to the final product without changing the strict backend safety rules underneath.
@@ -164,6 +165,18 @@ The first review mode should:
 - reuse the same validation and apply mechanics as block-level edit mode
 
 This keeps the expansion incremental while moving closer to the eventual full-resume review workflow.
+
+## Suggestion Lifecycle Refinement
+
+Once edit, review, and tailor generation all exist, the next refinement is lifecycle clarity.
+
+Suggestion sets should carry:
+
+- explicit mode metadata
+- mode-aware regenerate behavior
+- clearer empty-state messaging when no valid suggestions are returned or all suggestions are dismissed
+
+This does not change the strict backend safety rules. It makes the suggestion system feel like one coherent subsystem instead of several loosely connected scaffolds.
 
 ## First Tailor Mode
 

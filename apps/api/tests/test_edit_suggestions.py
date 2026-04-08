@@ -28,6 +28,7 @@ class EditSuggestionTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(len(payload["items"]), 1)
+        self.assertEqual(payload["items"][0]["mode"], "edit")
         self.assertGreater(len(payload["items"][0]["items"]), 0)
         self.assertTrue(all(item["validation"]["isValid"] for item in payload["items"][0]["items"]))
 

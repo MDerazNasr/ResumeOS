@@ -63,6 +63,7 @@ That likely means:
 - the workspace can now request first-pass tailoring suggestions from a pasted job description through the same review/apply flow
 - the snapshot panel now refreshes after tailoring so the pre-tailor snapshot is visible immediately
 - tailoring suggestions are now grouped around coarse job-description themes instead of only per-block buckets
+- suggestion sets now carry explicit mode metadata and regenerate according to their originating flow
 - document-model backend tests pass
 - frontend production build passes
 

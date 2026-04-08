@@ -64,6 +64,7 @@ def generate_edit_suggestions_for_user(
         items=[
             MockSuggestionSetDto(
                 id=f"generated-set-{target_block.id}",
+                mode="edit",
                 title=f"Edit suggestions for {target_block.label}",
                 summary=input_data.instruction,
                 retrySeed=0,
@@ -137,6 +138,7 @@ def generate_review_suggestions_for_user(
             suggestion_sets.append(
                 MockSuggestionSetDto(
                     id=f"review-set-{block.id}",
+                    mode="review",
                     title=f"Review suggestions for {block.label}",
                     summary=input_data.instruction,
                     retrySeed=0,
@@ -223,6 +225,7 @@ def generate_tailor_suggestions_for_user(
             suggestion_sets.append(
                 MockSuggestionSetDto(
                     id=f"tailor-set-{theme['id']}",
+                    mode="tailor",
                     title=theme["title"],
                     summary=theme["summary"],
                     retrySeed=0,

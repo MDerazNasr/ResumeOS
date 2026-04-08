@@ -51,6 +51,7 @@ def list_mock_patch_proposals_for_user(user_id: str, resume_id: str, seed: int =
             suggestion_sets.append(
                 MockSuggestionSetDto(
                     id=f"mock-set-{group_index}",
+                    mode="mock",
                     title=_build_set_title(group_index),
                     summary=_build_set_summary(group_index),
                     retrySeed=seed + 1,

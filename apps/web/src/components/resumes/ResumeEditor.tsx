@@ -25,6 +25,12 @@ type ResumeEditorProps = {
   resume: ResumeDto;
 };
 
+type SuggestionRequestContext =
+  | { mode: "mock"; seed: number }
+  | { mode: "edit"; targetBlockId: string; instruction: string }
+  | { mode: "review"; instruction: string }
+  | { mode: "tailor"; instruction: string; jobDescription: string };
+
 export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
   const [documentModelState, setDocumentModelState] = useState(documentModel);
   const [mockSuggestionSets, setMockSuggestionSets] = useState<MockSuggestionSetDto[]>([]);
@@ -38,10 +44,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const [isReviewing, setIsReviewing] = useState(false);
   const [isTailoring, setIsTailoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestionEmptyMessage, setSuggestionEmptyMessage] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
   const [jobDescription, setJobDescription] = useState("");
   const [snapshotRefreshToken, setSnapshotRefreshToken] = useState(0);
+  const [lastSuggestionRequest, setLastSuggestionRequest] = useState<SuggestionRequestContext>({ mode: "mock", seed: 0 });
   const saveInFlightRef = useRef<Promise<WorkingDraftDto | null> | null>(null);
   const sourceTexRef = useRef(sourceTex);
   const persistedSourceTexRef = useRef(persistedSourceTex);
@@ -85,6 +93,8 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       ]);
       setDocumentModelState(nextDocumentModel);
       setMockSuggestionSets(nextMockPatches.items);
+      setSuggestionEmptyMessage(null);
+      setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
       return savedDraft;
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save draft.");
@@ -181,6 +191,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       ]);
       setDocumentModelState(nextDocumentModel);
       setMockSuggestionSets(nextMockPatches.items);
+      setSuggestionEmptyMessage(null);
       return true;
     } catch (applyError) {
       setError(applyError instanceof Error ? applyError.message : "Failed to apply patch.");
@@ -199,23 +210,75 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       .then(([nextDocumentModel, nextMockPatches]) => {
         setDocumentModelState(nextDocumentModel);
         setMockSuggestionSets(nextMockPatches.items);
+        setSuggestionEmptyMessage(null);
+        setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
       })
       .catch(() => null);
   }
 
   useEffect(() => {
     void getMockPatches(resume.id, mockPatchSeed)
-      .then((result) => setMockSuggestionSets(result.items))
+      .then((result) => {
+        setMockSuggestionSets(result.items);
+        setSuggestionEmptyMessage(null);
+        setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+      })
       .catch(() => null);
   }, [mockPatchSeed, resume.id]);
 
   async function handleRetrySuggestionSet(suggestionSet: MockSuggestionSetDto) {
-    const nextSeed = suggestionSet.retrySeed;
-    setMockPatchSeed(nextSeed);
+    setError(null);
+    setSuggestionEmptyMessage(null);
+
+    if (suggestionSet.mode === "mock") {
+      const nextSeed = suggestionSet.retrySeed;
+      setMockPatchSeed(nextSeed);
+      return;
+    }
+
+    try {
+      if (lastSuggestionRequest.mode === "edit") {
+        const generated = await generateEditSuggestions(resume.id, {
+          targetBlockId: lastSuggestionRequest.targetBlockId,
+          instruction: lastSuggestionRequest.instruction,
+        });
+        setMockSuggestionSets(generated.items);
+        setSuggestionEmptyMessage(
+          generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
+        );
+        return;
+      }
+
+      if (lastSuggestionRequest.mode === "review") {
+        const generated = await generateReviewSuggestions(resume.id, {
+          instruction: lastSuggestionRequest.instruction,
+        });
+        setMockSuggestionSets(generated.items);
+        setSuggestionEmptyMessage(
+          generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
+        );
+        return;
+      }
+
+      if (lastSuggestionRequest.mode === "tailor") {
+        const generated = await generateTailorSuggestions(resume.id, {
+          jobDescription: lastSuggestionRequest.jobDescription,
+          instruction: lastSuggestionRequest.instruction,
+        });
+        setMockSuggestionSets(generated.items);
+        setSuggestionEmptyMessage(
+          generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
+        );
+        setSnapshotRefreshToken((current) => current + 1);
+      }
+    } catch (retryError) {
+      setError(retryError instanceof Error ? retryError.message : "Failed to regenerate suggestions.");
+    }
   }
 
   async function handleSuggestEdit(block: EditableBlockDto, instruction: string) {
     setError(null);
+    setSuggestionEmptyMessage(null);
 
     try {
       const generated = await generateEditSuggestions(resume.id, {
@@ -223,6 +286,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         instruction,
       });
       setMockSuggestionSets(generated.items);
+      setLastSuggestionRequest({ mode: "edit", targetBlockId: block.id, instruction });
+      setSuggestionEmptyMessage(
+        generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
+      );
     } catch (suggestError) {
       setError(suggestError instanceof Error ? suggestError.message : "Failed to generate edit suggestions.");
     }
@@ -231,12 +298,16 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   async function handleReviewResume() {
     setError(null);
     setIsReviewing(true);
+    setSuggestionEmptyMessage(null);
 
     try {
-      const generated = await generateReviewSuggestions(resume.id, {
-        instruction: "Review the current resume and suggest stronger wording for the weakest editable blocks.",
-      });
+      const instruction = "Review the current resume and suggest stronger wording for the weakest editable blocks.";
+      const generated = await generateReviewSuggestions(resume.id, { instruction });
       setMockSuggestionSets(generated.items);
+      setLastSuggestionRequest({ mode: "review", instruction });
+      setSuggestionEmptyMessage(
+        generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
+      );
     } catch (reviewError) {
       setError(reviewError instanceof Error ? reviewError.message : "Failed to generate review suggestions.");
     } finally {
@@ -254,6 +325,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
     setError(null);
     setIsTailoring(true);
+    setSuggestionEmptyMessage(null);
 
     try {
       const draftReady = await ensureLatestDraftSaved();
@@ -261,11 +333,16 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         return;
       }
 
+      const instruction = "Tailor the resume wording toward the most important requirements in this job description.";
       const generated = await generateTailorSuggestions(resume.id, {
         jobDescription: trimmedDescription,
-        instruction: "Tailor the resume wording toward the most important requirements in this job description.",
+        instruction,
       });
       setMockSuggestionSets(generated.items);
+      setLastSuggestionRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
+      setSuggestionEmptyMessage(
+        generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
+      );
       setSnapshotRefreshToken((current) => current + 1);
     } catch (tailorError) {
       setError(tailorError instanceof Error ? tailorError.message : "Failed to generate tailoring suggestions.");
@@ -384,6 +461,8 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           </div>
           <DocumentModelPanel documentModel={documentModelState} onSuggestEdit={handleSuggestEdit} />
           <SuggestionReviewPanel
+            emptyMessage={suggestionEmptyMessage}
+            isLoading={isReviewing || isTailoring}
             onApply={handleApplyMockPatch}
             onRetrySet={handleRetrySuggestionSet}
             suggestionSets={mockSuggestionSets}

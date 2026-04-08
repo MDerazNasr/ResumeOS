@@ -33,6 +33,7 @@ class TailorSuggestionsTestCase(unittest.TestCase):
         self.assertGreaterEqual(len(payload["items"]), 1)
 
         for suggestion_set in payload["items"]:
+            self.assertEqual(suggestion_set["mode"], "tailor")
             self.assertTrue(
                 suggestion_set["title"] in {
                     "Backend / API alignment",

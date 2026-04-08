@@ -88,6 +88,7 @@ class MockPatchProposalDto(BaseModel):
 
 class MockSuggestionSetDto(BaseModel):
     id: str
+    mode: Literal["mock", "edit", "review", "tailor"]
     title: str
     summary: str
     retrySeed: int

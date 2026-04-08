@@ -322,6 +322,23 @@ Verified:
 - backend test suite passes with the new tailoring grouping behavior
 - frontend production build still passes with the unchanged review surface
 
+### 2026-04-08: Section 4 Suggestion Lifecycle Refinement
+
+Made the suggestion subsystem more explicit and mode-aware instead of treating every suggestion set like the same generic scaffold.
+
+Added:
+
+- explicit suggestion mode metadata across mock, edit, review, and tailor suggestion sets
+- backend regression checks for the new mode contract
+- frontend mode badges and mode-aware regenerate labels
+- frontend empty-state messaging for zero-result and fully dismissed suggestion flows
+- frontend regenerate behavior that now actually replays edit, review, and tailor requests instead of only rotating mock sets
+
+Verified:
+
+- backend test suite passes with the mode-aware suggestion contract
+- frontend production build passes with the new review surface behavior
+
 ### 2026-03-29: Section 3 Snapshot Safety Polish
 
 Improved the safety and clarity of destructive snapshot actions.

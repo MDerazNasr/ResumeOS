@@ -19,6 +19,7 @@ class MockPatchTests(unittest.TestCase):
         payload = response.json()
         self.assertGreater(len(payload["items"]), 0)
         self.assertTrue(all(item["items"] for item in payload["items"]))
+        self.assertTrue(all(item["mode"] == "mock" for item in payload["items"]))
         self.assertTrue(
             all(proposal["validation"]["isValid"] for item in payload["items"] for proposal in item["items"])
         )

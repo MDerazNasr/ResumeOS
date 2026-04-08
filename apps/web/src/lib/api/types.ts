@@ -72,6 +72,7 @@ export type MockPatchProposalDto = {
 
 export type MockSuggestionSetDto = {
   id: string;
+  mode: "mock" | "edit" | "review" | "tailor";
   title: string;
   summary: string;
   retrySeed: number;

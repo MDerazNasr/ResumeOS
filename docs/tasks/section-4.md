@@ -61,6 +61,9 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] auto-create a snapshot before tailoring suggestions are generated
 - [x] refresh the snapshot panel after tailoring so the pre-tailor snapshot is visible immediately
 - [x] group tailoring suggestion sets by coarse job-description themes instead of only by block
+- [x] add explicit mode metadata to suggestion sets
+- [x] make regenerate behavior mode-aware for edit, review, and tailor flows
+- [x] improve empty-state messaging when a suggestion request returns nothing valid or everything is dismissed
 
 ## Verification Checklist
 
@@ -85,6 +88,8 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] tailoring suggestions appear in the same review/apply flow
 - [x] tailoring creates a pre-tailor snapshot automatically
 - [x] tailoring suggestion sets are grouped by job-description themes or gaps
+- [x] suggestion review exposes explicit suggestion mode metadata
+- [x] retry/regenerate behavior respects the originating suggestion mode
 
 ## Notes
 

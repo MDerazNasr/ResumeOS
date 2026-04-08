@@ -7,10 +7,18 @@ import type { MockPatchProposalDto, MockSuggestionSetDto } from "@/lib/api/types
 type SuggestionReviewPanelProps = {
   onRetrySet: (suggestionSet: MockSuggestionSetDto) => Promise<void>;
   onApply: (proposal: MockPatchProposalDto) => Promise<boolean>;
+  isLoading?: boolean;
+  emptyMessage?: string | null;
   suggestionSets: MockSuggestionSetDto[];
 };
 
-export function SuggestionReviewPanel({ onApply, onRetrySet, suggestionSets }: SuggestionReviewPanelProps) {
+export function SuggestionReviewPanel({
+  onApply,
+  onRetrySet,
+  suggestionSets,
+  isLoading = false,
+  emptyMessage = null,
+}: SuggestionReviewPanelProps) {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [retryingSetId, setRetryingSetId] = useState<string | null>(null);
@@ -53,9 +61,17 @@ export function SuggestionReviewPanel({ onApply, onRetrySet, suggestionSets }: S
           Structured suggestion sets rendered as validated patch hunks against the current draft.
         </span>
       </div>
-      {visibleSuggestionSets.length === 0 ? (
+      {isLoading ? (
         <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
-          No suggestions are available for the current draft.
+          Generating suggestions for the current draft...
+        </p>
+      ) : visibleSuggestionSets.length === 0 && suggestionSets.length > 0 ? (
+        <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+          All current suggestions were dismissed. Regenerate a set to try again.
+        </p>
+      ) : visibleSuggestionSets.length === 0 ? (
+        <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+          {emptyMessage ?? "No suggestions are available for the current draft."}
         </p>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
@@ -63,7 +79,10 @@ export function SuggestionReviewPanel({ onApply, onRetrySet, suggestionSets }: S
             <div key={suggestionSet.id} style={setCardStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                 <div style={{ display: "grid", gap: 6 }}>
-                  <strong style={{ fontSize: 15 }}>{suggestionSet.title}</strong>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <strong style={{ fontSize: 15 }}>{suggestionSet.title}</strong>
+                    <span style={modeBadgeStyle(suggestionSet.mode)}>{suggestionSet.mode}</span>
+                  </div>
                   <p style={setSummaryStyle}>{suggestionSet.summary}</p>
                 </div>
                 <button
@@ -72,7 +91,7 @@ export function SuggestionReviewPanel({ onApply, onRetrySet, suggestionSets }: S
                   style={secondaryButtonStyle}
                   type="button"
                 >
-                  {retryingSetId === suggestionSet.id ? "Retrying..." : "Regenerate"}
+                  {retryingSetId === suggestionSet.id ? retryLabel(suggestionSet.mode, true) : retryLabel(suggestionSet.mode, false)}
                 </button>
               </div>
               <div style={{ display: "grid", gap: 12 }}>
@@ -171,6 +190,31 @@ const badgeStyle: CSSProperties = {
   letterSpacing: "0.04em",
   textTransform: "uppercase",
 };
+
+function modeBadgeStyle(mode: MockSuggestionSetDto["mode"]): CSSProperties {
+  const palette =
+    mode === "tailor"
+      ? { background: "#2b1f12", color: "#ffd7a3" }
+      : mode === "review"
+        ? { background: "#142434", color: "#b8dcff" }
+        : mode === "edit"
+          ? { background: "#1f1f33", color: "#d8d0ff" }
+          : { background: "#243127", color: "#b5f0c9" };
+
+  return {
+    ...badgeStyle,
+    background: palette.background,
+    color: palette.color,
+  };
+}
+
+function retryLabel(mode: MockSuggestionSetDto["mode"], isLoading: boolean): string {
+  if (isLoading) {
+    return mode === "tailor" ? "Retailoring..." : mode === "review" ? "Rereviewing..." : mode === "edit" ? "Regenerating edit..." : "Retrying...";
+  }
+
+  return mode === "tailor" ? "Retailor" : mode === "review" ? "Rereview" : mode === "edit" ? "Regenerate Edit" : "Regenerate";
+}
 
 const diffHunkStyle: CSSProperties = {
   display: "grid",
