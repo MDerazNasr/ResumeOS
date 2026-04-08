@@ -47,3 +47,15 @@ CREATE TABLE IF NOT EXISTS snapshots (
   created_at TEXT NOT NULL,
   FOREIGN KEY(resume_id) REFERENCES resumes(id)
 );
+
+CREATE TABLE IF NOT EXISTS feedback_events (
+  id TEXT PRIMARY KEY,
+  resume_id TEXT NOT NULL,
+  suggestion_mode TEXT NOT NULL,
+  action TEXT NOT NULL,
+  suggestion_set_id TEXT NOT NULL,
+  proposal_id TEXT NOT NULL,
+  target_block_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY(resume_id) REFERENCES resumes(id)
+);

@@ -99,6 +99,14 @@ class MockSuggestionSetListDto(BaseModel):
     items: list[MockSuggestionSetDto]
 
 
+class LogFeedbackInput(BaseModel):
+    suggestionMode: Literal["mock", "edit", "review", "tailor"]
+    action: Literal["apply", "dismiss"]
+    suggestionSetId: str
+    proposalId: str
+    targetBlockId: str
+
+
 class ApplyPatchInput(BaseModel):
     targetBlockId: str
     startLine: int = Field(ge=1)

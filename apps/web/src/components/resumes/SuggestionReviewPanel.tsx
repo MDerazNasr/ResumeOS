@@ -6,7 +6,8 @@ import type { MockPatchProposalDto, MockSuggestionSetDto } from "@/lib/api/types
 
 type SuggestionReviewPanelProps = {
   onRetrySet: (suggestionSet: MockSuggestionSetDto) => Promise<void>;
-  onApply: (proposal: MockPatchProposalDto) => Promise<boolean>;
+  onApply: (suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) => Promise<boolean>;
+  onDismiss: (suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) => Promise<boolean>;
   isLoading?: boolean;
   emptyMessage?: string | null;
   suggestionSets: MockSuggestionSetDto[];
@@ -14,6 +15,7 @@ type SuggestionReviewPanelProps = {
 
 export function SuggestionReviewPanel({
   onApply,
+  onDismiss,
   onRetrySet,
   suggestionSets,
   isLoading = false,
@@ -21,6 +23,7 @@ export function SuggestionReviewPanel({
 }: SuggestionReviewPanelProps) {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
   const [retryingSetId, setRetryingSetId] = useState<string | null>(null);
   const visibleSuggestionSets = suggestionSets
     .map((suggestionSet) => ({
@@ -29,11 +32,11 @@ export function SuggestionReviewPanel({
     }))
     .filter((suggestionSet) => suggestionSet.items.length > 0);
 
-  async function handleApply(proposal: MockPatchProposalDto) {
+  async function handleApply(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
     setApplyingId(proposal.id);
 
     try {
-      const applied = await onApply(proposal);
+      const applied = await onApply(suggestionSet, proposal);
       if (applied) {
         setDismissedIds((current) => [...current, proposal.id]);
       }
@@ -50,6 +53,19 @@ export function SuggestionReviewPanel({
       setDismissedIds([]);
     } finally {
       setRetryingSetId(null);
+    }
+  }
+
+  async function handleDismiss(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
+    setDismissingId(proposal.id);
+
+    try {
+      const dismissed = await onDismiss(suggestionSet, proposal);
+      if (dismissed) {
+        setDismissedIds((current) => [...current, proposal.id]);
+      }
+    } finally {
+      setDismissingId(null);
     }
   }
 
@@ -80,13 +96,13 @@ export function SuggestionReviewPanel({
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                 <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <strong style={{ fontSize: 15 }}>{suggestionSet.title}</strong>
+                  <strong style={{ fontSize: 15 }}>{suggestionSet.title}</strong>
                     <span style={modeBadgeStyle(suggestionSet.mode)}>{suggestionSet.mode}</span>
                   </div>
                   <p style={setSummaryStyle}>{suggestionSet.summary}</p>
                 </div>
                 <button
-                  disabled={retryingSetId !== null || applyingId !== null}
+                  disabled={retryingSetId !== null || applyingId !== null || dismissingId !== null}
                   onClick={() => void handleRetrySet(suggestionSet)}
                   style={secondaryButtonStyle}
                   type="button"
@@ -119,20 +135,20 @@ export function SuggestionReviewPanel({
                     <p style={rationaleStyle}>{proposal.rationale}</p>
                     <div style={actionsStyle}>
                       <button
-                        disabled={applyingId !== null || retryingSetId !== null}
-                        onClick={() => void handleApply(proposal)}
+                        disabled={applyingId !== null || retryingSetId !== null || dismissingId !== null}
+                        onClick={() => void handleApply(suggestionSet, proposal)}
                         style={primaryButtonStyle}
                         type="button"
                       >
                         {applyingId === proposal.id ? "Applying..." : "Apply"}
                       </button>
                       <button
-                        disabled={applyingId !== null || retryingSetId !== null}
-                        onClick={() => setDismissedIds((current) => [...current, proposal.id])}
+                        disabled={applyingId !== null || retryingSetId !== null || dismissingId !== null}
+                        onClick={() => void handleDismiss(suggestionSet, proposal)}
                         style={secondaryButtonStyle}
                         type="button"
                       >
-                        Dismiss
+                        {dismissingId === proposal.id ? "Dismissing..." : "Dismiss"}
                       </button>
                     </div>
                   </div>

@@ -339,6 +339,22 @@ Verified:
 - backend test suite passes with the mode-aware suggestion contract
 - frontend production build passes with the new review surface behavior
 
+### 2026-04-08: Section 4 Feedback Event Logging
+
+Closed the first loop on the suggestion subsystem by persisting user outcomes instead of leaving them only in transient UI state.
+
+Added:
+
+- backend `feedback_events` persistence for suggestion apply and dismiss outcomes
+- backend feedback logging route scoped to the current resume
+- backend regression test coverage for feedback-event creation
+- frontend apply and dismiss logging with suggestion mode, set id, proposal id, and target block id
+
+Verified:
+
+- backend test suite passes with feedback-event logging enabled
+- frontend production build passes with the feedback calls wired into the review surface
+
 ### 2026-03-29: Section 3 Snapshot Safety Polish
 
 Improved the safety and clarity of destructive snapshot actions.

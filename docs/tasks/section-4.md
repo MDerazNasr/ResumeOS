@@ -64,6 +64,9 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] add explicit mode metadata to suggestion sets
 - [x] make regenerate behavior mode-aware for edit, review, and tailor flows
 - [x] improve empty-state messaging when a suggestion request returns nothing valid or everything is dismissed
+- [x] add backend feedback-event logging for apply and dismiss outcomes
+- [x] log suggestion outcomes with mode, suggestion set id, proposal id, and target block id
+- [x] add backend tests for feedback logging
 
 ## Verification Checklist
 
@@ -90,6 +93,7 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] tailoring suggestion sets are grouped by job-description themes or gaps
 - [x] suggestion review exposes explicit suggestion mode metadata
 - [x] retry/regenerate behavior respects the originating suggestion mode
+- [x] apply and dismiss actions produce persisted feedback events
 
 ## Notes
 

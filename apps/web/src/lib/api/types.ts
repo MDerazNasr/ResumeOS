@@ -83,6 +83,14 @@ export type MockSuggestionSetListDto = {
   items: MockSuggestionSetDto[];
 };
 
+export type LogFeedbackInput = {
+  suggestionMode: "mock" | "edit" | "review" | "tailor";
+  action: "apply" | "dismiss";
+  suggestionSetId: string;
+  proposalId: string;
+  targetBlockId: string;
+};
+
 export type ApplyPatchInput = {
   targetBlockId: string;
   startLine: number;

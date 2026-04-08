@@ -55,6 +55,7 @@ The backend should be a FastAPI service responsible for:
 - snapshot creation and restore
 - AI orchestration
 - patch validation
+- feedback event logging for suggestion outcomes
 - compile job submission and result handling
 - style-memory retrieval
 - feedback logging

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getMockPatches, logFeedback, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
@@ -164,7 +164,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     }
   }
 
-  async function handleApplyMockPatch(proposal: MockPatchProposalDto) {
+  async function handleApplyMockPatch(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
     setError(null);
 
     try {
@@ -174,6 +174,13 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         endLine: proposal.endLine,
         beforeText: proposal.beforeText,
         afterText: proposal.afterText,
+      });
+      await logFeedback(resume.id, {
+        suggestionMode: suggestionSet.mode,
+        action: "apply",
+        suggestionSetId: suggestionSet.id,
+        proposalId: proposal.id,
+        targetBlockId: proposal.targetBlockId,
       });
 
       sourceTexRef.current = updatedDraft.sourceTex;
@@ -195,6 +202,22 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       return true;
     } catch (applyError) {
       setError(applyError instanceof Error ? applyError.message : "Failed to apply patch.");
+      return false;
+    }
+  }
+
+  async function handleDismissSuggestion(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
+    try {
+      await logFeedback(resume.id, {
+        suggestionMode: suggestionSet.mode,
+        action: "dismiss",
+        suggestionSetId: suggestionSet.id,
+        proposalId: proposal.id,
+        targetBlockId: proposal.targetBlockId,
+      });
+      return true;
+    } catch (dismissError) {
+      setError(dismissError instanceof Error ? dismissError.message : "Failed to record suggestion feedback.");
       return false;
     }
   }
@@ -464,6 +487,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
             emptyMessage={suggestionEmptyMessage}
             isLoading={isReviewing || isTailoring}
             onApply={handleApplyMockPatch}
+            onDismiss={handleDismissSuggestion}
             onRetrySet={handleRetrySuggestionSet}
             suggestionSets={mockSuggestionSets}
           />

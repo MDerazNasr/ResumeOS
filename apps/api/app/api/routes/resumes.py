@@ -10,6 +10,7 @@ from app.models.schemas import (
     GenerateEditSuggestionsInput,
     GenerateReviewSuggestionsInput,
     GenerateTailorSuggestionsInput,
+    LogFeedbackInput,
     MockSuggestionSetListDto,
     PatchValidationResultDto,
     RestoreSnapshotInput,
@@ -28,6 +29,7 @@ from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
 from app.services.document_model import get_document_model_for_user
 from app.services.edit_suggestions import generate_edit_suggestions_for_user, generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
+from app.services.feedback import log_feedback_for_user
 from app.services.mock_patches import list_mock_patch_proposals_for_user
 from app.services.patch_apply import apply_patch_for_user
 from app.services.patch_validation import validate_patch_for_user
@@ -129,6 +131,15 @@ def apply_patch(
     current_user: UserDto = Depends(get_current_user),
 ) -> WorkingDraftDto:
     return apply_patch_for_user(current_user.id, resume_id, input_data)
+
+
+@router.post("/{resume_id}/feedback", status_code=204)
+def log_feedback(
+    resume_id: str,
+    input_data: LogFeedbackInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> None:
+    log_feedback_for_user(current_user.id, resume_id, input_data)
 
 
 @router.put("/{resume_id}/draft", response_model=WorkingDraftDto)

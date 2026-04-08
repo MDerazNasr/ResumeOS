@@ -8,6 +8,7 @@ import type {
   GenerateEditSuggestionsInput,
   GenerateReviewSuggestionsInput,
   GenerateTailorSuggestionsInput,
+  LogFeedbackInput,
   MockSuggestionSetListDto,
   RestoreSnapshotInput,
   ResumeDto,
@@ -34,6 +35,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status}`);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json() as Promise<T>;
@@ -102,6 +107,13 @@ export function generateTailorSuggestions(
 
 export function applyPatch(resumeId: string, input: ApplyPatchInput): Promise<WorkingDraftDto> {
   return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/patches/apply`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function logFeedback(resumeId: string, input: LogFeedbackInput): Promise<void> {
+  return apiFetch<void>(`/resumes/${resumeId}/feedback`, {
     method: "POST",
     body: JSON.stringify(input)
   });
