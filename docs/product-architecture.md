@@ -197,6 +197,12 @@ Purpose:
 
 - tailor the resume to a pasted job description
 
+Initial safe shape:
+
+- accept one pasted job description
+- generate suggestions only across a small set of editable blocks
+- route those suggestions through the same validation, diff review, and apply flow as Edit and Review
+
 This mode should create a snapshot automatically before generating suggestions so the user can always return to the base version.
 
 ## Style Memory

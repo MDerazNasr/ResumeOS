@@ -99,6 +99,11 @@ export type GenerateReviewSuggestionsInput = {
   instruction: string;
 };
 
+export type GenerateTailorSuggestionsInput = {
+  jobDescription: string;
+  instruction: string;
+};
+
 export type CreateResumeInput = {
   title: string;
 };

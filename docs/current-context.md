@@ -33,6 +33,7 @@ Active milestone:
 - editor page is a two-pane workspace
 - left pane: Monaco-based LaTeX editor
 - right pane: compile status, real PDF preview, snapshots, document model summary, and suggestion review
+- the workspace now also includes a first tailoring input for job descriptions
 - dirty-state tracking now follows the last saved draft
 
 ## Immediate Next Goal
@@ -43,7 +44,7 @@ That likely means:
 
 - tighten editable-block coverage for common resume constructs
 - prepare a cleaner patch schema around block IDs and source ranges
-- expand from the first real block-level edit and review generation paths into richer suggestion generation modes
+- expand from the first real block-level edit, review, and tailoring generation paths into richer suggestion generation modes
 
 ## Definition of Success for the Current Slice
 
@@ -58,6 +59,7 @@ That likely means:
 - selected editable blocks can now request generated edit suggestions through a provider abstraction
 - block-level generated edits are now user-directed instead of using one fixed prompt
 - the workspace can now request multi-block review suggestions through the same review/apply flow
+- the workspace can now request first-pass tailoring suggestions from a pasted job description through the same review/apply flow
 - document-model backend tests pass
 - frontend production build passes
 

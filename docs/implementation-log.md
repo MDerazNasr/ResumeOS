@@ -276,6 +276,23 @@ Verified:
 - backend test suite passes with the new review suggestion flow
 - frontend production build passes after wiring review generation into the editor workspace
 
+### 2026-04-08: Section 4 First Tailor Mode
+
+Expanded the same safe suggestion pipeline into the first tailoring flow.
+
+Added:
+
+- backend tailoring suggestion route that accepts a pasted job description
+- provider contract support for job-description-guided rewrites across a small set of editable blocks
+- validation of tailoring suggestions through the same exact block gate as edit and review mode
+- backend regression test coverage for tailoring suggestion generation
+- frontend `Tailor Resume` input and action that loads tailoring suggestions into the existing diff-style review surface
+
+Verified:
+
+- backend test suite passes with the new tailoring suggestion flow
+- frontend production build passes after wiring tailoring generation into the editor workspace
+
 ### 2026-03-29: Section 3 Snapshot Safety Polish
 
 Improved the safety and clarity of destructive snapshot actions.

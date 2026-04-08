@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
@@ -36,9 +36,11 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const [isSaving, setIsSaving] = useState(false);
   const [isCompiling, setIsCompiling] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isTailoring, setIsTailoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
+  const [jobDescription, setJobDescription] = useState("");
   const saveInFlightRef = useRef<Promise<WorkingDraftDto | null> | null>(null);
   const sourceTexRef = useRef(sourceTex);
   const persistedSourceTexRef = useRef(persistedSourceTex);
@@ -241,6 +243,35 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     }
   }
 
+  async function handleTailorResume() {
+    const trimmedDescription = jobDescription.trim();
+
+    if (trimmedDescription.length < 20) {
+      setError("Job description must be at least 20 characters to generate tailoring suggestions.");
+      return;
+    }
+
+    setError(null);
+    setIsTailoring(true);
+
+    try {
+      const draftReady = await ensureLatestDraftSaved();
+      if (!draftReady) {
+        return;
+      }
+
+      const generated = await generateTailorSuggestions(resume.id, {
+        jobDescription: trimmedDescription,
+        instruction: "Tailor the resume wording toward the most important requirements in this job description.",
+      });
+      setMockSuggestionSets(generated.items);
+    } catch (tailorError) {
+      setError(tailorError instanceof Error ? tailorError.message : "Failed to generate tailoring suggestions.");
+    } finally {
+      setIsTailoring(false);
+    }
+  }
+
   return (
     <section style={shellStyle}>
       <div style={headerStyle}>
@@ -251,14 +282,19 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
           <div style={{ display: "flex", gap: 10 }}>
             <button
-              disabled={isSaving || isCompiling || isReviewing}
+              disabled={isSaving || isCompiling || isReviewing || isTailoring}
               onClick={handleReviewResume}
               style={secondaryButtonStyle}
               type="button"
             >
               {isReviewing ? "Reviewing..." : "Review Resume"}
             </button>
-            <button disabled={isSaving || isCompiling} onClick={handleCompile} style={secondaryButtonStyle} type="button">
+            <button
+              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              onClick={handleCompile}
+              style={secondaryButtonStyle}
+              type="button"
+            >
               {isCompiling ? "Compiling..." : "Compile"}
             </button>
           </div>
@@ -323,6 +359,26 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
                 </p>
               )}
             </div>
+          </div>
+          <div style={tailorCardStyle}>
+            <strong style={{ fontSize: 15 }}>Tailor Resume</strong>
+            <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+              Paste a job description to generate a small set of validated tailoring suggestions.
+            </p>
+            <textarea
+              onChange={(event) => setJobDescription(event.target.value)}
+              placeholder="Paste a job description here..."
+              style={tailorTextareaStyle}
+              value={jobDescription}
+            />
+            <button
+              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              onClick={handleTailorResume}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              {isTailoring ? "Tailoring..." : "Tailor Resume"}
+            </button>
           </div>
           <DocumentModelPanel documentModel={documentModelState} onSuggestEdit={handleSuggestEdit} />
           <SuggestionReviewPanel
@@ -421,6 +477,28 @@ const logsCardStyle: CSSProperties = {
   border: "1px solid #262b36",
   borderRadius: 14,
   background: "#171a21"
+};
+
+const tailorCardStyle: CSSProperties = {
+  display: "grid",
+  gap: 12,
+  padding: 16,
+  border: "1px solid #262b36",
+  borderRadius: 14,
+  background: "#171a21"
+};
+
+const tailorTextareaStyle: CSSProperties = {
+  minHeight: 140,
+  width: "100%",
+  resize: "vertical",
+  padding: 12,
+  border: "1px solid #30384a",
+  borderRadius: 12,
+  background: "#0f1115",
+  color: "#eef1f6",
+  font: "inherit",
+  lineHeight: 1.5
 };
 
 function logItemStyle(level: "info" | "error"): CSSProperties {

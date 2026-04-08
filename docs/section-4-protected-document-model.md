@@ -164,3 +164,17 @@ The first review mode should:
 - reuse the same validation and apply mechanics as block-level edit mode
 
 This keeps the expansion incremental while moving closer to the eventual full-resume review workflow.
+
+## First Tailor Mode
+
+After multi-block review generation works, the next safe expansion is a narrow tailoring flow driven by a pasted job description.
+
+The first tailor mode should:
+
+- accept one job description input and one tailoring instruction
+- select a limited number of editable blocks from the current draft
+- generate replacement candidates that better align those blocks to the target role
+- return them as grouped suggestion sets
+- reuse the same validation and apply mechanics as edit and review mode
+
+This keeps tailoring bounded to the same safe patch workflow instead of introducing full-document rewrite behavior.

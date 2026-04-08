@@ -53,6 +53,11 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] validate review suggestions through the same patch gate
 - [x] add backend tests for review suggestion generation
 - [x] expose a "Review Resume" action that loads review suggestions into the same review surface
+- [x] add backend first tailoring suggestion endpoint
+- [x] generate tailoring suggestions across a small set of editable blocks using a job description input
+- [x] validate tailoring suggestions through the same patch gate
+- [x] add backend tests for tailoring suggestion generation
+- [x] expose a "Tailor Resume" action that loads tailoring suggestions into the same review surface
 
 ## Verification Checklist
 
@@ -74,6 +79,7 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] a selected editable block can request generated edit suggestions
 - [x] generated edit suggestions appear in the same review/apply flow
 - [x] multi-block review suggestions appear in the same review/apply flow
+- [x] tailoring suggestions appear in the same review/apply flow
 
 ## Notes
 

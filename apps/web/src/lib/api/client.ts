@@ -7,6 +7,7 @@ import type {
   DocumentModelDto,
   GenerateEditSuggestionsInput,
   GenerateReviewSuggestionsInput,
+  GenerateTailorSuggestionsInput,
   MockSuggestionSetListDto,
   RestoreSnapshotInput,
   ResumeDto,
@@ -84,6 +85,16 @@ export function generateReviewSuggestions(
   input: GenerateReviewSuggestionsInput,
 ): Promise<MockSuggestionSetListDto> {
   return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/review`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function generateTailorSuggestions(
+  resumeId: string,
+  input: GenerateTailorSuggestionsInput,
+): Promise<MockSuggestionSetListDto> {
+  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/tailor`, {
     method: "POST",
     body: JSON.stringify(input)
   });
