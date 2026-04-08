@@ -96,3 +96,23 @@ This is useful because it proves the architecture end to end:
 - frontend review surface
 
 without introducing model variability yet.
+
+## First Patch-Apply Contract
+
+The first apply path should stay as strict as the validator.
+
+A patch apply request should include:
+
+- target block id
+- exact line range
+- exact `beforeText`
+- replacement `afterText`
+
+The backend should:
+
+- re-run validation against the current draft
+- reject stale or invalid requests
+- replace only the targeted editable block text
+- persist the updated working draft immediately
+
+This keeps the first apply mechanic easy to reason about and avoids mixing optimistic client-side editing with safety-critical server-side validation.

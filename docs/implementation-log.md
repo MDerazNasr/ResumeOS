@@ -389,6 +389,29 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-04-08: Section 4 Mock Patch Apply Mechanics
+
+Turned the mocked patch cards from a static review surface into a real working-draft update path.
+
+Added:
+
+- documented first patch-apply contract
+- backend patch-apply DTO and route
+- strict backend apply logic that re-validates the target block before persisting
+- backend tests for valid and stale patch apply cases
+- frontend `Apply` and `Dismiss` controls on mocked patch cards
+
+Why this shape:
+
+- it proves that patch review can mutate the working draft safely
+- it keeps the source of truth on the backend instead of attempting risky client-side text surgery
+- it uses the same strict block-based validation gate as the mocked proposal flow
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

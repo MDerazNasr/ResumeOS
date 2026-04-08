@@ -1,4 +1,5 @@
 import type {
+  ApplyPatchInput,
   CompileRequestInput,
   CompileResultDto,
   CreateSnapshotInput,
@@ -64,6 +65,13 @@ export function getDocumentModel(resumeId: string): Promise<DocumentModelDto> {
 
 export function getMockPatches(resumeId: string): Promise<MockPatchProposalListDto> {
   return apiFetch<MockPatchProposalListDto>(`/resumes/${resumeId}/patches/mock`);
+}
+
+export function applyPatch(resumeId: string, input: ApplyPatchInput): Promise<WorkingDraftDto> {
+  return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/patches/apply`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
 }
 
 export function saveDraft(resumeId: string, input: UpdateDraftInput): Promise<WorkingDraftDto> {

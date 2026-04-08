@@ -88,6 +88,14 @@ class MockPatchProposalListDto(BaseModel):
     items: list[MockPatchProposalDto]
 
 
+class ApplyPatchInput(BaseModel):
+    targetBlockId: str
+    startLine: int = Field(ge=1)
+    endLine: int = Field(ge=1)
+    beforeText: str
+    afterText: str
+
+
 class UpdateDraftInput(BaseModel):
     sourceTex: str
     version: int = Field(ge=1)

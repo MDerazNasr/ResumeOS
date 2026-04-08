@@ -43,7 +43,7 @@ That likely means:
 
 - tighten editable-block coverage for common resume constructs
 - prepare the patch schema around block IDs and source ranges
-- move from mocked patch proposals to a real patch schema and review/apply mechanics
+- move from the first apply mechanics to grouped suggestions and retry behavior
 
 ## Definition of Success for the Current Slice
 
@@ -52,6 +52,7 @@ That likely means:
 - exact block-targeted patch validation is enforced server-side
 - the editor shows the model in a visible way
 - mocked patch proposals exercise the same validation gate before any AI integration
+- mocked patch proposals can be applied directly into the working draft
 - document-model backend tests pass
 - frontend production build passes
 

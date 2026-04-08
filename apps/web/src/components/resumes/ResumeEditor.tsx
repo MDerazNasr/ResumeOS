@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { compileDraft, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { MockPatchPanel } from "@/components/resumes/MockPatchPanel";
@@ -147,6 +147,40 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     }
   }
 
+  async function handleApplyMockPatch(proposal: MockPatchProposalDto) {
+    setError(null);
+
+    try {
+      const updatedDraft = await applyPatch(resume.id, {
+        targetBlockId: proposal.targetBlockId,
+        startLine: proposal.startLine,
+        endLine: proposal.endLine,
+        beforeText: proposal.beforeText,
+        afterText: proposal.afterText,
+      });
+
+      sourceTexRef.current = updatedDraft.sourceTex;
+      persistedSourceTexRef.current = updatedDraft.sourceTex;
+      versionRef.current = updatedDraft.version;
+      setPersistedSourceTex(updatedDraft.sourceTex);
+      setSourceTex(updatedDraft.sourceTex);
+      setVersion(updatedDraft.version);
+      setUpdatedAt(updatedDraft.updatedAt);
+      setCompileResult(null);
+
+      const [nextDocumentModel, nextMockPatches] = await Promise.all([
+        getDocumentModel(resume.id),
+        getMockPatches(resume.id),
+      ]);
+      setDocumentModelState(nextDocumentModel);
+      setMockPatches(nextMockPatches.items);
+      return true;
+    } catch (applyError) {
+      setError(applyError instanceof Error ? applyError.message : "Failed to apply patch.");
+      return false;
+    }
+  }
+
   function handleSnapshotRestore(restoredDraft: WorkingDraftDto) {
     setPersistedSourceTex(restoredDraft.sourceTex);
     setSourceTex(restoredDraft.sourceTex);
@@ -244,7 +278,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
             </div>
           </div>
           <DocumentModelPanel documentModel={documentModelState} />
-          <MockPatchPanel proposals={mockPatches} />
+          <MockPatchPanel onApply={handleApplyMockPatch} proposals={mockPatches} />
           <SnapshotPanel
             currentSourceTex={sourceTex}
             ensureLatestDraft={ensureLatestDraftSaved}

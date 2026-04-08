@@ -72,6 +72,14 @@ export type MockPatchProposalListDto = {
   items: MockPatchProposalDto[];
 };
 
+export type ApplyPatchInput = {
+  targetBlockId: string;
+  startLine: number;
+  endLine: number;
+  beforeText: string;
+  afterText: string;
+};
+
 export type CreateResumeInput = {
   title: string;
 };

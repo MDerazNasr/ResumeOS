@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.models.schemas import (
+    ApplyPatchInput,
     CompileRequestInput,
     CompileResultDto,
     CreateSnapshotInput,
@@ -24,6 +25,7 @@ from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
 from app.services.document_model import get_document_model_for_user
 from app.services.mock_patches import list_mock_patch_proposals_for_user
+from app.services.patch_apply import apply_patch_for_user
 from app.services.patch_validation import validate_patch_for_user
 from app.services.resumes import (
     create_resume_for_user,
@@ -86,6 +88,15 @@ def list_mock_patches(
     current_user: UserDto = Depends(get_current_user),
 ) -> MockPatchProposalListDto:
     return list_mock_patch_proposals_for_user(current_user.id, resume_id)
+
+
+@router.post("/{resume_id}/patches/apply", response_model=WorkingDraftDto)
+def apply_patch(
+    resume_id: str,
+    input_data: ApplyPatchInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> WorkingDraftDto:
+    return apply_patch_for_user(current_user.id, resume_id, input_data)
 
 
 @router.put("/{resume_id}/draft", response_model=WorkingDraftDto)
