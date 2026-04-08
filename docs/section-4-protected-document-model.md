@@ -140,3 +140,14 @@ The review surface should emphasize:
 - validation status that reads like a review system, not a mock-only scaffold
 
 The point of this step is to make the workflow feel closer to the final product without changing the strict backend safety rules underneath.
+
+## First Model-Backed Edit Mode
+
+The first real generation path should stay narrow:
+
+- one selected editable block
+- one explicit edit instruction
+- one provider interface behind the backend
+- generated replacements must still pass the same validation and apply gates
+
+This avoids jumping straight from deterministic mocks to unconstrained whole-document generation.

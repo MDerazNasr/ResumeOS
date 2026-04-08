@@ -43,7 +43,7 @@ That likely means:
 
 - tighten editable-block coverage for common resume constructs
 - prepare a cleaner patch schema around block IDs and source ranges
-- move from deterministic mocked suggestions toward the first real model-backed suggestion generation
+- expand from the first real block-level edit generation path into richer suggestion generation modes
 
 ## Definition of Success for the Current Slice
 
@@ -55,6 +55,7 @@ That likely means:
 - mocked patch proposals can be applied directly into the working draft
 - mocked patch proposals are grouped into suggestion sets with retry behavior
 - suggestion review now reads like a diff workflow instead of a mock card list
+- selected editable blocks can now request generated edit suggestions through a provider abstraction
 - document-model backend tests pass
 - frontend production build passes
 

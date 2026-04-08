@@ -1,13 +1,14 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import type { DocumentModelDto } from "@/lib/api/types";
+import type { DocumentModelDto, EditableBlockDto } from "@/lib/api/types";
 
 type DocumentModelPanelProps = {
   documentModel: DocumentModelDto;
+  onSuggestEdit: (block: EditableBlockDto) => Promise<void>;
 };
 
-export function DocumentModelPanel({ documentModel }: DocumentModelPanelProps) {
+export function DocumentModelPanel({ documentModel, onSuggestEdit }: DocumentModelPanelProps) {
   const previewBlocks = documentModel.editableBlocks.slice(0, 6);
 
   return (
@@ -40,13 +41,20 @@ export function DocumentModelPanel({ documentModel }: DocumentModelPanelProps) {
         ) : (
           previewBlocks.map((block) => (
             <div key={block.id} style={blockCardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-                <strong style={{ fontSize: 13 }}>{block.label}</strong>
-                <span style={badgeStyle}>{block.kind}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
+                <div style={{ display: "grid", gap: 4 }}>
+                  <strong style={{ fontSize: 13 }}>{block.label}</strong>
+                  <span style={{ color: "#9ba3b4", fontSize: 12 }}>
+                    Lines {block.startLine}-{block.endLine} • Col {block.startColumn}-{block.endColumn}
+                  </span>
+                </div>
+                <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
+                  <span style={badgeStyle}>{block.kind}</span>
+                  <button onClick={() => void onSuggestEdit(block)} style={buttonStyle} type="button">
+                    Suggest Edit
+                  </button>
+                </div>
               </div>
-              <span style={{ color: "#9ba3b4", fontSize: 12 }}>
-                Lines {block.startLine}-{block.endLine} • Col {block.startColumn}-{block.endColumn}
-              </span>
               <p style={textPreviewStyle}>{block.text}</p>
             </div>
           ))
@@ -109,6 +117,16 @@ const badgeStyle: CSSProperties = {
   fontWeight: 600,
   letterSpacing: "0.04em",
   textTransform: "uppercase",
+};
+
+const buttonStyle: CSSProperties = {
+  padding: "6px 10px",
+  border: "1px solid #3b4254",
+  borderRadius: 10,
+  background: "#171a21",
+  color: "#eef1f6",
+  cursor: "pointer",
+  fontSize: 12,
 };
 
 const textPreviewStyle: CSSProperties = {

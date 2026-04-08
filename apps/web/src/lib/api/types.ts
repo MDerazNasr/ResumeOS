@@ -90,6 +90,11 @@ export type ApplyPatchInput = {
   afterText: string;
 };
 
+export type GenerateEditSuggestionsInput = {
+  targetBlockId: string;
+  instruction: string;
+};
+
 export type CreateResumeInput = {
   title: string;
 };

@@ -5,6 +5,7 @@ import type {
   CreateSnapshotInput,
   CreateResumeInput,
   DocumentModelDto,
+  GenerateEditSuggestionsInput,
   MockSuggestionSetListDto,
   RestoreSnapshotInput,
   ResumeDto,
@@ -65,6 +66,16 @@ export function getDocumentModel(resumeId: string): Promise<DocumentModelDto> {
 
 export function getMockPatches(resumeId: string, seed = 0): Promise<MockSuggestionSetListDto> {
   return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/patches/mock?seed=${seed}`);
+}
+
+export function generateEditSuggestions(
+  resumeId: string,
+  input: GenerateEditSuggestionsInput,
+): Promise<MockSuggestionSetListDto> {
+  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/edit`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
 }
 
 export function applyPatch(resumeId: string, input: ApplyPatchInput): Promise<WorkingDraftDto> {

@@ -43,6 +43,11 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] add clearer patch metadata for suggestion review
 - [x] replace the mock review panel with a diff-centric suggestion review surface
 - [x] keep apply/dismiss/retry behavior working in the new review surface
+- [x] add LLM provider abstraction for block-level edit generation
+- [x] add backend block-level edit suggestion endpoint
+- [x] validate generated suggestions through the same patch gate
+- [x] add backend tests for generated edit suggestions
+- [x] expose a per-block "Suggest Edit" action in the editor UI
 
 ## Verification Checklist
 
@@ -61,6 +66,8 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] mocked suggestions are grouped into coherent sets
 - [x] a suggestion set can be retried/regenerated
 - [x] suggestion review feels diff-centric rather than card-centric
+- [x] a selected editable block can request generated edit suggestions
+- [x] generated edit suggestions appear in the same review/apply flow
 
 ## Notes
 

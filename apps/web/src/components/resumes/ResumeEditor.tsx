@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, getDocumentModel, getMockPatches, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
@@ -10,6 +10,7 @@ import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
 import type {
   CompileResultDto,
   DocumentModelDto,
+  EditableBlockDto,
   MockPatchProposalDto,
   MockSuggestionSetDto,
   ResumeDto,
@@ -209,6 +210,20 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     setMockPatchSeed(nextSeed);
   }
 
+  async function handleSuggestEdit(block: EditableBlockDto) {
+    setError(null);
+
+    try {
+      const generated = await generateEditSuggestions(resume.id, {
+        targetBlockId: block.id,
+        instruction: `Make this ${block.kind} stronger and more specific while preserving the existing voice.`,
+      });
+      setMockSuggestionSets(generated.items);
+    } catch (suggestError) {
+      setError(suggestError instanceof Error ? suggestError.message : "Failed to generate edit suggestions.");
+    }
+  }
+
   return (
     <section style={shellStyle}>
       <div style={headerStyle}>
@@ -284,7 +299,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
               )}
             </div>
           </div>
-          <DocumentModelPanel documentModel={documentModelState} />
+          <DocumentModelPanel documentModel={documentModelState} onSuggestEdit={handleSuggestEdit} />
           <SuggestionReviewPanel
             onApply={handleApplyMockPatch}
             onRetrySet={handleRetrySuggestionSet}

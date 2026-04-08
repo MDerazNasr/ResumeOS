@@ -106,6 +106,11 @@ class ApplyPatchInput(BaseModel):
     afterText: str
 
 
+class GenerateEditSuggestionsInput(BaseModel):
+    targetBlockId: str
+    instruction: str = Field(min_length=1, max_length=300)
+
+
 class UpdateDraftInput(BaseModel):
     sourceTex: str
     version: int = Field(ge=1)

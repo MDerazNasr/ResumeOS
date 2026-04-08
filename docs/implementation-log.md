@@ -37,6 +37,13 @@ Primary file:
 
 - [product-architecture.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/product-architecture.md)
 
+Planning updates should keep landing in the architecture doc as the product brief evolves.
+
+Recent planning additions:
+
+- light/dark mode is now tracked as a later UI preference and polish item
+- standard/Vim editor mode is now tracked as part of the editor experience
+
 ### 2026-03-29: Section 1 Scaffold
 
 Built the first real project slice for Resume Document Core.
@@ -450,6 +457,29 @@ Why this shape:
 
 - the safety core was already in place, so the leverage here was making the workflow read like a real review system
 - this brings the product closer to the eventual AI editing UX without introducing model variability yet
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
+### 2026-04-08: Section 4 First Generated Edit Suggestions
+
+Added the first real generation path on top of the existing safety and review system.
+
+Added:
+
+- LLM provider abstraction for block-level edit generation
+- default mock provider plus an OpenAI-backed provider path behind configuration
+- backend edit suggestion endpoint for one selected editable block
+- validation of generated candidates through the same patch gate used elsewhere
+- per-block `Suggest Edit` action in the document model panel
+
+Why this shape:
+
+- it introduces real generation at the narrowest safe scope
+- it reuses the same review/apply system instead of inventing a second path
+- it keeps testing stable by defaulting to a deterministic provider when not configured otherwise
 
 Verified:
 
