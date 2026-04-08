@@ -57,3 +57,23 @@ npm run dev:web:local
 ```
 
 Set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` if needed. By default the web app expects the API on `http://localhost:8000`.
+
+### Edit Suggestion Provider
+
+Block-level edit suggestions default to a deterministic mock provider so local development and tests stay stable.
+
+To switch the API to the OpenAI-backed provider, set these environment variables before starting the backend:
+
+```bash
+export RESUMEOS_LLM_PROVIDER=openai
+export OPENAI_API_KEY=your_key_here
+export RESUMEOS_OPENAI_MODEL=gpt-4o-mini
+```
+
+Optional:
+
+```bash
+export OPENAI_BASE_URL=https://api.openai.com/v1
+```
+
+If `RESUMEOS_LLM_PROVIDER` is not set, ResumeOS uses the mock provider by default.

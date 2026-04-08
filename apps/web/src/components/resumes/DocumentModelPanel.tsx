@@ -1,15 +1,27 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import type { DocumentModelDto, EditableBlockDto } from "@/lib/api/types";
 
 type DocumentModelPanelProps = {
   documentModel: DocumentModelDto;
-  onSuggestEdit: (block: EditableBlockDto) => Promise<void>;
+  onSuggestEdit: (block: EditableBlockDto, instruction: string) => Promise<void>;
 };
 
 export function DocumentModelPanel({ documentModel, onSuggestEdit }: DocumentModelPanelProps) {
   const previewBlocks = documentModel.editableBlocks.slice(0, 6);
+  const initialInstructions = useMemo(
+    () =>
+      Object.fromEntries(
+        previewBlocks.map((block) => [
+          block.id,
+          `Make this ${block.kind} stronger and more specific while preserving the existing voice.`,
+        ]),
+      ),
+    [previewBlocks],
+  );
+  const [instructions, setInstructions] = useState<Record<string, string>>(initialInstructions);
 
   return (
     <section style={panelStyle}>
@@ -50,12 +62,30 @@ export function DocumentModelPanel({ documentModel, onSuggestEdit }: DocumentMod
                 </div>
                 <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
                   <span style={badgeStyle}>{block.kind}</span>
-                  <button onClick={() => void onSuggestEdit(block)} style={buttonStyle} type="button">
+                  <button
+                    onClick={() => void onSuggestEdit(block, instructions[block.id] ?? initialInstructions[block.id])}
+                    style={buttonStyle}
+                    type="button"
+                  >
                     Suggest Edit
                   </button>
                 </div>
               </div>
               <p style={textPreviewStyle}>{block.text}</p>
+              <label style={instructionLabelStyle}>
+                Suggestion Prompt
+                <textarea
+                  onChange={(event) =>
+                    setInstructions((current) => ({
+                      ...current,
+                      [block.id]: event.target.value,
+                    }))
+                  }
+                  rows={3}
+                  style={instructionInputStyle}
+                  value={instructions[block.id] ?? initialInstructions[block.id]}
+                />
+              </label>
             </div>
           ))
         )}
@@ -133,5 +163,24 @@ const textPreviewStyle: CSSProperties = {
   margin: 0,
   color: "#eef1f6",
   fontSize: 13,
+  lineHeight: 1.5,
+};
+
+const instructionLabelStyle: CSSProperties = {
+  display: "grid",
+  gap: 8,
+  color: "#9ba3b4",
+  fontSize: 12,
+};
+
+const instructionInputStyle: CSSProperties = {
+  width: "100%",
+  padding: "10px 12px",
+  border: "1px solid #313748",
+  borderRadius: 12,
+  background: "#0f1115",
+  color: "#eef1f6",
+  resize: "vertical",
+  fontSize: 12,
   lineHeight: 1.5,
 };

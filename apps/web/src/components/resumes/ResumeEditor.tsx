@@ -210,13 +210,13 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     setMockPatchSeed(nextSeed);
   }
 
-  async function handleSuggestEdit(block: EditableBlockDto) {
+  async function handleSuggestEdit(block: EditableBlockDto, instruction: string) {
     setError(null);
 
     try {
       const generated = await generateEditSuggestions(resume.id, {
         targetBlockId: block.id,
-        instruction: `Make this ${block.kind} stronger and more specific while preserving the existing voice.`,
+        instruction,
       });
       setMockSuggestionSets(generated.items);
     } catch (suggestError) {

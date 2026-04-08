@@ -486,6 +486,26 @@ Verified:
 - backend tests still pass
 - frontend production build passes
 
+### 2026-04-08: User-Directed Edit Prompts
+
+Made the first generated edit flow user-directed instead of relying on one canned instruction.
+
+Added:
+
+- per-block prompt input in the document model panel
+- `Suggest Edit` now uses the user-provided instruction for that block
+- README guidance for switching from the default mock provider to the OpenAI-backed provider
+
+Why this shape:
+
+- it makes the block-level generation path materially more useful without changing the underlying safety model
+- it keeps the UI control close to the specific editable block being targeted
+
+Verified:
+
+- backend tests still pass
+- frontend production build passes
+
 ## Open Notes
 
 - local dev persistence is SQLite for now

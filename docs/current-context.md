@@ -56,6 +56,7 @@ That likely means:
 - mocked patch proposals are grouped into suggestion sets with retry behavior
 - suggestion review now reads like a diff workflow instead of a mock card list
 - selected editable blocks can now request generated edit suggestions through a provider abstraction
+- block-level generated edits are now user-directed instead of using one fixed prompt
 - document-model backend tests pass
 - frontend production build passes
 
