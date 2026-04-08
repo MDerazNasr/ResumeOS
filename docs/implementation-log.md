@@ -308,6 +308,20 @@ Verified:
 - backend test suite passes with the automatic snapshot behavior
 - frontend production build passes with the snapshot refresh wiring
 
+### 2026-04-08: Section 4 Tailoring Theme Grouping
+
+Improved tailoring output organization so the review surface feels closer to the real product and less like raw per-block scaffolding.
+
+Added:
+
+- backend grouping of tailoring suggestion sets around coarse job-description themes such as backend/API, systems/infrastructure, and ownership/collaboration
+- backend regression coverage that verifies theme-based grouping appears when the job description supports it
+
+Verified:
+
+- backend test suite passes with the new tailoring grouping behavior
+- frontend production build still passes with the unchanged review surface
+
 ### 2026-03-29: Section 3 Snapshot Safety Polish
 
 Improved the safety and clarity of destructive snapshot actions.

@@ -60,6 +60,7 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] expose a "Tailor Resume" action that loads tailoring suggestions into the same review surface
 - [x] auto-create a snapshot before tailoring suggestions are generated
 - [x] refresh the snapshot panel after tailoring so the pre-tailor snapshot is visible immediately
+- [x] group tailoring suggestion sets by coarse job-description themes instead of only by block
 
 ## Verification Checklist
 
@@ -83,6 +84,7 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] multi-block review suggestions appear in the same review/apply flow
 - [x] tailoring suggestions appear in the same review/apply flow
 - [x] tailoring creates a pre-tailor snapshot automatically
+- [x] tailoring suggestion sets are grouped by job-description themes or gaps
 
 ## Notes
 

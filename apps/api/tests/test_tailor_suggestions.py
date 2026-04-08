@@ -33,12 +33,39 @@ class TailorSuggestionsTestCase(unittest.TestCase):
         self.assertGreaterEqual(len(payload["items"]), 1)
 
         for suggestion_set in payload["items"]:
-            self.assertIn("Tailor suggestions for", suggestion_set["title"])
+            self.assertTrue(
+                suggestion_set["title"] in {
+                    "Backend / API alignment",
+                    "Systems / infrastructure alignment",
+                    "Ownership / collaboration alignment",
+                    "General role alignment",
+                }
+            )
             self.assertGreaterEqual(len(suggestion_set["items"]), 1)
 
             for proposal in suggestion_set["items"]:
                 self.assertEqual(proposal["status"], "validated")
                 self.assertTrue(proposal["validation"]["isValid"])
+
+    def test_generate_tailor_suggestions_groups_by_job_description_themes(self) -> None:
+        response = self.client.post(
+            f"/resumes/{self.resume_id}/suggestions/tailor",
+            json={
+                "jobDescription": (
+                    "Senior backend engineer working on APIs, distributed systems, platform infrastructure, "
+                    "and cross-functional product ownership."
+                ),
+                "instruction": "Tailor the resume toward the role.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        titles = {item["title"] for item in payload["items"]}
+
+        self.assertIn("Backend / API alignment", titles)
+        self.assertIn("Systems / infrastructure alignment", titles)
+        self.assertIn("Ownership / collaboration alignment", titles)
 
     def test_generate_tailor_suggestions_creates_pre_tailor_snapshot(self) -> None:
         before = self.client.get(f"/resumes/{self.resume_id}/snapshots").json()

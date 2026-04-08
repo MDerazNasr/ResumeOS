@@ -175,7 +175,7 @@ The first tailor mode should:
 - create a snapshot of the current draft before generating suggestions
 - select a limited number of editable blocks from the current draft
 - generate replacement candidates that better align those blocks to the target role
-- return them as grouped suggestion sets
+- return them as grouped suggestion sets, ideally organized around coarse job-description themes
 - reuse the same validation and apply mechanics as edit and review mode
 
 This keeps tailoring bounded to the same safe patch workflow instead of introducing full-document rewrite behavior.
