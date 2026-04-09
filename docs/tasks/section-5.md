@@ -23,6 +23,7 @@ Turn the current suggestion workflow into a first-class patch-set editing system
 - [x] verify the frontend still supports edit, review, and tailor flows through the new patch-set model
 - [x] remove the leftover mock-suggestion type naming from the shared frontend/backend contracts
 - [x] rename the seeded baseline patch-set route and client helpers to match the patch-set vocabulary
+- [x] rename the remaining editor review panel and patch-set state internals to match the patch-set workflow language
 
 ## Verification Checklist
 

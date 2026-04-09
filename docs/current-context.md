@@ -56,6 +56,7 @@ That now means:
 - patch application and feedback logging still work
 - the old mock-suggestion type aliases have been removed from the shared contract surface
 - the seeded baseline patch-set endpoint and client naming match the patch-set workflow language
+- the editor review panel and local state now also use patch-set terminology consistently
 - frontend review UI still renders grouped diff hunks correctly
 - backend tests pass
 - frontend production build passes

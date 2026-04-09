@@ -98,6 +98,21 @@ Verified:
 - backend test suite still passes after the route and helper rename
 - frontend production build still passes after the client/editor cleanup
 
+### 2026-04-09: Section 5 Review UI Naming Cleanup
+
+Finished the last low-risk frontend naming cleanup so the review surface and editor state match the patch-set workflow terminology introduced in Section 5.
+
+Added:
+
+- review panel component rename from `SuggestionReviewPanel` to `PatchSetReviewPanel`
+- editor state rename from suggestion-oriented names to patch-set-oriented names for empty-state and retry context tracking
+- Section 5 task/context updates so the recorded milestone matches the implementation
+
+Verified:
+
+- backend test suite still passes after the UI/internal rename
+- frontend production build still passes after the component rename
+
 ### 2026-03-29: Initial Project Docs
 
 Added the first project-level documentation:

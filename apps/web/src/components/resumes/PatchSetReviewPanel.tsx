@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import type { PatchHunkDto, PatchSetDto } from "@/lib/api/types";
 
-type SuggestionReviewPanelProps = {
+type PatchSetReviewPanelProps = {
   onRetrySet: (patchSet: PatchSetDto) => Promise<void>;
   onApply: (patchSet: PatchSetDto, hunk: PatchHunkDto) => Promise<boolean>;
   onDismiss: (patchSet: PatchSetDto, hunk: PatchHunkDto) => Promise<boolean>;
@@ -13,14 +13,14 @@ type SuggestionReviewPanelProps = {
   patchSets: PatchSetDto[];
 };
 
-export function SuggestionReviewPanel({
+export function PatchSetReviewPanel({
   onApply,
   onDismiss,
   onRetrySet,
   patchSets,
   isLoading = false,
   emptyMessage = null,
-}: SuggestionReviewPanelProps) {
+}: PatchSetReviewPanelProps) {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [dismissingId, setDismissingId] = useState<string | null>(null);
