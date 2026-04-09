@@ -157,7 +157,7 @@ def get_relevant_style_examples_for_user(
         _ensure_style_examples_table(connection)
         rows = connection.execute(
             """
-            SELECT block_kind, text
+            SELECT block_kind, block_label, text, updated_at
                  , source_type
             FROM style_examples
             WHERE resume_id = ?
@@ -165,7 +165,7 @@ def get_relevant_style_examples_for_user(
             (resume_id,),
         ).fetchall()
 
-    scored_examples: list[tuple[int, int, int, str]] = []
+    scored_examples: list[tuple[int, int, str, int, str, str]] = []
     for row in rows:
         text = row["text"].strip()
         if not text or text in excluded:
@@ -176,10 +176,19 @@ def get_relevant_style_examples_for_user(
         kind_bonus = 3 if preferred_kind and row["block_kind"] == preferred_kind else 0
         source_bonus = 5 if row["source_type"] == "accepted" else 0
         score = source_bonus + kind_bonus + overlap
-        scored_examples.append((score, source_bonus, len(example_tokens), text))
+        scored_examples.append(
+            (
+                score,
+                source_bonus,
+                row["updated_at"],
+                len(example_tokens),
+                row["block_label"],
+                text,
+            )
+        )
 
-    scored_examples.sort(key=lambda item: (-item[0], -item[1], item[2], item[3]))
-    return [text for _, _, _, text in scored_examples[:limit]]
+    scored_examples.sort(key=lambda item: (-item[0], -item[1], item[2], item[3], item[5]), reverse=False)
+    return _select_diverse_examples(scored_examples, limit)
 
 
 def _tokenize(text: str) -> set[str]:
@@ -203,3 +212,43 @@ def _ensure_style_examples_table(connection) -> None:
         )
         """
     )
+
+
+def _select_diverse_examples(
+    scored_examples: list[tuple[int, int, str, int, str, str]],
+    limit: int,
+) -> list[str]:
+    selected: list[str] = []
+    used_labels: set[str] = set()
+    remaining = sorted(
+        scored_examples,
+        key=lambda item: (-item[0], -item[1], -_updated_at_rank(item[2]), item[3], item[5]),
+    )
+
+    for score, source_bonus, updated_at, token_length, block_label, text in remaining:
+        if len(selected) >= limit:
+            break
+        if block_label in used_labels:
+            continue
+
+        selected.append(text)
+        used_labels.add(block_label)
+
+    if len(selected) >= limit:
+        return selected
+
+    for _, _, _, _, _, text in remaining:
+        if len(selected) >= limit:
+            break
+        if text in selected:
+            continue
+        selected.append(text)
+
+    return selected
+
+
+def _updated_at_rank(updated_at: str) -> float:
+    try:
+        return datetime.fromisoformat(updated_at).timestamp()
+    except ValueError:
+        return 0.0

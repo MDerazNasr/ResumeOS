@@ -73,6 +73,44 @@ class StyleMemoryTests(unittest.TestCase):
         self.assertGreaterEqual(len(examples), 1)
         self.assertEqual(examples[0], accepted_text)
 
+    def test_retrieval_prefers_varied_labels_before_duplicates(self) -> None:
+        store_accepted_style_example_for_user(
+            self.user["id"],
+            self.resume_id,
+            block_kind="bullet",
+            block_label="Experience",
+            text="Delivered backend improvements with clearer impact framing and tighter execution language.",
+        )
+        store_accepted_style_example_for_user(
+            self.user["id"],
+            self.resume_id,
+            block_kind="bullet",
+            block_label="Experience",
+            text="Improved API reliability with measurable results and sharper technical ownership framing.",
+        )
+        store_accepted_style_example_for_user(
+            self.user["id"],
+            self.resume_id,
+            block_kind="bullet",
+            block_label="Projects",
+            text="Built a product-facing system with explicit technical tradeoffs and stronger delivery framing.",
+        )
+
+        examples = get_relevant_style_examples_for_user(
+            self.user["id"],
+            self.resume_id,
+            instruction="Make this stronger and more results-oriented",
+            target_text="Built and shipped a production feature that improved a measurable product outcome.",
+            preferred_kind="bullet",
+            exclude_texts={"Built and shipped a production feature that improved a measurable product outcome."},
+        )
+
+        self.assertGreaterEqual(len(examples), 2)
+        self.assertIn(
+            "Built a product-facing system with explicit technical tradeoffs and stronger delivery framing.",
+            examples[:2],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

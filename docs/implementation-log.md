@@ -86,6 +86,21 @@ Verified:
 - backend test suite passes after accepted-style-example persistence was added
 - frontend production build still passes after the backend-only retrieval upgrade
 
+### 2026-04-09: Section 6 Retrieval Quality Upgrade
+
+Improved local style-memory retrieval so it is less repetitive and more useful without needing embeddings yet.
+
+Added:
+
+- retrieval ranking that considers freshness alongside source-type and overlap score
+- greedy result selection that prefers label diversity before returning duplicate examples from the same area
+- regression coverage confirming varied examples are selected when strong alternatives exist
+
+Verified:
+
+- backend test suite passes after the retrieval-quality upgrade
+- frontend production build still passes after the backend-only ranking change
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

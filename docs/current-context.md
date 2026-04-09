@@ -58,6 +58,7 @@ That means:
 - provider inputs visibly include style-memory context
 - patch sets now expose the retrieved style examples so the style-memory behavior is inspectable
 - accepted patch outcomes now contribute to style memory and are preferred during retrieval
+- local retrieval now also prefers fresher and more label-diverse examples when scores are close
 - patch validation and apply behavior remain unchanged
 - backend tests pass
 - frontend production build passes
