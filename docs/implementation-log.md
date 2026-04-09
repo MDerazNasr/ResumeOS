@@ -23,6 +23,21 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-08: Section 5 Planning
+
+Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.
+
+Planned scope:
+
+- formalize one first-class patch-set contract
+- adapt edit, review, and tailor flows to emit that contract
+- keep validation, apply, retry, and feedback behavior intact
+
+Primary planning files:
+
+- [section-5-patch-set-workflow.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-5-patch-set-workflow.md)
+- [section-5.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-5.md)
+
 ### 2026-03-29: Initial Project Docs
 
 Added the first project-level documentation:
