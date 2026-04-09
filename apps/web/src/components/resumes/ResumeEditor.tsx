@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getMockPatches, logFeedback, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getMockPatchSets, logFeedback, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
@@ -87,12 +87,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setPersistedSourceTex(savedDraft.sourceTex);
       setVersion(savedDraft.version);
       setUpdatedAt(savedDraft.updatedAt);
-      const [nextDocumentModel, nextMockPatches] = await Promise.all([
+      const [nextDocumentModel, nextPatchSets] = await Promise.all([
         getDocumentModel(resume.id),
-        getMockPatches(resume.id, mockPatchSeed),
+        getMockPatchSets(resume.id, mockPatchSeed),
       ]);
       setDocumentModelState(nextDocumentModel);
-      setPatchSets(nextMockPatches.items);
+      setPatchSets(nextPatchSets.items);
       setSuggestionEmptyMessage(null);
       setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
       return savedDraft;
@@ -192,12 +192,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setUpdatedAt(updatedDraft.updatedAt);
       setCompileResult(null);
 
-      const [nextDocumentModel, nextMockPatches] = await Promise.all([
+      const [nextDocumentModel, nextPatchSets] = await Promise.all([
         getDocumentModel(resume.id),
-        getMockPatches(resume.id, mockPatchSeed),
+        getMockPatchSets(resume.id, mockPatchSeed),
       ]);
       setDocumentModelState(nextDocumentModel);
-      setPatchSets(nextMockPatches.items);
+      setPatchSets(nextPatchSets.items);
       setSuggestionEmptyMessage(null);
       return true;
     } catch (applyError) {
@@ -229,10 +229,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     setUpdatedAt(restoredDraft.updatedAt);
     setCompileResult(null);
     setError(null);
-    void Promise.all([getDocumentModel(resume.id), getMockPatches(resume.id, mockPatchSeed)])
-      .then(([nextDocumentModel, nextMockPatches]) => {
+    void Promise.all([getDocumentModel(resume.id), getMockPatchSets(resume.id, mockPatchSeed)])
+      .then(([nextDocumentModel, nextPatchSets]) => {
         setDocumentModelState(nextDocumentModel);
-        setPatchSets(nextMockPatches.items);
+        setPatchSets(nextPatchSets.items);
         setSuggestionEmptyMessage(null);
         setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
       })
@@ -240,7 +240,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   }
 
   useEffect(() => {
-    void getMockPatches(resume.id, mockPatchSeed)
+    void getMockPatchSets(resume.id, mockPatchSeed)
       .then((result) => {
         setPatchSets(result.items);
         setSuggestionEmptyMessage(null);

@@ -83,10 +83,6 @@ export type PatchSetListDto = {
   items: PatchSetDto[];
 };
 
-export type MockPatchProposalDto = PatchHunkDto;
-export type MockSuggestionSetDto = PatchSetDto;
-export type MockSuggestionSetListDto = PatchSetListDto;
-
 export type LogFeedbackInput = {
   suggestionMode: "mock" | "edit" | "review" | "tailor";
   action: "apply" | "dismiss";

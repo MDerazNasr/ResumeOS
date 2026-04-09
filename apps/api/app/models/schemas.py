@@ -99,18 +99,6 @@ class PatchSetListDto(BaseModel):
     items: list[PatchSetDto]
 
 
-class MockPatchProposalDto(PatchHunkDto):
-    pass
-
-
-class MockSuggestionSetDto(PatchSetDto):
-    items: list[MockPatchProposalDto]
-
-
-class MockSuggestionSetListDto(PatchSetListDto):
-    items: list[MockSuggestionSetDto]
-
-
 class LogFeedbackInput(BaseModel):
     suggestionMode: Literal["mock", "edit", "review", "tailor"]
     action: Literal["apply", "dismiss"]

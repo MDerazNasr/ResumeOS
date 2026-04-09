@@ -68,6 +68,20 @@ Verified:
 - backend test suite passes after migrating all live generation flows to the patch-set contract
 - frontend production build passes with the unified contract in place
 
+### 2026-04-09: Section 5 Patch-Set Naming Cleanup
+
+Finished the contract cleanup by removing the leftover old mock-type aliases from the shared patch-set surface.
+
+Added:
+
+- backend mock patch source now emits the shared patch-set types directly
+- frontend client and editor helpers now refer to patch sets explicitly instead of carrying old mock-type aliases forward
+
+Verified:
+
+- backend test suite still passes after the naming cleanup
+- frontend production build still passes after the client/editor rename
+
 ### 2026-03-29: Initial Project Docs
 
 Added the first project-level documentation:

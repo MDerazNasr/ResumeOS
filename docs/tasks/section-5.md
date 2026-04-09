@@ -21,14 +21,15 @@ Turn the current suggestion workflow into a first-class patch-set editing system
 - [x] keep mode metadata, retry behavior, and feedback logging working after the contract rename
 - [x] add backend tests for the new patch-set contract
 - [x] verify the frontend still supports edit, review, and tailor flows through the new patch-set model
+- [x] remove the leftover mock-suggestion type naming from the shared frontend/backend contracts
 
 ## Verification Checklist
 
 - [x] patch sets are returned through one shared contract for edit, review, and tailor
 - [x] the edit flow returns the new patch-set contract explicitly
 - [x] review and tailor also return the new patch-set contract explicitly
-- [ ] validated patch application still works through the new contract
-- [ ] feedback logging still records apply and dismiss outcomes
+- [x] validated patch application still works through the new contract
+- [x] feedback logging still records apply and dismiss outcomes
 - [x] review UI still renders grouped diff hunks correctly
 - [x] backend tests pass
 - [x] frontend production build passes

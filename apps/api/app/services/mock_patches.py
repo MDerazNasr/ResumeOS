@@ -1,16 +1,16 @@
-from app.models.schemas import MockPatchProposalDto, MockSuggestionSetDto, MockSuggestionSetListDto, ValidatePatchInput
+from app.models.schemas import PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
 from app.services.document_model import get_document_model_for_user
 from app.services.patch_validation import validate_patch_for_user
 
 
-def list_mock_patch_proposals_for_user(user_id: str, resume_id: str, seed: int = 0) -> MockSuggestionSetListDto:
+def list_mock_patch_proposals_for_user(user_id: str, resume_id: str, seed: int = 0) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     editable_blocks = document_model.editableBlocks[:4]
     grouped_blocks = [editable_blocks[:2], editable_blocks[2:4]]
-    suggestion_sets: list[MockSuggestionSetDto] = []
+    suggestion_sets: list[PatchSetDto] = []
 
     for group_index, blocks in enumerate(grouped_blocks, start=1):
-        proposals: list[MockPatchProposalDto] = []
+        proposals: list[PatchHunkDto] = []
 
         for index, block in enumerate(blocks, start=1):
             if block is None:
@@ -32,7 +32,7 @@ def list_mock_patch_proposals_for_user(user_id: str, resume_id: str, seed: int =
                 continue
 
             proposals.append(
-                MockPatchProposalDto(
+                PatchHunkDto(
                     id=f"mock-patch-{group_index}-{index}",
                     operation="replace",
                     status="validated",
@@ -49,7 +49,7 @@ def list_mock_patch_proposals_for_user(user_id: str, resume_id: str, seed: int =
 
         if proposals:
             suggestion_sets.append(
-                MockSuggestionSetDto(
+                PatchSetDto(
                     id=f"mock-set-{group_index}",
                     mode="mock",
                     title=_build_set_title(group_index),
@@ -59,7 +59,7 @@ def list_mock_patch_proposals_for_user(user_id: str, resume_id: str, seed: int =
                 )
             )
 
-    return MockSuggestionSetListDto(items=suggestion_sets)
+    return PatchSetListDto(items=suggestion_sets)
 
 
 def _build_mock_after_text(block_kind: str, text: str, variant_seed: int) -> str:

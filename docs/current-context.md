@@ -54,6 +54,7 @@ That likely means:
 - patch sets are represented through one shared contract
 - edit, review, and tailor all emit the new patch-set structure explicitly
 - patch application and feedback logging still work
+- the old mock-suggestion type aliases have been removed from the shared contract surface
 - frontend review UI still renders grouped diff hunks correctly
 - backend tests pass
 - frontend production build passes
