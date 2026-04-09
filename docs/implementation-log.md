@@ -355,6 +355,20 @@ Verified:
 - backend test suite passes with feedback-event logging enabled
 - frontend production build passes with the feedback calls wired into the review surface
 
+### 2026-04-08: Section 4 SQLite Connection Hardening
+
+Cleaned up a backend reliability issue that was showing up as a wall of SQLite resource warnings during repeated test runs.
+
+Added:
+
+- explicit database connection closing in the shared SQLite helper so existing service call sites do not leak connections
+
+Verified:
+
+- backend test suite still passes after the helper change
+- the prior SQLite resource warning flood no longer appears in the test run
+- frontend production build still passes
+
 ### 2026-03-29: Section 3 Snapshot Safety Polish
 
 Improved the safety and clarity of destructive snapshot actions.

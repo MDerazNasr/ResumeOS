@@ -67,6 +67,7 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] add backend feedback-event logging for apply and dismiss outcomes
 - [x] log suggestion outcomes with mode, suggestion set id, proposal id, and target block id
 - [x] add backend tests for feedback logging
+- [x] harden backend database connection handling so repeated suggestion flows do not leak SQLite connections during tests
 
 ## Verification Checklist
 
@@ -94,6 +95,7 @@ Introduce a protected document model so ResumeOS can distinguish between safe AI
 - [x] suggestion review exposes explicit suggestion mode metadata
 - [x] retry/regenerate behavior respects the originating suggestion mode
 - [x] apply and dismiss actions produce persisted feedback events
+- [x] backend test suite runs cleanly without the prior SQLite resource warning flood
 
 ## Notes
 

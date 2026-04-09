@@ -65,6 +65,7 @@ That likely means:
 - tailoring suggestions are now grouped around coarse job-description themes instead of only per-block buckets
 - suggestion sets now carry explicit mode metadata and regenerate according to their originating flow
 - apply and dismiss outcomes are now logged as feedback events
+- backend database connections are now explicitly closed, which removed the repeated SQLite resource warnings in the test suite
 - document-model backend tests pass
 - frontend production build passes
 

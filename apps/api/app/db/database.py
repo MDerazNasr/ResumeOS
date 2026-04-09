@@ -1,4 +1,6 @@
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -6,10 +8,14 @@ DB_PATH = Path(__file__).resolve().parent.parent.parent / "resumeos.db"
 SCHEMA_PATH = Path(__file__).resolve().parent.parent.parent / "schema.sql"
 
 
-def get_connection() -> sqlite3.Connection:
+@contextmanager
+def get_connection() -> Iterator[sqlite3.Connection]:
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
-    return connection
+    try:
+        yield connection
+    finally:
+        connection.close()
 
 
 def initialize_database() -> None:
@@ -17,4 +23,3 @@ def initialize_database() -> None:
     with get_connection() as connection:
         connection.executescript(schema_sql)
         connection.commit()
-
