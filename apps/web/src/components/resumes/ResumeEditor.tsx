@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getMockPatchSets, logFeedback, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getSeededPatchSets, logFeedback, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
@@ -34,7 +34,7 @@ type SuggestionRequestContext =
 export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
   const [documentModelState, setDocumentModelState] = useState(documentModel);
   const [patchSets, setPatchSets] = useState<PatchSetDto[]>([]);
-  const [mockPatchSeed, setMockPatchSeed] = useState(0);
+  const [seededPatchSetSeed, setSeededPatchSetSeed] = useState(0);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
   const [version, setVersion] = useState(draft.version);
@@ -89,12 +89,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setUpdatedAt(savedDraft.updatedAt);
       const [nextDocumentModel, nextPatchSets] = await Promise.all([
         getDocumentModel(resume.id),
-        getMockPatchSets(resume.id, mockPatchSeed),
+        getSeededPatchSets(resume.id, seededPatchSetSeed),
       ]);
       setDocumentModelState(nextDocumentModel);
       setPatchSets(nextPatchSets.items);
       setSuggestionEmptyMessage(null);
-      setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+      setLastSuggestionRequest({ mode: "mock", seed: seededPatchSetSeed });
       return savedDraft;
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save draft.");
@@ -194,7 +194,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
       const [nextDocumentModel, nextPatchSets] = await Promise.all([
         getDocumentModel(resume.id),
-        getMockPatchSets(resume.id, mockPatchSeed),
+        getSeededPatchSets(resume.id, seededPatchSetSeed),
       ]);
       setDocumentModelState(nextDocumentModel);
       setPatchSets(nextPatchSets.items);
@@ -229,25 +229,25 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     setUpdatedAt(restoredDraft.updatedAt);
     setCompileResult(null);
     setError(null);
-    void Promise.all([getDocumentModel(resume.id), getMockPatchSets(resume.id, mockPatchSeed)])
+    void Promise.all([getDocumentModel(resume.id), getSeededPatchSets(resume.id, seededPatchSetSeed)])
       .then(([nextDocumentModel, nextPatchSets]) => {
         setDocumentModelState(nextDocumentModel);
         setPatchSets(nextPatchSets.items);
         setSuggestionEmptyMessage(null);
-        setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+        setLastSuggestionRequest({ mode: "mock", seed: seededPatchSetSeed });
       })
       .catch(() => null);
   }
 
   useEffect(() => {
-    void getMockPatchSets(resume.id, mockPatchSeed)
+    void getSeededPatchSets(resume.id, seededPatchSetSeed)
       .then((result) => {
         setPatchSets(result.items);
         setSuggestionEmptyMessage(null);
-        setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+        setLastSuggestionRequest({ mode: "mock", seed: seededPatchSetSeed });
       })
       .catch(() => null);
-  }, [mockPatchSeed, resume.id]);
+  }, [resume.id, seededPatchSetSeed]);
 
   async function handleRetryPatchSet(patchSet: PatchSetDto) {
     setError(null);
@@ -255,7 +255,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
     if (patchSet.mode === "mock") {
       const nextSeed = patchSet.retrySeed;
-      setMockPatchSeed(nextSeed);
+      setSeededPatchSetSeed(nextSeed);
       return;
     }
 

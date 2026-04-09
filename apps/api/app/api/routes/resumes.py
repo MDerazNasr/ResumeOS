@@ -11,8 +11,8 @@ from app.models.schemas import (
     GenerateReviewSuggestionsInput,
     GenerateTailorSuggestionsInput,
     LogFeedbackInput,
-    PatchSetListDto,
     PatchValidationResultDto,
+    PatchSetListDto,
     RestoreSnapshotInput,
     ResumeDto,
     ResumeListResponseDto,
@@ -30,7 +30,7 @@ from app.services.auth import get_current_user
 from app.services.document_model import get_document_model_for_user
 from app.services.edit_suggestions import generate_edit_suggestions_for_user, generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
 from app.services.feedback import log_feedback_for_user
-from app.services.mock_patches import list_mock_patch_proposals_for_user
+from app.services.mock_patches import list_seeded_patch_sets_for_user
 from app.services.patch_apply import apply_patch_for_user
 from app.services.patch_validation import validate_patch_for_user
 from app.services.resumes import (
@@ -88,13 +88,13 @@ def validate_patch(
     return validate_patch_for_user(current_user.id, resume_id, input_data)
 
 
-@router.get("/{resume_id}/patches/mock", response_model=PatchSetListDto)
-def list_mock_patches(
+@router.get("/{resume_id}/patch-sets/seeded", response_model=PatchSetListDto)
+def list_seeded_patch_sets(
     resume_id: str,
     seed: int = 0,
     current_user: UserDto = Depends(get_current_user),
 ) -> PatchSetListDto:
-    return list_mock_patch_proposals_for_user(current_user.id, resume_id, seed)
+    return list_seeded_patch_sets_for_user(current_user.id, resume_id, seed)
 
 
 @router.post("/{resume_id}/suggestions/edit", response_model=PatchSetListDto)

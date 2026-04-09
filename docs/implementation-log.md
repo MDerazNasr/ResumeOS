@@ -82,6 +82,22 @@ Verified:
 - backend test suite still passes after the naming cleanup
 - frontend production build still passes after the client/editor rename
 
+### 2026-04-09: Section 5 Seeded Patch-Set Route Cleanup
+
+Finished the remaining naming cleanup at the route and client layer so the baseline patch-set retrieval path matches the Section 5 vocabulary.
+
+Added:
+
+- backend seeded patch-set route rename from `/patches/mock` to `/patch-sets/seeded`
+- backend service rename so the seeded baseline source reads like patch-set infrastructure rather than a leftover mock helper
+- frontend client and editor-state rename from `getMockPatchSets` and `mockPatchSeed` to seeded patch-set terminology
+- backend test updates so patch-apply and seeded baseline coverage target the renamed route
+
+Verified:
+
+- backend test suite still passes after the route and helper rename
+- frontend production build still passes after the client/editor cleanup
+
 ### 2026-03-29: Initial Project Docs
 
 Added the first project-level documentation:

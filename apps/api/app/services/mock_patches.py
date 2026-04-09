@@ -3,7 +3,7 @@ from app.services.document_model import get_document_model_for_user
 from app.services.patch_validation import validate_patch_for_user
 
 
-def list_mock_patch_proposals_for_user(user_id: str, resume_id: str, seed: int = 0) -> PatchSetListDto:
+def list_seeded_patch_sets_for_user(user_id: str, resume_id: str, seed: int = 0) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     editable_blocks = document_model.editableBlocks[:4]
     grouped_blocks = [editable_blocks[:2], editable_blocks[2:4]]

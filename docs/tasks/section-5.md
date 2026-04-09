@@ -13,15 +13,16 @@ Turn the current suggestion workflow into a first-class patch-set editing system
 
 ## Implementation Checklist
 
-- [ ] document the Section 5 patch-set contract
+- [x] document the Section 5 patch-set contract
 - [x] define first-class patch-set DTOs distinct from the current mock suggestion naming
 - [x] add backend adapters so edit, review, and tailor flows all emit the same patch-set structure
-- [ ] preserve the current validation and apply gates under the new patch-set contract
+- [x] preserve the current validation and apply gates under the new patch-set contract
 - [x] update the frontend review surface to speak in terms of patch sets rather than mixed suggestion terminology
 - [x] keep mode metadata, retry behavior, and feedback logging working after the contract rename
 - [x] add backend tests for the new patch-set contract
 - [x] verify the frontend still supports edit, review, and tailor flows through the new patch-set model
 - [x] remove the leftover mock-suggestion type naming from the shared frontend/backend contracts
+- [x] rename the seeded baseline patch-set route and client helpers to match the patch-set vocabulary
 
 ## Verification Checklist
 

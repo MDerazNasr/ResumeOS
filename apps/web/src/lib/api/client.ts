@@ -71,8 +71,8 @@ export function getDocumentModel(resumeId: string): Promise<DocumentModelDto> {
   return apiFetch<DocumentModelDto>(`/resumes/${resumeId}/document-model`);
 }
 
-export function getMockPatchSets(resumeId: string, seed = 0): Promise<PatchSetListDto> {
-  return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/patches/mock?seed=${seed}`);
+export function getSeededPatchSets(resumeId: string, seed = 0): Promise<PatchSetListDto> {
+  return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/patch-sets/seeded?seed=${seed}`);
 }
 
 export function generateEditSuggestions(

@@ -43,11 +43,11 @@ Active milestone:
 
 Start Section 5 by turning the current suggestion workflow into one first-class patch-set system.
 
-That likely means:
+That now means:
 
-- define one shared patch-set contract
-- adapt edit, review, and tailor flows to emit that contract
-- keep validation, apply, retry, and feedback behavior intact under the new naming and boundaries
+- finish the remaining route and service naming cleanup around seeded baseline patch sets
+- keep validation, apply, retry, and feedback behavior intact under the patch-set naming
+- close Section 5 cleanly once the workflow is coherent end to end
 
 ## Definition of Success for the Current Slice
 
@@ -55,6 +55,7 @@ That likely means:
 - edit, review, and tailor all emit the new patch-set structure explicitly
 - patch application and feedback logging still work
 - the old mock-suggestion type aliases have been removed from the shared contract surface
+- the seeded baseline patch-set endpoint and client naming match the patch-set workflow language
 - frontend review UI still renders grouped diff hunks correctly
 - backend tests pass
 - frontend production build passes
