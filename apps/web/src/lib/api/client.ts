@@ -9,7 +9,7 @@ import type {
   GenerateReviewSuggestionsInput,
   GenerateTailorSuggestionsInput,
   LogFeedbackInput,
-  MockSuggestionSetListDto,
+  PatchSetListDto,
   RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
@@ -71,15 +71,15 @@ export function getDocumentModel(resumeId: string): Promise<DocumentModelDto> {
   return apiFetch<DocumentModelDto>(`/resumes/${resumeId}/document-model`);
 }
 
-export function getMockPatches(resumeId: string, seed = 0): Promise<MockSuggestionSetListDto> {
-  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/patches/mock?seed=${seed}`);
+export function getSeededPatchSets(resumeId: string, seed = 0): Promise<PatchSetListDto> {
+  return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/patch-sets/seeded?seed=${seed}`);
 }
 
 export function generateEditSuggestions(
   resumeId: string,
   input: GenerateEditSuggestionsInput,
-): Promise<MockSuggestionSetListDto> {
-  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/edit`, {
+): Promise<PatchSetListDto> {
+  return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/suggestions/edit`, {
     method: "POST",
     body: JSON.stringify(input)
   });
@@ -88,8 +88,8 @@ export function generateEditSuggestions(
 export function generateReviewSuggestions(
   resumeId: string,
   input: GenerateReviewSuggestionsInput,
-): Promise<MockSuggestionSetListDto> {
-  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/review`, {
+): Promise<PatchSetListDto> {
+  return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/suggestions/review`, {
     method: "POST",
     body: JSON.stringify(input)
   });
@@ -98,8 +98,8 @@ export function generateReviewSuggestions(
 export function generateTailorSuggestions(
   resumeId: string,
   input: GenerateTailorSuggestionsInput,
-): Promise<MockSuggestionSetListDto> {
-  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/tailor`, {
+): Promise<PatchSetListDto> {
+  return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/suggestions/tailor`, {
     method: "POST",
     body: JSON.stringify(input)
   });

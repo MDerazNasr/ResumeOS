@@ -72,7 +72,7 @@ class PatchValidationResultDto(BaseModel):
     reason: str | None = None
 
 
-class MockPatchProposalDto(BaseModel):
+class PatchHunkDto(BaseModel):
     id: str
     operation: Literal["replace"]
     status: Literal["validated"]
@@ -86,17 +86,17 @@ class MockPatchProposalDto(BaseModel):
     validation: PatchValidationResultDto
 
 
-class MockSuggestionSetDto(BaseModel):
+class PatchSetDto(BaseModel):
     id: str
     mode: Literal["mock", "edit", "review", "tailor"]
     title: str
     summary: str
     retrySeed: int
-    items: list[MockPatchProposalDto]
+    items: list[PatchHunkDto]
 
 
-class MockSuggestionSetListDto(BaseModel):
-    items: list[MockSuggestionSetDto]
+class PatchSetListDto(BaseModel):
+    items: list[PatchSetDto]
 
 
 class LogFeedbackInput(BaseModel):

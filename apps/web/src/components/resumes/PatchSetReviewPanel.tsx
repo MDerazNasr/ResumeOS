@@ -2,67 +2,67 @@
 
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import type { MockPatchProposalDto, MockSuggestionSetDto } from "@/lib/api/types";
+import type { PatchHunkDto, PatchSetDto } from "@/lib/api/types";
 
-type SuggestionReviewPanelProps = {
-  onRetrySet: (suggestionSet: MockSuggestionSetDto) => Promise<void>;
-  onApply: (suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) => Promise<boolean>;
-  onDismiss: (suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) => Promise<boolean>;
+type PatchSetReviewPanelProps = {
+  onRetrySet: (patchSet: PatchSetDto) => Promise<void>;
+  onApply: (patchSet: PatchSetDto, hunk: PatchHunkDto) => Promise<boolean>;
+  onDismiss: (patchSet: PatchSetDto, hunk: PatchHunkDto) => Promise<boolean>;
   isLoading?: boolean;
   emptyMessage?: string | null;
-  suggestionSets: MockSuggestionSetDto[];
+  patchSets: PatchSetDto[];
 };
 
-export function SuggestionReviewPanel({
+export function PatchSetReviewPanel({
   onApply,
   onDismiss,
   onRetrySet,
-  suggestionSets,
+  patchSets,
   isLoading = false,
   emptyMessage = null,
-}: SuggestionReviewPanelProps) {
+}: PatchSetReviewPanelProps) {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [dismissingId, setDismissingId] = useState<string | null>(null);
   const [retryingSetId, setRetryingSetId] = useState<string | null>(null);
-  const visibleSuggestionSets = suggestionSets
-    .map((suggestionSet) => ({
-      ...suggestionSet,
-      items: suggestionSet.items.filter((proposal) => !dismissedIds.includes(proposal.id)),
+  const visiblePatchSets = patchSets
+    .map((patchSet) => ({
+      ...patchSet,
+      items: patchSet.items.filter((hunk) => !dismissedIds.includes(hunk.id)),
     }))
-    .filter((suggestionSet) => suggestionSet.items.length > 0);
+    .filter((patchSet) => patchSet.items.length > 0);
 
-  async function handleApply(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
-    setApplyingId(proposal.id);
+  async function handleApply(patchSet: PatchSetDto, hunk: PatchHunkDto) {
+    setApplyingId(hunk.id);
 
     try {
-      const applied = await onApply(suggestionSet, proposal);
+      const applied = await onApply(patchSet, hunk);
       if (applied) {
-        setDismissedIds((current) => [...current, proposal.id]);
+        setDismissedIds((current) => [...current, hunk.id]);
       }
     } finally {
       setApplyingId(null);
     }
   }
 
-  async function handleRetrySet(suggestionSet: MockSuggestionSetDto) {
-    setRetryingSetId(suggestionSet.id);
+  async function handleRetrySet(patchSet: PatchSetDto) {
+    setRetryingSetId(patchSet.id);
 
     try {
-      await onRetrySet(suggestionSet);
+      await onRetrySet(patchSet);
       setDismissedIds([]);
     } finally {
       setRetryingSetId(null);
     }
   }
 
-  async function handleDismiss(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
-    setDismissingId(proposal.id);
+  async function handleDismiss(patchSet: PatchSetDto, hunk: PatchHunkDto) {
+    setDismissingId(hunk.id);
 
     try {
-      const dismissed = await onDismiss(suggestionSet, proposal);
+      const dismissed = await onDismiss(patchSet, hunk);
       if (dismissed) {
-        setDismissedIds((current) => [...current, proposal.id]);
+        setDismissedIds((current) => [...current, hunk.id]);
       }
     } finally {
       setDismissingId(null);
@@ -72,83 +72,83 @@ export function SuggestionReviewPanel({
   return (
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
-        <strong style={{ fontSize: 16 }}>Suggestions</strong>
+        <strong style={{ fontSize: 16 }}>Patch Sets</strong>
         <span style={{ color: "#9ba3b4", fontSize: 13 }}>
-          Structured suggestion sets rendered as validated patch hunks against the current draft.
+          Structured patch sets rendered as validated hunks against the current draft.
         </span>
       </div>
       {isLoading ? (
         <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
-          Generating suggestions for the current draft...
+          Generating patch sets for the current draft...
         </p>
-      ) : visibleSuggestionSets.length === 0 && suggestionSets.length > 0 ? (
+      ) : visiblePatchSets.length === 0 && patchSets.length > 0 ? (
         <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
-          All current suggestions were dismissed. Regenerate a set to try again.
+          All current patch hunks were dismissed. Regenerate a patch set to try again.
         </p>
-      ) : visibleSuggestionSets.length === 0 ? (
+      ) : visiblePatchSets.length === 0 ? (
         <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
-          {emptyMessage ?? "No suggestions are available for the current draft."}
+          {emptyMessage ?? "No patch sets are available for the current draft."}
         </p>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
-          {visibleSuggestionSets.map((suggestionSet) => (
-            <div key={suggestionSet.id} style={setCardStyle}>
+          {visiblePatchSets.map((patchSet) => (
+            <div key={patchSet.id} style={setCardStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                 <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                  <strong style={{ fontSize: 15 }}>{suggestionSet.title}</strong>
-                    <span style={modeBadgeStyle(suggestionSet.mode)}>{suggestionSet.mode}</span>
+                    <strong style={{ fontSize: 15 }}>{patchSet.title}</strong>
+                    <span style={modeBadgeStyle(patchSet.mode)}>{patchSet.mode}</span>
                   </div>
-                  <p style={setSummaryStyle}>{suggestionSet.summary}</p>
+                  <p style={setSummaryStyle}>{patchSet.summary}</p>
                 </div>
                 <button
                   disabled={retryingSetId !== null || applyingId !== null || dismissingId !== null}
-                  onClick={() => void handleRetrySet(suggestionSet)}
+                  onClick={() => void handleRetrySet(patchSet)}
                   style={secondaryButtonStyle}
                   type="button"
                 >
-                  {retryingSetId === suggestionSet.id ? retryLabel(suggestionSet.mode, true) : retryLabel(suggestionSet.mode, false)}
+                  {retryingSetId === patchSet.id ? retryLabel(patchSet.mode, true) : retryLabel(patchSet.mode, false)}
                 </button>
               </div>
               <div style={{ display: "grid", gap: 12 }}>
-                {suggestionSet.items.map((proposal) => (
-                  <div key={proposal.id} style={proposalCardStyle}>
+                {patchSet.items.map((hunk) => (
+                  <div key={hunk.id} style={proposalCardStyle}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                       <div style={{ display: "grid", gap: 4 }}>
-                        <strong style={{ fontSize: 14 }}>{proposal.label}</strong>
+                        <strong style={{ fontSize: 14 }}>{hunk.label}</strong>
                         <span style={{ color: "#9ba3b4", fontSize: 12 }}>
-                          {proposal.operation} • lines {proposal.startLine}-{proposal.endLine}
+                          {hunk.operation} • lines {hunk.startLine}-{hunk.endLine}
                         </span>
                       </div>
-                      <span style={badgeStyle}>{proposal.status}</span>
+                      <span style={badgeStyle}>{hunk.status}</span>
                     </div>
                     <div style={diffHunkStyle}>
                       <div style={diffLineStyle("removed")}>
                         <span style={lineMarkerStyle("removed")}>-</span>
-                        <code style={diffCodeStyle}>{proposal.beforeText}</code>
+                        <code style={diffCodeStyle}>{hunk.beforeText}</code>
                       </div>
                       <div style={diffLineStyle("added")}>
                         <span style={lineMarkerStyle("added")}>+</span>
-                        <code style={diffCodeStyle}>{proposal.afterText}</code>
+                        <code style={diffCodeStyle}>{hunk.afterText}</code>
                       </div>
                     </div>
-                    <p style={rationaleStyle}>{proposal.rationale}</p>
+                    <p style={rationaleStyle}>{hunk.rationale}</p>
                     <div style={actionsStyle}>
                       <button
                         disabled={applyingId !== null || retryingSetId !== null || dismissingId !== null}
-                        onClick={() => void handleApply(suggestionSet, proposal)}
+                        onClick={() => void handleApply(patchSet, hunk)}
                         style={primaryButtonStyle}
                         type="button"
                       >
-                        {applyingId === proposal.id ? "Applying..." : "Apply"}
+                        {applyingId === hunk.id ? "Applying..." : "Apply"}
                       </button>
                       <button
                         disabled={applyingId !== null || retryingSetId !== null || dismissingId !== null}
-                        onClick={() => void handleDismiss(suggestionSet, proposal)}
+                        onClick={() => void handleDismiss(patchSet, hunk)}
                         style={secondaryButtonStyle}
                         type="button"
                       >
-                        {dismissingId === proposal.id ? "Dismissing..." : "Dismiss"}
+                        {dismissingId === hunk.id ? "Dismissing..." : "Dismiss"}
                       </button>
                     </div>
                   </div>
@@ -207,7 +207,7 @@ const badgeStyle: CSSProperties = {
   textTransform: "uppercase",
 };
 
-function modeBadgeStyle(mode: MockSuggestionSetDto["mode"]): CSSProperties {
+function modeBadgeStyle(mode: PatchSetDto["mode"]): CSSProperties {
   const palette =
     mode === "tailor"
       ? { background: "#2b1f12", color: "#ffd7a3" }
@@ -224,7 +224,7 @@ function modeBadgeStyle(mode: MockSuggestionSetDto["mode"]): CSSProperties {
   };
 }
 
-function retryLabel(mode: MockSuggestionSetDto["mode"], isLoading: boolean): string {
+function retryLabel(mode: PatchSetDto["mode"], isLoading: boolean): string {
   if (isLoading) {
     return mode === "tailor" ? "Retailoring..." : mode === "review" ? "Rereviewing..." : mode === "edit" ? "Regenerating edit..." : "Retrying...";
   }

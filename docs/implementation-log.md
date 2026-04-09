@@ -23,6 +23,96 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-08: Section 5 Planning
+
+Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.
+
+Planned scope:
+
+- formalize one first-class patch-set contract
+- adapt edit, review, and tailor flows to emit that contract
+- keep validation, apply, retry, and feedback behavior intact
+
+Primary planning files:
+
+- [section-5-patch-set-workflow.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-5-patch-set-workflow.md)
+- [section-5.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-5.md)
+
+### 2026-04-08: Section 5 First Patch-Set Contract Slice
+
+Started the Section 5 migration by introducing a first-class patch-set contract without rewriting the whole subsystem at once.
+
+Added:
+
+- backend `PatchHunk`, `PatchSet`, and `PatchSetList` DTOs
+- backend `edit` route migration onto the new patch-set response model
+- frontend review-surface vocabulary shift from “suggestions” to “patch sets”
+- frontend state and handler updates so the live editor now works in terms of patch sets
+
+Verified:
+
+- backend test suite passes after the first contract migration
+- frontend production build passes after the review-surface rename
+
+### 2026-04-09: Section 5 Patch-Set Contract Migration
+
+Completed the contract migration so the live AI-assisted flows now speak one explicit backend shape.
+
+Added:
+
+- backend `review` and `tailor` route migration onto the shared patch-set response model
+- frontend client updates so mock, edit, review, and tailor retrieval now all work against the shared patch-set structure
+
+Verified:
+
+- backend test suite passes after migrating all live generation flows to the patch-set contract
+- frontend production build passes with the unified contract in place
+
+### 2026-04-09: Section 5 Patch-Set Naming Cleanup
+
+Finished the contract cleanup by removing the leftover old mock-type aliases from the shared patch-set surface.
+
+Added:
+
+- backend mock patch source now emits the shared patch-set types directly
+- frontend client and editor helpers now refer to patch sets explicitly instead of carrying old mock-type aliases forward
+
+Verified:
+
+- backend test suite still passes after the naming cleanup
+- frontend production build still passes after the client/editor rename
+
+### 2026-04-09: Section 5 Seeded Patch-Set Route Cleanup
+
+Finished the remaining naming cleanup at the route and client layer so the baseline patch-set retrieval path matches the Section 5 vocabulary.
+
+Added:
+
+- backend seeded patch-set route rename from `/patches/mock` to `/patch-sets/seeded`
+- backend service rename so the seeded baseline source reads like patch-set infrastructure rather than a leftover mock helper
+- frontend client and editor-state rename from `getMockPatchSets` and `mockPatchSeed` to seeded patch-set terminology
+- backend test updates so patch-apply and seeded baseline coverage target the renamed route
+
+Verified:
+
+- backend test suite still passes after the route and helper rename
+- frontend production build still passes after the client/editor cleanup
+
+### 2026-04-09: Section 5 Review UI Naming Cleanup
+
+Finished the last low-risk frontend naming cleanup so the review surface and editor state match the patch-set workflow terminology introduced in Section 5.
+
+Added:
+
+- review panel component rename from `SuggestionReviewPanel` to `PatchSetReviewPanel`
+- editor state rename from suggestion-oriented names to patch-set-oriented names for empty-state and retry context tracking
+- Section 5 task/context updates so the recorded milestone matches the implementation
+
+Verified:
+
+- backend test suite still passes after the UI/internal rename
+- frontend production build still passes after the component rename
+
 ### 2026-03-29: Initial Project Docs
 
 Added the first project-level documentation:

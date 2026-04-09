@@ -2,17 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getMockPatches, logFeedback, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getSeededPatchSets, logFeedback, saveDraft } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
-import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
+import { PatchSetReviewPanel } from "@/components/resumes/PatchSetReviewPanel";
 import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
 import type {
   CompileResultDto,
   DocumentModelDto,
   EditableBlockDto,
-  MockPatchProposalDto,
-  MockSuggestionSetDto,
+  PatchHunkDto,
+  PatchSetDto,
   ResumeDto,
   SnapshotDto,
   WorkingDraftDto,
@@ -25,7 +25,7 @@ type ResumeEditorProps = {
   resume: ResumeDto;
 };
 
-type SuggestionRequestContext =
+type PatchSetRequestContext =
   | { mode: "mock"; seed: number }
   | { mode: "edit"; targetBlockId: string; instruction: string }
   | { mode: "review"; instruction: string }
@@ -33,8 +33,8 @@ type SuggestionRequestContext =
 
 export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
   const [documentModelState, setDocumentModelState] = useState(documentModel);
-  const [mockSuggestionSets, setMockSuggestionSets] = useState<MockSuggestionSetDto[]>([]);
-  const [mockPatchSeed, setMockPatchSeed] = useState(0);
+  const [patchSets, setPatchSets] = useState<PatchSetDto[]>([]);
+  const [seededPatchSetSeed, setSeededPatchSetSeed] = useState(0);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
   const [version, setVersion] = useState(draft.version);
@@ -44,12 +44,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const [isReviewing, setIsReviewing] = useState(false);
   const [isTailoring, setIsTailoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [suggestionEmptyMessage, setSuggestionEmptyMessage] = useState<string | null>(null);
+  const [patchSetEmptyMessage, setPatchSetEmptyMessage] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
   const [jobDescription, setJobDescription] = useState("");
   const [snapshotRefreshToken, setSnapshotRefreshToken] = useState(0);
-  const [lastSuggestionRequest, setLastSuggestionRequest] = useState<SuggestionRequestContext>({ mode: "mock", seed: 0 });
+  const [lastPatchSetRequest, setLastPatchSetRequest] = useState<PatchSetRequestContext>({ mode: "mock", seed: 0 });
   const saveInFlightRef = useRef<Promise<WorkingDraftDto | null> | null>(null);
   const sourceTexRef = useRef(sourceTex);
   const persistedSourceTexRef = useRef(persistedSourceTex);
@@ -87,14 +87,14 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setPersistedSourceTex(savedDraft.sourceTex);
       setVersion(savedDraft.version);
       setUpdatedAt(savedDraft.updatedAt);
-      const [nextDocumentModel, nextMockPatches] = await Promise.all([
+      const [nextDocumentModel, nextPatchSets] = await Promise.all([
         getDocumentModel(resume.id),
-        getMockPatches(resume.id, mockPatchSeed),
+        getSeededPatchSets(resume.id, seededPatchSetSeed),
       ]);
       setDocumentModelState(nextDocumentModel);
-      setMockSuggestionSets(nextMockPatches.items);
-      setSuggestionEmptyMessage(null);
-      setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+      setPatchSets(nextPatchSets.items);
+      setPatchSetEmptyMessage(null);
+      setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       return savedDraft;
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save draft.");
@@ -164,23 +164,23 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     }
   }
 
-  async function handleApplyMockPatch(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
+  async function handleApplyPatchSetHunk(patchSet: PatchSetDto, hunk: PatchHunkDto) {
     setError(null);
 
     try {
       const updatedDraft = await applyPatch(resume.id, {
-        targetBlockId: proposal.targetBlockId,
-        startLine: proposal.startLine,
-        endLine: proposal.endLine,
-        beforeText: proposal.beforeText,
-        afterText: proposal.afterText,
+        targetBlockId: hunk.targetBlockId,
+        startLine: hunk.startLine,
+        endLine: hunk.endLine,
+        beforeText: hunk.beforeText,
+        afterText: hunk.afterText,
       });
       await logFeedback(resume.id, {
-        suggestionMode: suggestionSet.mode,
+        suggestionMode: patchSet.mode,
         action: "apply",
-        suggestionSetId: suggestionSet.id,
-        proposalId: proposal.id,
-        targetBlockId: proposal.targetBlockId,
+        suggestionSetId: patchSet.id,
+        proposalId: hunk.id,
+        targetBlockId: hunk.targetBlockId,
       });
 
       sourceTexRef.current = updatedDraft.sourceTex;
@@ -192,13 +192,13 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setUpdatedAt(updatedDraft.updatedAt);
       setCompileResult(null);
 
-      const [nextDocumentModel, nextMockPatches] = await Promise.all([
+      const [nextDocumentModel, nextPatchSets] = await Promise.all([
         getDocumentModel(resume.id),
-        getMockPatches(resume.id, mockPatchSeed),
+        getSeededPatchSets(resume.id, seededPatchSetSeed),
       ]);
       setDocumentModelState(nextDocumentModel);
-      setMockSuggestionSets(nextMockPatches.items);
-      setSuggestionEmptyMessage(null);
+      setPatchSets(nextPatchSets.items);
+      setPatchSetEmptyMessage(null);
       return true;
     } catch (applyError) {
       setError(applyError instanceof Error ? applyError.message : "Failed to apply patch.");
@@ -206,14 +206,14 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     }
   }
 
-  async function handleDismissSuggestion(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
+  async function handleDismissPatchSetHunk(patchSet: PatchSetDto, hunk: PatchHunkDto) {
     try {
       await logFeedback(resume.id, {
-        suggestionMode: suggestionSet.mode,
+        suggestionMode: patchSet.mode,
         action: "dismiss",
-        suggestionSetId: suggestionSet.id,
-        proposalId: proposal.id,
-        targetBlockId: proposal.targetBlockId,
+        suggestionSetId: patchSet.id,
+        proposalId: hunk.id,
+        targetBlockId: hunk.targetBlockId,
       });
       return true;
     } catch (dismissError) {
@@ -229,67 +229,67 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     setUpdatedAt(restoredDraft.updatedAt);
     setCompileResult(null);
     setError(null);
-    void Promise.all([getDocumentModel(resume.id), getMockPatches(resume.id, mockPatchSeed)])
-      .then(([nextDocumentModel, nextMockPatches]) => {
+    void Promise.all([getDocumentModel(resume.id), getSeededPatchSets(resume.id, seededPatchSetSeed)])
+      .then(([nextDocumentModel, nextPatchSets]) => {
         setDocumentModelState(nextDocumentModel);
-        setMockSuggestionSets(nextMockPatches.items);
-        setSuggestionEmptyMessage(null);
-        setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+        setPatchSets(nextPatchSets.items);
+        setPatchSetEmptyMessage(null);
+        setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       })
       .catch(() => null);
   }
 
   useEffect(() => {
-    void getMockPatches(resume.id, mockPatchSeed)
+    void getSeededPatchSets(resume.id, seededPatchSetSeed)
       .then((result) => {
-        setMockSuggestionSets(result.items);
-        setSuggestionEmptyMessage(null);
-        setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+        setPatchSets(result.items);
+        setPatchSetEmptyMessage(null);
+        setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       })
       .catch(() => null);
-  }, [mockPatchSeed, resume.id]);
+  }, [resume.id, seededPatchSetSeed]);
 
-  async function handleRetrySuggestionSet(suggestionSet: MockSuggestionSetDto) {
+  async function handleRetryPatchSet(patchSet: PatchSetDto) {
     setError(null);
-    setSuggestionEmptyMessage(null);
+    setPatchSetEmptyMessage(null);
 
-    if (suggestionSet.mode === "mock") {
-      const nextSeed = suggestionSet.retrySeed;
-      setMockPatchSeed(nextSeed);
+    if (patchSet.mode === "mock") {
+      const nextSeed = patchSet.retrySeed;
+      setSeededPatchSetSeed(nextSeed);
       return;
     }
 
     try {
-      if (lastSuggestionRequest.mode === "edit") {
+      if (lastPatchSetRequest.mode === "edit") {
         const generated = await generateEditSuggestions(resume.id, {
-          targetBlockId: lastSuggestionRequest.targetBlockId,
-          instruction: lastSuggestionRequest.instruction,
+          targetBlockId: lastPatchSetRequest.targetBlockId,
+          instruction: lastPatchSetRequest.instruction,
         });
-        setMockSuggestionSets(generated.items);
-        setSuggestionEmptyMessage(
+        setPatchSets(generated.items);
+        setPatchSetEmptyMessage(
           generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
         );
         return;
       }
 
-      if (lastSuggestionRequest.mode === "review") {
+      if (lastPatchSetRequest.mode === "review") {
         const generated = await generateReviewSuggestions(resume.id, {
-          instruction: lastSuggestionRequest.instruction,
+          instruction: lastPatchSetRequest.instruction,
         });
-        setMockSuggestionSets(generated.items);
-        setSuggestionEmptyMessage(
+        setPatchSets(generated.items);
+        setPatchSetEmptyMessage(
           generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
         );
         return;
       }
 
-      if (lastSuggestionRequest.mode === "tailor") {
+      if (lastPatchSetRequest.mode === "tailor") {
         const generated = await generateTailorSuggestions(resume.id, {
-          jobDescription: lastSuggestionRequest.jobDescription,
-          instruction: lastSuggestionRequest.instruction,
+          jobDescription: lastPatchSetRequest.jobDescription,
+          instruction: lastPatchSetRequest.instruction,
         });
-        setMockSuggestionSets(generated.items);
-        setSuggestionEmptyMessage(
+        setPatchSets(generated.items);
+        setPatchSetEmptyMessage(
           generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
         );
         setSnapshotRefreshToken((current) => current + 1);
@@ -301,16 +301,16 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
   async function handleSuggestEdit(block: EditableBlockDto, instruction: string) {
     setError(null);
-    setSuggestionEmptyMessage(null);
+    setPatchSetEmptyMessage(null);
 
     try {
       const generated = await generateEditSuggestions(resume.id, {
         targetBlockId: block.id,
         instruction,
       });
-      setMockSuggestionSets(generated.items);
-      setLastSuggestionRequest({ mode: "edit", targetBlockId: block.id, instruction });
-      setSuggestionEmptyMessage(
+      setPatchSets(generated.items);
+      setLastPatchSetRequest({ mode: "edit", targetBlockId: block.id, instruction });
+      setPatchSetEmptyMessage(
         generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
       );
     } catch (suggestError) {
@@ -321,14 +321,14 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   async function handleReviewResume() {
     setError(null);
     setIsReviewing(true);
-    setSuggestionEmptyMessage(null);
+    setPatchSetEmptyMessage(null);
 
     try {
       const instruction = "Review the current resume and suggest stronger wording for the weakest editable blocks.";
       const generated = await generateReviewSuggestions(resume.id, { instruction });
-      setMockSuggestionSets(generated.items);
-      setLastSuggestionRequest({ mode: "review", instruction });
-      setSuggestionEmptyMessage(
+      setPatchSets(generated.items);
+      setLastPatchSetRequest({ mode: "review", instruction });
+      setPatchSetEmptyMessage(
         generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
       );
     } catch (reviewError) {
@@ -348,7 +348,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
     setError(null);
     setIsTailoring(true);
-    setSuggestionEmptyMessage(null);
+    setPatchSetEmptyMessage(null);
 
     try {
       const draftReady = await ensureLatestDraftSaved();
@@ -361,9 +361,9 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         jobDescription: trimmedDescription,
         instruction,
       });
-      setMockSuggestionSets(generated.items);
-      setLastSuggestionRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
-      setSuggestionEmptyMessage(
+      setPatchSets(generated.items);
+      setLastPatchSetRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
+      setPatchSetEmptyMessage(
         generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
       );
       setSnapshotRefreshToken((current) => current + 1);
@@ -483,13 +483,13 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
             </button>
           </div>
           <DocumentModelPanel documentModel={documentModelState} onSuggestEdit={handleSuggestEdit} />
-          <SuggestionReviewPanel
-            emptyMessage={suggestionEmptyMessage}
+          <PatchSetReviewPanel
+            emptyMessage={patchSetEmptyMessage}
             isLoading={isReviewing || isTailoring}
-            onApply={handleApplyMockPatch}
-            onDismiss={handleDismissSuggestion}
-            onRetrySet={handleRetrySuggestionSet}
-            suggestionSets={mockSuggestionSets}
+            onApply={handleApplyPatchSetHunk}
+            onDismiss={handleDismissPatchSetHunk}
+            onRetrySet={handleRetryPatchSet}
+            patchSets={patchSets}
           />
           <SnapshotPanel
             currentSourceTex={sourceTex}

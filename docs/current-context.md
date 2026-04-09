@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 4: protected document model
+- Section 5: patch-set workflow
 
 ## Completed Milestones
 
@@ -13,6 +13,7 @@ Active milestone:
 - Section 2A: compile contract and editor workspace scaffolded and verified
 - Section 2B: real TeX compile execution and PDF preview implemented and verified
 - Section 2C: Monaco integration and compile test hardening implemented and verified
+- Section 4: protected document model and safe suggestion workflow completed and merged into `main`
 
 ## Current Constraints
 
@@ -33,40 +34,31 @@ Active milestone:
 - editor page is a two-pane workspace
 - left pane: Monaco-based LaTeX editor
 - right pane: compile status, real PDF preview, snapshots, document model summary, and suggestion review
+- the review surface now speaks in terms of patch sets instead of generic suggestions
 - the workspace now also includes a first tailoring input for job descriptions
 - tailoring now creates a pre-tailor snapshot before suggestions are generated
 - dirty-state tracking now follows the last saved draft
 
 ## Immediate Next Goal
 
-Build the next protected-document slice on top of the new extraction, validation, and first generated suggestion flows.
+Start Section 5 by turning the current suggestion workflow into one first-class patch-set system.
 
-That likely means:
+That now means:
 
-- tighten editable-block coverage for common resume constructs
-- prepare a cleaner patch schema around block IDs and source ranges
-- expand from the first real block-level edit, review, and tailoring generation paths into richer suggestion generation modes
+- finish the remaining route and service naming cleanup around seeded baseline patch sets
+- keep validation, apply, retry, and feedback behavior intact under the patch-set naming
+- close Section 5 cleanly once the workflow is coherent end to end
 
 ## Definition of Success for the Current Slice
 
-- protected regions are extracted from the current working draft
-- editable blocks are extracted from the current working draft
-- exact block-targeted patch validation is enforced server-side
-- the editor shows the model in a visible way
-- mocked patch proposals exercise the same validation gate before any AI integration
-- mocked patch proposals can be applied directly into the working draft
-- mocked patch proposals are grouped into suggestion sets with retry behavior
-- suggestion review now reads like a diff workflow instead of a mock card list
-- selected editable blocks can now request generated edit suggestions through a provider abstraction
-- block-level generated edits are now user-directed instead of using one fixed prompt
-- the workspace can now request multi-block review suggestions through the same review/apply flow
-- the workspace can now request first-pass tailoring suggestions from a pasted job description through the same review/apply flow
-- the snapshot panel now refreshes after tailoring so the pre-tailor snapshot is visible immediately
-- tailoring suggestions are now grouped around coarse job-description themes instead of only per-block buckets
-- suggestion sets now carry explicit mode metadata and regenerate according to their originating flow
-- apply and dismiss outcomes are now logged as feedback events
-- backend database connections are now explicitly closed, which removed the repeated SQLite resource warnings in the test suite
-- document-model backend tests pass
+- patch sets are represented through one shared contract
+- edit, review, and tailor all emit the new patch-set structure explicitly
+- patch application and feedback logging still work
+- the old mock-suggestion type aliases have been removed from the shared contract surface
+- the seeded baseline patch-set endpoint and client naming match the patch-set workflow language
+- the editor review panel and local state now also use patch-set terminology consistently
+- frontend review UI still renders grouped diff hunks correctly
+- backend tests pass
 - frontend production build passes
 
 ## Known Risks
