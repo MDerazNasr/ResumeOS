@@ -71,6 +71,21 @@ Verified:
 - backend test suite still passes after exposing style-memory metadata
 - frontend production build still passes with the new review-panel rendering
 
+### 2026-04-09: Section 6 Accepted Outcome Style Memory
+
+Extended style memory so the system learns not only from the current draft but also from text the user actually approved through patch application.
+
+Added:
+
+- accepted style-example persistence at patch-apply time
+- retrieval ranking that prefers accepted examples over plain draft-derived examples
+- regression tests confirming accepted outcomes are stored and preferred during retrieval
+
+Verified:
+
+- backend test suite passes after accepted-style-example persistence was added
+- frontend production build still passes after the backend-only retrieval upgrade
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

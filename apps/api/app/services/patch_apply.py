@@ -4,6 +4,7 @@ from app.models.schemas import ApplyPatchInput, WorkingDraftDto
 from app.services.document_model import get_document_model_for_user
 from app.services.patch_validation import validate_patch_for_user
 from app.services.resumes import get_draft_for_user, save_draft_for_user
+from app.services.style_memory import store_accepted_style_example_for_user
 
 
 def apply_patch_for_user(user_id: str, resume_id: str, input_data: ApplyPatchInput) -> WorkingDraftDto:
@@ -27,7 +28,15 @@ def apply_patch_for_user(user_id: str, resume_id: str, input_data: ApplyPatchInp
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target block not found.")
 
     updated_source = _replace_block_text(draft.sourceTex, target_block, input_data.afterText)
-    return save_draft_for_user(user_id, resume_id, updated_source, draft.version)
+    updated_draft = save_draft_for_user(user_id, resume_id, updated_source, draft.version)
+    store_accepted_style_example_for_user(
+        user_id,
+        resume_id,
+        block_kind=target_block.kind,
+        block_label=target_block.label,
+        text=input_data.afterText,
+    )
+    return updated_draft
 
 
 def _replace_block_text(source_tex: str, target_block, replacement_text: str) -> str:

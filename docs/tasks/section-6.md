@@ -22,6 +22,7 @@ Add a first-pass style-memory layer that makes generated patch sets reflect the 
 - [x] add backend tests for style-example persistence and retrieval
 - [x] verify frontend build still passes after backend integration
 - [x] expose retrieved style examples through the patch-set contract for inspection
+- [x] persist accepted patch outcomes as style-memory examples and prefer them during retrieval
 
 ## Verification Checklist
 
@@ -32,6 +33,7 @@ Add a first-pass style-memory layer that makes generated patch sets reflect the 
 - [x] backend tests pass
 - [x] frontend production build passes
 - [x] patch-review UI can show which style examples informed a patch set
+- [x] accepted patch outcomes are incorporated into style-memory retrieval
 
 ## Notes
 

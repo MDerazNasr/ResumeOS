@@ -57,6 +57,7 @@ That means:
 - edit, review, and tailor flows can retrieve a bounded style context
 - provider inputs visibly include style-memory context
 - patch sets now expose the retrieved style examples so the style-memory behavior is inspectable
+- accepted patch outcomes now contribute to style memory and are preferred during retrieval
 - patch validation and apply behavior remain unchanged
 - backend tests pass
 - frontend production build passes

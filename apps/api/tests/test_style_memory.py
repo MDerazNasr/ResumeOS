@@ -4,7 +4,11 @@ import unittest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.services.style_memory import get_relevant_style_examples_for_user, refresh_draft_style_examples_for_user
+from app.services.style_memory import (
+    get_relevant_style_examples_for_user,
+    refresh_draft_style_examples_for_user,
+    store_accepted_style_example_for_user,
+)
 
 
 class StyleMemoryTests(unittest.TestCase):
@@ -46,6 +50,28 @@ class StyleMemoryTests(unittest.TestCase):
 
         self.assertNotIn("Built and shipped a production feature that improved a measurable product outcome.", examples)
         self.assertTrue(any("Designed backend services" in example or "Building an AI-assisted resume IDE" in example for example in examples))
+
+    def test_retrieval_prefers_accepted_examples(self) -> None:
+        accepted_text = "Delivered a backend feature with clearer ownership, measurable impact, and crisp technical framing."
+        store_accepted_style_example_for_user(
+            self.user["id"],
+            self.resume_id,
+            block_kind="bullet",
+            block_label="Experience",
+            text=accepted_text,
+        )
+
+        examples = get_relevant_style_examples_for_user(
+            self.user["id"],
+            self.resume_id,
+            instruction="Make this stronger and more results-oriented",
+            target_text="Built and shipped a production feature that improved a measurable product outcome.",
+            preferred_kind="bullet",
+            exclude_texts={"Built and shipped a production feature that improved a measurable product outcome."},
+        )
+
+        self.assertGreaterEqual(len(examples), 1)
+        self.assertEqual(examples[0], accepted_text)
 
 
 if __name__ == "__main__":
