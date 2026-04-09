@@ -59,6 +59,7 @@ That means:
 - patch validation and apply behavior remain unchanged
 - backend tests pass
 - frontend production build passes
+- the first version remains deterministic and local, without vector or embedding infrastructure
 
 ## Known Risks
 

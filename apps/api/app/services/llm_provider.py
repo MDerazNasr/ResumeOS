@@ -11,6 +11,7 @@ class EditSuggestionPrompt:
     block_label: str
     instruction: str
     text: str
+    style_examples: list[str]
 
 
 @dataclass
@@ -40,8 +41,9 @@ class EditSuggestionProvider:
 class MockEditSuggestionProvider(EditSuggestionProvider):
     def generate_rewrites(self, prompt: EditSuggestionPrompt) -> list[str]:
         cleaned = prompt.text.rstrip(".")
-        base_suffix = "clearer scope and stronger technical specificity"
-        alternate_suffix = "more direct impact framing while preserving the original voice"
+        style_tone = _style_tone_suffix(prompt.style_examples)
+        base_suffix = f"clearer scope, stronger technical specificity, and {style_tone}"
+        alternate_suffix = f"more direct impact framing while preserving the user's {style_tone}"
 
         if prompt.block_kind == "bullet":
             return [
@@ -64,6 +66,7 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
                     block_label=block.block_label,
                     instruction=prompt.instruction,
                     text=block.text,
+                    style_examples=block.style_examples,
                 )
             )
 
@@ -122,6 +125,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                             f"Section: {prompt.block_label}\n"
                             f"Block kind: {prompt.block_kind}\n"
                             f"Instruction: {prompt.instruction}\n"
+                            f"Style examples: {json.dumps(prompt.style_examples)}\n"
                             f"Original text: {prompt.text}"
                         ),
                     },
@@ -165,6 +169,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                         "label": block.block_label,
                                         "kind": block.block_kind,
                                         "text": block.text,
+                                        "style_examples": block.style_examples,
                                     }
                                     for block in prompt.blocks
                                 ],
@@ -220,6 +225,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                         "label": block.block_label,
                                         "kind": block.block_kind,
                                         "text": block.text,
+                                        "style_examples": block.style_examples,
                                     }
                                     for block in prompt.blocks
                                 ],
@@ -260,6 +266,17 @@ def _extract_emphasized_terms(job_description: str) -> list[str]:
     ]
     lowered = job_description.lower()
     return [term for term in preferred_terms if term in lowered]
+
+
+def _style_tone_suffix(style_examples: list[str]) -> str:
+    if not style_examples:
+        return "a crisp resume cadence"
+
+    average_word_count = sum(len(example.split()) for example in style_examples) / len(style_examples)
+    if average_word_count <= 12:
+        return "tight bullet pacing"
+
+    return "slightly fuller explanatory pacing"
 
 
 def get_edit_suggestion_provider() -> EditSuggestionProvider:

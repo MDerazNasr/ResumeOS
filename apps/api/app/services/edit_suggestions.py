@@ -5,6 +5,7 @@ from app.services.document_model import get_document_model_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
 from app.services.patch_validation import validate_patch_for_user
 from app.services.snapshots import create_automatic_snapshot_for_user
+from app.services.style_memory import get_relevant_style_examples_for_user
 
 
 def generate_edit_suggestions_for_user(
@@ -25,6 +26,14 @@ def generate_edit_suggestions_for_user(
             block_label=target_block.label,
             instruction=input_data.instruction,
             text=target_block.text,
+            style_examples=get_relevant_style_examples_for_user(
+                user_id,
+                resume_id,
+                instruction=input_data.instruction,
+                target_text=target_block.text,
+                preferred_kind=target_block.kind,
+                exclude_texts={target_block.text},
+            ),
         )
     )
 
@@ -92,6 +101,14 @@ def generate_review_suggestions_for_user(
                     block_label=block.label,
                     instruction=input_data.instruction,
                     text=block.text,
+                    style_examples=get_relevant_style_examples_for_user(
+                        user_id,
+                        resume_id,
+                        instruction=input_data.instruction,
+                        target_text=block.text,
+                        preferred_kind=block.kind,
+                        exclude_texts={block.text},
+                    ),
                 )
                 for block in selected_blocks
             ],
@@ -174,6 +191,14 @@ def generate_tailor_suggestions_for_user(
                     block_label=block.label,
                     instruction=input_data.instruction,
                     text=block.text,
+                    style_examples=get_relevant_style_examples_for_user(
+                        user_id,
+                        resume_id,
+                        instruction=input_data.instruction,
+                        target_text=block.text,
+                        preferred_kind=block.kind,
+                        exclude_texts={block.text},
+                    ),
                 )
                 for block in selected_blocks
             ],

@@ -59,3 +59,16 @@ CREATE TABLE IF NOT EXISTS feedback_events (
   created_at TEXT NOT NULL,
   FOREIGN KEY(resume_id) REFERENCES resumes(id)
 );
+
+CREATE TABLE IF NOT EXISTS style_examples (
+  id TEXT PRIMARY KEY,
+  resume_id TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  block_kind TEXT NOT NULL,
+  block_label TEXT NOT NULL,
+  text TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(resume_id, source_type, text),
+  FOREIGN KEY(resume_id) REFERENCES resumes(id)
+);

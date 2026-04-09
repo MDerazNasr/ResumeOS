@@ -39,6 +39,22 @@ Primary planning files:
 - [section-6-style-memory.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-6-style-memory.md)
 - [section-6.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-6.md)
 
+### 2026-04-09: Section 6 First Style-Memory Slice
+
+Implemented the first local style-memory layer without introducing vector infrastructure.
+
+Added:
+
+- `style_examples` persistence in the local schema
+- a backend style-memory service that refreshes draft-derived style examples and retrieves a bounded relevant subset
+- style-context threading into edit, review, and tailor provider prompts
+- backend tests covering style-example persistence and retrieval
+
+Verified:
+
+- backend test suite passes after the style-memory integration
+- frontend production build still passes after the backend-only change
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.
