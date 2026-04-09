@@ -34,6 +34,7 @@ Active milestone:
 - editor page is a two-pane workspace
 - left pane: Monaco-based LaTeX editor
 - right pane: compile status, real PDF preview, snapshots, document model summary, and suggestion review
+- the review surface now speaks in terms of patch sets instead of generic suggestions
 - the workspace now also includes a first tailoring input for job descriptions
 - tailoring now creates a pre-tailor snapshot before suggestions are generated
 - dirty-state tracking now follows the last saved draft
@@ -51,7 +52,8 @@ That likely means:
 ## Definition of Success for the Current Slice
 
 - patch sets are represented through one shared contract
-- edit, review, and tailor all emit the same patch-set structure
+- the `edit` flow already emits the new patch-set structure explicitly
+- review and tailor remain source-compatible while they wait for the next migration slice
 - patch application and feedback logging still work
 - frontend review UI still renders grouped diff hunks correctly
 - backend tests pass

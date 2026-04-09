@@ -38,6 +38,22 @@ Primary planning files:
 - [section-5-patch-set-workflow.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-5-patch-set-workflow.md)
 - [section-5.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-5.md)
 
+### 2026-04-08: Section 5 First Patch-Set Contract Slice
+
+Started the Section 5 migration by introducing a first-class patch-set contract without rewriting the whole subsystem at once.
+
+Added:
+
+- backend `PatchHunk`, `PatchSet`, and `PatchSetList` DTOs
+- backend `edit` route migration onto the new patch-set response model
+- frontend review-surface vocabulary shift from “suggestions” to “patch sets”
+- frontend state and handler updates so the live editor now works in terms of patch sets
+
+Verified:
+
+- backend test suite passes after the first contract migration
+- frontend production build passes after the review-surface rename
+
 ### 2026-03-29: Initial Project Docs
 
 Added the first project-level documentation:

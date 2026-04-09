@@ -10,6 +10,7 @@ import type {
   GenerateTailorSuggestionsInput,
   LogFeedbackInput,
   MockSuggestionSetListDto,
+  PatchSetListDto,
   RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
@@ -78,8 +79,8 @@ export function getMockPatches(resumeId: string, seed = 0): Promise<MockSuggesti
 export function generateEditSuggestions(
   resumeId: string,
   input: GenerateEditSuggestionsInput,
-): Promise<MockSuggestionSetListDto> {
-  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/edit`, {
+): Promise<PatchSetListDto> {
+  return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/suggestions/edit`, {
     method: "POST",
     body: JSON.stringify(input)
   });

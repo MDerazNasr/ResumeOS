@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 
-from app.models.schemas import GenerateEditSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, MockPatchProposalDto, MockSuggestionSetDto, MockSuggestionSetListDto, ValidatePatchInput
+from app.models.schemas import GenerateEditSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, MockPatchProposalDto, MockSuggestionSetDto, MockSuggestionSetListDto, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
 from app.services.document_model import get_document_model_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
 from app.services.patch_validation import validate_patch_for_user
@@ -11,7 +11,7 @@ def generate_edit_suggestions_for_user(
     user_id: str,
     resume_id: str,
     input_data: GenerateEditSuggestionsInput,
-) -> MockSuggestionSetListDto:
+) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     target_block = next((block for block in document_model.editableBlocks if block.id == input_data.targetBlockId), None)
 
@@ -28,7 +28,7 @@ def generate_edit_suggestions_for_user(
         )
     )
 
-    proposals: list[MockPatchProposalDto] = []
+    proposals: list[PatchHunkDto] = []
     for index, after_text in enumerate(candidates, start=1):
         validation = validate_patch_for_user(
             user_id,
@@ -45,7 +45,7 @@ def generate_edit_suggestions_for_user(
             continue
 
         proposals.append(
-            MockPatchProposalDto(
+            PatchHunkDto(
                 id=f"generated-edit-{index}",
                 operation="replace",
                 status="validated",
@@ -60,9 +60,9 @@ def generate_edit_suggestions_for_user(
             )
         )
 
-    return MockSuggestionSetListDto(
+    return PatchSetListDto(
         items=[
-            MockSuggestionSetDto(
+            PatchSetDto(
                 id=f"generated-set-{target_block.id}",
                 mode="edit",
                 title=f"Edit suggestions for {target_block.label}",

@@ -67,6 +67,17 @@ Section 5 is successful when:
 - apply, dismiss, retry, and feedback still work
 - no safety guarantees are weakened
 
+## First Migration Slice
+
+The first concrete Section 5 migration should stay narrow:
+
+- define first-class `PatchHunk` and `PatchSet` DTOs
+- migrate the `edit` flow to emit that contract explicitly
+- move the frontend review surface vocabulary to patch-set terminology
+- keep `review` and `tailor` source-compatible while they wait for the next migration slice
+
+This gives the system a real new contract without attempting a risky all-at-once rename.
+
 ## Why This Matters
 
 Section 4 made the system safe.

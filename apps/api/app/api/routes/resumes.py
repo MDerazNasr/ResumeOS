@@ -12,6 +12,7 @@ from app.models.schemas import (
     GenerateTailorSuggestionsInput,
     LogFeedbackInput,
     MockSuggestionSetListDto,
+    PatchSetListDto,
     PatchValidationResultDto,
     RestoreSnapshotInput,
     ResumeDto,
@@ -97,12 +98,12 @@ def list_mock_patches(
     return list_mock_patch_proposals_for_user(current_user.id, resume_id, seed)
 
 
-@router.post("/{resume_id}/suggestions/edit", response_model=MockSuggestionSetListDto)
+@router.post("/{resume_id}/suggestions/edit", response_model=PatchSetListDto)
 def generate_edit_suggestions(
     resume_id: str,
     input_data: GenerateEditSuggestionsInput,
     current_user: UserDto = Depends(get_current_user),
-) -> MockSuggestionSetListDto:
+) -> PatchSetListDto:
     return generate_edit_suggestions_for_user(current_user.id, resume_id, input_data)
 
 

@@ -56,7 +56,7 @@ export type PatchValidationResultDto = {
   reason: string | null;
 };
 
-export type MockPatchProposalDto = {
+export type PatchHunkDto = {
   id: string;
   operation: "replace";
   status: "validated";
@@ -70,18 +70,22 @@ export type MockPatchProposalDto = {
   validation: PatchValidationResultDto;
 };
 
-export type MockSuggestionSetDto = {
+export type PatchSetDto = {
   id: string;
   mode: "mock" | "edit" | "review" | "tailor";
   title: string;
   summary: string;
   retrySeed: number;
-  items: MockPatchProposalDto[];
+  items: PatchHunkDto[];
 };
 
-export type MockSuggestionSetListDto = {
-  items: MockSuggestionSetDto[];
+export type PatchSetListDto = {
+  items: PatchSetDto[];
 };
+
+export type MockPatchProposalDto = PatchHunkDto;
+export type MockSuggestionSetDto = PatchSetDto;
+export type MockSuggestionSetListDto = PatchSetListDto;
 
 export type LogFeedbackInput = {
   suggestionMode: "mock" | "edit" | "review" | "tailor";
