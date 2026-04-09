@@ -72,11 +72,11 @@ Section 5 is successful when:
 The first concrete Section 5 migration should stay narrow:
 
 - define first-class `PatchHunk` and `PatchSet` DTOs
-- migrate the `edit` flow to emit that contract explicitly
+- migrate the `edit`, `review`, and `tailor` flows to emit that contract explicitly
 - move the frontend review surface vocabulary to patch-set terminology
-- keep `review` and `tailor` source-compatible while they wait for the next migration slice
+- keep the underlying validation, retry, apply, and feedback behavior stable during the contract migration
 
-This gives the system a real new contract without attempting a risky all-at-once rename.
+This gives the system a real new contract without attempting a risky all-at-once subsystem rewrite.
 
 ## Why This Matters
 

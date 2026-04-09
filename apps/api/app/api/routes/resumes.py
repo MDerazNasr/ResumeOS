@@ -11,7 +11,6 @@ from app.models.schemas import (
     GenerateReviewSuggestionsInput,
     GenerateTailorSuggestionsInput,
     LogFeedbackInput,
-    MockSuggestionSetListDto,
     PatchSetListDto,
     PatchValidationResultDto,
     RestoreSnapshotInput,
@@ -89,12 +88,12 @@ def validate_patch(
     return validate_patch_for_user(current_user.id, resume_id, input_data)
 
 
-@router.get("/{resume_id}/patches/mock", response_model=MockSuggestionSetListDto)
+@router.get("/{resume_id}/patches/mock", response_model=PatchSetListDto)
 def list_mock_patches(
     resume_id: str,
     seed: int = 0,
     current_user: UserDto = Depends(get_current_user),
-) -> MockSuggestionSetListDto:
+) -> PatchSetListDto:
     return list_mock_patch_proposals_for_user(current_user.id, resume_id, seed)
 
 
@@ -107,21 +106,21 @@ def generate_edit_suggestions(
     return generate_edit_suggestions_for_user(current_user.id, resume_id, input_data)
 
 
-@router.post("/{resume_id}/suggestions/review", response_model=MockSuggestionSetListDto)
+@router.post("/{resume_id}/suggestions/review", response_model=PatchSetListDto)
 def generate_review_suggestions(
     resume_id: str,
     input_data: GenerateReviewSuggestionsInput,
     current_user: UserDto = Depends(get_current_user),
-) -> MockSuggestionSetListDto:
+) -> PatchSetListDto:
     return generate_review_suggestions_for_user(current_user.id, resume_id, input_data)
 
 
-@router.post("/{resume_id}/suggestions/tailor", response_model=MockSuggestionSetListDto)
+@router.post("/{resume_id}/suggestions/tailor", response_model=PatchSetListDto)
 def generate_tailor_suggestions(
     resume_id: str,
     input_data: GenerateTailorSuggestionsInput,
     current_user: UserDto = Depends(get_current_user),
-) -> MockSuggestionSetListDto:
+) -> PatchSetListDto:
     return generate_tailor_suggestions_for_user(current_user.id, resume_id, input_data)
 
 

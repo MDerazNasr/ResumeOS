@@ -15,17 +15,18 @@ Turn the current suggestion workflow into a first-class patch-set editing system
 
 - [ ] document the Section 5 patch-set contract
 - [x] define first-class patch-set DTOs distinct from the current mock suggestion naming
-- [ ] add backend adapters so edit, review, and tailor flows all emit the same patch-set structure
+- [x] add backend adapters so edit, review, and tailor flows all emit the same patch-set structure
 - [ ] preserve the current validation and apply gates under the new patch-set contract
 - [x] update the frontend review surface to speak in terms of patch sets rather than mixed suggestion terminology
-- [ ] keep mode metadata, retry behavior, and feedback logging working after the contract rename
-- [ ] add backend tests for the new patch-set contract
-- [ ] verify the frontend still supports edit, review, and tailor flows through the new patch-set model
+- [x] keep mode metadata, retry behavior, and feedback logging working after the contract rename
+- [x] add backend tests for the new patch-set contract
+- [x] verify the frontend still supports edit, review, and tailor flows through the new patch-set model
 
 ## Verification Checklist
 
-- [ ] patch sets are returned through one shared contract for edit, review, and tailor
+- [x] patch sets are returned through one shared contract for edit, review, and tailor
 - [x] the edit flow returns the new patch-set contract explicitly
+- [x] review and tailor also return the new patch-set contract explicitly
 - [ ] validated patch application still works through the new contract
 - [ ] feedback logging still records apply and dismiss outcomes
 - [x] review UI still renders grouped diff hunks correctly

@@ -52,8 +52,7 @@ That likely means:
 ## Definition of Success for the Current Slice
 
 - patch sets are represented through one shared contract
-- the `edit` flow already emits the new patch-set structure explicitly
-- review and tailor remain source-compatible while they wait for the next migration slice
+- edit, review, and tailor all emit the new patch-set structure explicitly
 - patch application and feedback logging still work
 - frontend review UI still renders grouped diff hunks correctly
 - backend tests pass

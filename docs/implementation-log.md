@@ -54,6 +54,20 @@ Verified:
 - backend test suite passes after the first contract migration
 - frontend production build passes after the review-surface rename
 
+### 2026-04-09: Section 5 Patch-Set Contract Migration
+
+Completed the contract migration so the live AI-assisted flows now speak one explicit backend shape.
+
+Added:
+
+- backend `review` and `tailor` route migration onto the shared patch-set response model
+- frontend client updates so mock, edit, review, and tailor retrieval now all work against the shared patch-set structure
+
+Verified:
+
+- backend test suite passes after migrating all live generation flows to the patch-set contract
+- frontend production build passes with the unified contract in place
+
 ### 2026-03-29: Initial Project Docs
 
 Added the first project-level documentation:

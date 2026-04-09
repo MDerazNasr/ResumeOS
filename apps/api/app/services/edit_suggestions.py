@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 
-from app.models.schemas import GenerateEditSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, MockPatchProposalDto, MockSuggestionSetDto, MockSuggestionSetListDto, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
+from app.models.schemas import GenerateEditSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
 from app.services.document_model import get_document_model_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
 from app.services.patch_validation import validate_patch_for_user
@@ -78,7 +78,7 @@ def generate_review_suggestions_for_user(
     user_id: str,
     resume_id: str,
     input_data: GenerateReviewSuggestionsInput,
-) -> MockSuggestionSetListDto:
+) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     provider = get_edit_suggestion_provider()
     selected_blocks = document_model.editableBlocks[:3]
@@ -98,10 +98,10 @@ def generate_review_suggestions_for_user(
         )
     )
 
-    suggestion_sets: list[MockSuggestionSetDto] = []
+    suggestion_sets: list[PatchSetDto] = []
     for index, block in enumerate(selected_blocks, start=1):
         candidates = generated.get(block.text, [])
-        proposals: list[MockPatchProposalDto] = []
+        proposals: list[PatchHunkDto] = []
 
         for candidate_index, after_text in enumerate(candidates[:2], start=1):
             validation = validate_patch_for_user(
@@ -119,7 +119,7 @@ def generate_review_suggestions_for_user(
                 continue
 
             proposals.append(
-                MockPatchProposalDto(
+                PatchHunkDto(
                     id=f"review-edit-{index}-{candidate_index}",
                     operation="replace",
                     status="validated",
@@ -136,7 +136,7 @@ def generate_review_suggestions_for_user(
 
         if proposals:
             suggestion_sets.append(
-                MockSuggestionSetDto(
+                PatchSetDto(
                     id=f"review-set-{block.id}",
                     mode="review",
                     title=f"Review suggestions for {block.label}",
@@ -146,14 +146,14 @@ def generate_review_suggestions_for_user(
                 )
             )
 
-    return MockSuggestionSetListDto(items=suggestion_sets)
+    return PatchSetListDto(items=suggestion_sets)
 
 
 def generate_tailor_suggestions_for_user(
     user_id: str,
     resume_id: str,
     input_data: GenerateTailorSuggestionsInput,
-) -> MockSuggestionSetListDto:
+) -> PatchSetListDto:
     create_automatic_snapshot_for_user(
         user_id,
         resume_id,
@@ -180,7 +180,7 @@ def generate_tailor_suggestions_for_user(
         )
     )
 
-    grouped_suggestion_items: dict[str, list[MockPatchProposalDto]] = {group["id"]: [] for group in theme_groups}
+    grouped_suggestion_items: dict[str, list[PatchHunkDto]] = {group["id"]: [] for group in theme_groups}
     assigned_theme_ids: set[str] = set()
     for index, block in enumerate(selected_blocks, start=1):
         candidates = generated.get(block.text, [])
@@ -203,7 +203,7 @@ def generate_tailor_suggestions_for_user(
                 continue
 
             grouped_suggestion_items[theme_id].append(
-                MockPatchProposalDto(
+                PatchHunkDto(
                     id=f"tailor-edit-{index}-{candidate_index}",
                     operation="replace",
                     status="validated",
@@ -218,12 +218,12 @@ def generate_tailor_suggestions_for_user(
                 )
             )
 
-    suggestion_sets: list[MockSuggestionSetDto] = []
+    suggestion_sets: list[PatchSetDto] = []
     for theme in theme_groups:
         proposals = grouped_suggestion_items[theme["id"]]
         if proposals:
             suggestion_sets.append(
-                MockSuggestionSetDto(
+                PatchSetDto(
                     id=f"tailor-set-{theme['id']}",
                     mode="tailor",
                     title=theme["title"],
@@ -233,7 +233,7 @@ def generate_tailor_suggestions_for_user(
                 )
             )
 
-    return MockSuggestionSetListDto(items=suggestion_sets)
+    return PatchSetListDto(items=suggestion_sets)
 
 
 def _build_tailor_snapshot_name(job_description: str) -> str:
