@@ -20,20 +20,21 @@ def generate_edit_suggestions_for_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target editable block not found.")
 
     provider = get_edit_suggestion_provider()
+    style_examples = get_relevant_style_examples_for_user(
+        user_id,
+        resume_id,
+        instruction=input_data.instruction,
+        target_text=target_block.text,
+        preferred_kind=target_block.kind,
+        exclude_texts={target_block.text},
+    )
     candidates = provider.generate_rewrites(
         EditSuggestionPrompt(
             block_kind=target_block.kind,
             block_label=target_block.label,
             instruction=input_data.instruction,
             text=target_block.text,
-            style_examples=get_relevant_style_examples_for_user(
-                user_id,
-                resume_id,
-                instruction=input_data.instruction,
-                target_text=target_block.text,
-                preferred_kind=target_block.kind,
-                exclude_texts={target_block.text},
-            ),
+            style_examples=style_examples,
         )
     )
 
@@ -76,6 +77,7 @@ def generate_edit_suggestions_for_user(
                 mode="edit",
                 title=f"Edit suggestions for {target_block.label}",
                 summary=input_data.instruction,
+                styleExamples=style_examples,
                 retrySeed=0,
                 items=proposals,
             )
@@ -92,6 +94,18 @@ def generate_review_suggestions_for_user(
     provider = get_edit_suggestion_provider()
     selected_blocks = document_model.editableBlocks[:3]
 
+    block_style_examples = {
+        block.id: get_relevant_style_examples_for_user(
+            user_id,
+            resume_id,
+            instruction=input_data.instruction,
+            target_text=block.text,
+            preferred_kind=block.kind,
+            exclude_texts={block.text},
+        )
+        for block in selected_blocks
+    }
+
     generated = provider.generate_review_rewrites(
         ReviewSuggestionPrompt(
             instruction=input_data.instruction,
@@ -101,14 +115,7 @@ def generate_review_suggestions_for_user(
                     block_label=block.label,
                     instruction=input_data.instruction,
                     text=block.text,
-                    style_examples=get_relevant_style_examples_for_user(
-                        user_id,
-                        resume_id,
-                        instruction=input_data.instruction,
-                        target_text=block.text,
-                        preferred_kind=block.kind,
-                        exclude_texts={block.text},
-                    ),
+                    style_examples=block_style_examples[block.id],
                 )
                 for block in selected_blocks
             ],
@@ -158,6 +165,7 @@ def generate_review_suggestions_for_user(
                     mode="review",
                     title=f"Review suggestions for {block.label}",
                     summary=input_data.instruction,
+                    styleExamples=block_style_examples[block.id],
                     retrySeed=0,
                     items=proposals,
                 )
@@ -181,6 +189,18 @@ def generate_tailor_suggestions_for_user(
     selected_blocks = document_model.editableBlocks[:3]
     theme_groups = _extract_tailor_theme_groups(input_data.jobDescription)
 
+    block_style_examples = {
+        block.id: get_relevant_style_examples_for_user(
+            user_id,
+            resume_id,
+            instruction=input_data.instruction,
+            target_text=block.text,
+            preferred_kind=block.kind,
+            exclude_texts={block.text},
+        )
+        for block in selected_blocks
+    }
+
     generated = provider.generate_tailor_rewrites(
         TailorSuggestionPrompt(
             instruction=input_data.instruction,
@@ -191,14 +211,7 @@ def generate_tailor_suggestions_for_user(
                     block_label=block.label,
                     instruction=input_data.instruction,
                     text=block.text,
-                    style_examples=get_relevant_style_examples_for_user(
-                        user_id,
-                        resume_id,
-                        instruction=input_data.instruction,
-                        target_text=block.text,
-                        preferred_kind=block.kind,
-                        exclude_texts={block.text},
-                    ),
+                    style_examples=block_style_examples[block.id],
                 )
                 for block in selected_blocks
             ],
@@ -247,12 +260,14 @@ def generate_tailor_suggestions_for_user(
     for theme in theme_groups:
         proposals = grouped_suggestion_items[theme["id"]]
         if proposals:
+            style_examples = _collect_style_examples_for_theme(proposals, block_style_examples)
             suggestion_sets.append(
                 PatchSetDto(
                     id=f"tailor-set-{theme['id']}",
                     mode="tailor",
                     title=theme["title"],
                     summary=theme["summary"],
+                    styleExamples=style_examples,
                     retrySeed=0,
                     items=proposals,
                 )
@@ -342,3 +357,18 @@ def _select_tailor_theme_for_block(
         return preferred_theme_id
 
     return theme_groups[fallback_index % len(theme_groups)]["id"]
+
+
+def _collect_style_examples_for_theme(
+    proposals: list[PatchHunkDto],
+    block_style_examples: dict[str, list[str]],
+) -> list[str]:
+    collected: list[str] = []
+    for proposal in proposals:
+        for example in block_style_examples.get(proposal.targetBlockId, []):
+            if example not in collected:
+                collected.append(example)
+            if len(collected) >= 3:
+                return collected
+
+    return collected

@@ -25,6 +25,7 @@ class ReviewSuggestionTests(unittest.TestCase):
         self.assertGreater(len(payload["items"]), 0)
         self.assertTrue(all(item["items"] for item in payload["items"]))
         self.assertTrue(all(item["mode"] == "review" for item in payload["items"]))
+        self.assertTrue(all(len(item["styleExamples"]) >= 1 for item in payload["items"]))
         self.assertTrue(all(proposal["validation"]["isValid"] for item in payload["items"] for proposal in item["items"]))
 
 

@@ -21,6 +21,7 @@ Add a first-pass style-memory layer that makes generated patch sets reflect the 
 - [x] thread retrieved style context into edit, review, and tailor generation flows
 - [x] add backend tests for style-example persistence and retrieval
 - [x] verify frontend build still passes after backend integration
+- [x] expose retrieved style examples through the patch-set contract for inspection
 
 ## Verification Checklist
 
@@ -30,6 +31,7 @@ Add a first-pass style-memory layer that makes generated patch sets reflect the 
 - [x] patch validation and apply behavior remain unchanged
 - [x] backend tests pass
 - [x] frontend production build passes
+- [x] patch-review UI can show which style examples informed a patch set
 
 ## Notes
 

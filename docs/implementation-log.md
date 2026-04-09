@@ -55,6 +55,22 @@ Verified:
 - backend test suite passes after the style-memory integration
 - frontend production build still passes after the backend-only change
 
+### 2026-04-09: Section 6 Style-Memory Inspection Slice
+
+Exposed the retrieved style-memory examples through the patch-set contract so the personalization layer is visible instead of hidden in backend prompts.
+
+Added:
+
+- `styleExamples` on patch sets in the shared backend/frontend contract
+- edit, review, and tailor patch-set population with the retrieved style examples that informed generation
+- review-panel rendering of the retrieved style examples for each patch set
+- regression assertions that generated patch sets include bounded style-memory examples
+
+Verified:
+
+- backend test suite still passes after exposing style-memory metadata
+- frontend production build still passes with the new review-panel rendering
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

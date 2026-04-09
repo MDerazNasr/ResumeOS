@@ -100,6 +100,18 @@ export function PatchSetReviewPanel({
                     <span style={modeBadgeStyle(patchSet.mode)}>{patchSet.mode}</span>
                   </div>
                   <p style={setSummaryStyle}>{patchSet.summary}</p>
+                  {patchSet.styleExamples.length > 0 ? (
+                    <div style={styleExamplesStyle}>
+                      <span style={styleExamplesLabelStyle}>Style memory</span>
+                      <div style={{ display: "grid", gap: 6 }}>
+                        {patchSet.styleExamples.map((example) => (
+                          <code key={example} style={styleExampleCodeStyle}>
+                            {example}
+                          </code>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
                 <button
                   disabled={retryingSetId !== null || applyingId !== null || dismissingId !== null}
@@ -194,6 +206,32 @@ const setSummaryStyle: CSSProperties = {
   color: "#9ba3b4",
   fontSize: 13,
   lineHeight: 1.5,
+};
+
+const styleExamplesStyle: CSSProperties = {
+  display: "grid",
+  gap: 8,
+  padding: 10,
+  border: "1px solid #262b36",
+  borderRadius: 12,
+  background: "#11151d",
+};
+
+const styleExamplesLabelStyle: CSSProperties = {
+  color: "#9ba3b4",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+};
+
+const styleExampleCodeStyle: CSSProperties = {
+  color: "#d9e2f1",
+  fontSize: 12,
+  lineHeight: 1.5,
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
+  fontFamily: "var(--font-geist-mono, monospace)",
 };
 
 const badgeStyle: CSSProperties = {

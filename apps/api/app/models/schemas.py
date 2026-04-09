@@ -91,6 +91,7 @@ class PatchSetDto(BaseModel):
     mode: Literal["mock", "edit", "review", "tailor"]
     title: str
     summary: str
+    styleExamples: list[str] = []
     retrySeed: int
     items: list[PatchHunkDto]
 

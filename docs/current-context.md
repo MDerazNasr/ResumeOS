@@ -56,6 +56,7 @@ That means:
 - style examples are stored in a first-pass local persistence model
 - edit, review, and tailor flows can retrieve a bounded style context
 - provider inputs visibly include style-memory context
+- patch sets now expose the retrieved style examples so the style-memory behavior is inspectable
 - patch validation and apply behavior remain unchanged
 - backend tests pass
 - frontend production build passes
