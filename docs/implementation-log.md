@@ -23,6 +23,22 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-09: Section 6 Planning
+
+Opened the Section 6 branch from merged `main` after Section 5 was pushed and integrated.
+
+Planned scope:
+
+- add a first-pass style-memory layer
+- persist local style examples from the draft and accepted outcomes
+- retrieve a bounded style context for generation requests
+- thread that context into edit, review, and tailor without changing the patch workflow
+
+Primary planning files:
+
+- [section-6-style-memory.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-6-style-memory.md)
+- [section-6.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-6.md)
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.
