@@ -33,6 +33,102 @@ class WorkingDraftDto(BaseModel):
     updatedAt: str
 
 
+class ProtectedRegionDto(BaseModel):
+    id: str
+    kind: Literal["preamble", "scaffold", "command"]
+    label: str
+    startLine: int
+    endLine: int
+
+
+class EditableBlockDto(BaseModel):
+    id: str
+    kind: Literal["paragraph", "bullet"]
+    label: str
+    text: str
+    startLine: int
+    startColumn: int
+    endLine: int
+    endColumn: int
+
+
+class DocumentModelDto(BaseModel):
+    resumeId: str
+    protectedRegions: list[ProtectedRegionDto]
+    editableBlocks: list[EditableBlockDto]
+
+
+class ValidatePatchInput(BaseModel):
+    targetBlockId: str
+    startLine: int = Field(ge=1)
+    endLine: int = Field(ge=1)
+    beforeText: str
+
+
+class PatchValidationResultDto(BaseModel):
+    isValid: bool
+    targetBlockId: str
+    matchedCurrentText: str | None = None
+    reason: str | None = None
+
+
+class MockPatchProposalDto(BaseModel):
+    id: str
+    operation: Literal["replace"]
+    status: Literal["validated"]
+    targetBlockId: str
+    label: str
+    startLine: int
+    endLine: int
+    beforeText: str
+    afterText: str
+    rationale: str
+    validation: PatchValidationResultDto
+
+
+class MockSuggestionSetDto(BaseModel):
+    id: str
+    mode: Literal["mock", "edit", "review", "tailor"]
+    title: str
+    summary: str
+    retrySeed: int
+    items: list[MockPatchProposalDto]
+
+
+class MockSuggestionSetListDto(BaseModel):
+    items: list[MockSuggestionSetDto]
+
+
+class LogFeedbackInput(BaseModel):
+    suggestionMode: Literal["mock", "edit", "review", "tailor"]
+    action: Literal["apply", "dismiss"]
+    suggestionSetId: str
+    proposalId: str
+    targetBlockId: str
+
+
+class ApplyPatchInput(BaseModel):
+    targetBlockId: str
+    startLine: int = Field(ge=1)
+    endLine: int = Field(ge=1)
+    beforeText: str
+    afterText: str
+
+
+class GenerateEditSuggestionsInput(BaseModel):
+    targetBlockId: str
+    instruction: str = Field(min_length=1, max_length=300)
+
+
+class GenerateReviewSuggestionsInput(BaseModel):
+    instruction: str = Field(min_length=1, max_length=300)
+
+
+class GenerateTailorSuggestionsInput(BaseModel):
+    jobDescription: str = Field(min_length=20, max_length=6000)
+    instruction: str = Field(min_length=1, max_length=300)
+
+
 class UpdateDraftInput(BaseModel):
     sourceTex: str
     version: int = Field(ge=1)
@@ -55,3 +151,27 @@ class CompileResultDto(BaseModel):
     logs: list[CompileLogEntryDto]
     pdfUrl: str | None = None
     compiledAt: str
+
+
+class SnapshotDto(BaseModel):
+    id: str
+    resumeId: str
+    name: str
+    sourceVersion: int
+    createdAt: str
+
+
+class SnapshotDetailDto(SnapshotDto):
+    sourceTex: str
+
+
+class SnapshotListResponseDto(BaseModel):
+    items: list[SnapshotDto]
+
+
+class CreateSnapshotInput(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+
+
+class RestoreSnapshotInput(BaseModel):
+    snapshotId: str

@@ -37,10 +37,12 @@ ResumeOS should be split into the following major components.
 The frontend should be a Next.js app responsible for:
 
 - Monaco-based LaTeX editor
+- editor preferences such as standard or Vim keybindings
 - PDF preview pane
 - AI sidebar for Edit, Review, and Tailor modes
 - diff review UI with accept/reject per hunk
 - snapshot and version history UI
+- UI preferences such as light/dark theme switching
 - auth session handling
 
 ### Backend
@@ -53,6 +55,7 @@ The backend should be a FastAPI service responsible for:
 - snapshot creation and restore
 - AI orchestration
 - patch validation
+- feedback event logging for suggestion outcomes
 - compile job submission and result handling
 - style-memory retrieval
 - feedback logging
@@ -194,6 +197,13 @@ Output should be structured and actionable, not generic writing advice.
 Purpose:
 
 - tailor the resume to a pasted job description
+
+Initial safe shape:
+
+- accept one pasted job description
+- create a snapshot automatically before generating tailored suggestions
+- generate suggestions only across a small set of editable blocks
+- route those suggestions through the same validation, diff review, and apply flow as Edit and Review
 
 This mode should create a snapshot automatically before generating suggestions so the user can always return to the base version.
 
@@ -369,6 +379,7 @@ Goal:
 Build:
 
 - Monaco editor
+- standard/Vim editing mode toggle
 - compile endpoint
 - TeX container execution
 - compile logs
@@ -382,6 +393,7 @@ Deliverable:
 Acceptance:
 
 - source edits appear in Monaco
+- user can switch between standard and Vim editing modes
 - compile works end to end
 - preview updates on success
 - errors are visible on failure
@@ -579,6 +591,7 @@ Goal:
 Build:
 
 - auth hardening
+- persisted UI preferences such as light/dark theme
 - rate limiting
 - job timeouts
 - compile sandboxing

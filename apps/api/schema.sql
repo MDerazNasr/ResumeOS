@@ -37,3 +37,25 @@ CREATE TABLE IF NOT EXISTS compile_runs (
   created_at TEXT NOT NULL,
   FOREIGN KEY(resume_id) REFERENCES resumes(id)
 );
+
+CREATE TABLE IF NOT EXISTS snapshots (
+  id TEXT PRIMARY KEY,
+  resume_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  source_tex TEXT NOT NULL,
+  source_version INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY(resume_id) REFERENCES resumes(id)
+);
+
+CREATE TABLE IF NOT EXISTS feedback_events (
+  id TEXT PRIMARY KEY,
+  resume_id TEXT NOT NULL,
+  suggestion_mode TEXT NOT NULL,
+  action TEXT NOT NULL,
+  suggestion_set_id TEXT NOT NULL,
+  proposal_id TEXT NOT NULL,
+  target_block_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY(resume_id) REFERENCES resumes(id)
+);

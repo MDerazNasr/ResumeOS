@@ -1,38 +1,100 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { compileDraft, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getMockPatches, logFeedback, saveDraft } from "@/lib/api/client";
+import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
-import type { CompileResultDto, ResumeDto, WorkingDraftDto } from "@/lib/api/types";
+import { SuggestionReviewPanel } from "@/components/resumes/SuggestionReviewPanel";
+import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
+import type {
+  CompileResultDto,
+  DocumentModelDto,
+  EditableBlockDto,
+  MockPatchProposalDto,
+  MockSuggestionSetDto,
+  ResumeDto,
+  SnapshotDto,
+  WorkingDraftDto,
+} from "@/lib/api/types";
 
 type ResumeEditorProps = {
+  documentModel: DocumentModelDto;
   draft: WorkingDraftDto;
+  initialSnapshots: SnapshotDto[];
   resume: ResumeDto;
 };
 
-export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
+type SuggestionRequestContext =
+  | { mode: "mock"; seed: number }
+  | { mode: "edit"; targetBlockId: string; instruction: string }
+  | { mode: "review"; instruction: string }
+  | { mode: "tailor"; instruction: string; jobDescription: string };
+
+export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
+  const [documentModelState, setDocumentModelState] = useState(documentModel);
+  const [mockSuggestionSets, setMockSuggestionSets] = useState<MockSuggestionSetDto[]>([]);
+  const [mockPatchSeed, setMockPatchSeed] = useState(0);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
   const [version, setVersion] = useState(draft.version);
   const [updatedAt, setUpdatedAt] = useState(draft.updatedAt);
   const [isSaving, setIsSaving] = useState(false);
   const [isCompiling, setIsCompiling] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [isTailoring, setIsTailoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestionEmptyMessage, setSuggestionEmptyMessage] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
+  const [jobDescription, setJobDescription] = useState("");
+  const [snapshotRefreshToken, setSnapshotRefreshToken] = useState(0);
+  const [lastSuggestionRequest, setLastSuggestionRequest] = useState<SuggestionRequestContext>({ mode: "mock", seed: 0 });
+  const saveInFlightRef = useRef<Promise<WorkingDraftDto | null> | null>(null);
+  const sourceTexRef = useRef(sourceTex);
+  const persistedSourceTexRef = useRef(persistedSourceTex);
+  const versionRef = useRef(version);
 
   const isDirty = useMemo(() => sourceTex !== persistedSourceTex, [persistedSourceTex, sourceTex]);
 
-  async function handleSave() {
+  useEffect(() => {
+    sourceTexRef.current = sourceTex;
+  }, [sourceTex]);
+
+  useEffect(() => {
+    persistedSourceTexRef.current = persistedSourceTex;
+  }, [persistedSourceTex]);
+
+  useEffect(() => {
+    versionRef.current = version;
+  }, [version]);
+
+  async function saveLatestDraft() {
+    if (sourceTexRef.current === persistedSourceTexRef.current) {
+      return null;
+    }
+
     setIsSaving(true);
     setError(null);
 
     try {
-      const savedDraft = await saveDraft(resume.id, { sourceTex, version });
+      const savedDraft = await saveDraft(resume.id, {
+        sourceTex: sourceTexRef.current,
+        version: versionRef.current,
+      });
+      persistedSourceTexRef.current = savedDraft.sourceTex;
+      versionRef.current = savedDraft.version;
       setPersistedSourceTex(savedDraft.sourceTex);
       setVersion(savedDraft.version);
       setUpdatedAt(savedDraft.updatedAt);
+      const [nextDocumentModel, nextMockPatches] = await Promise.all([
+        getDocumentModel(resume.id),
+        getMockPatches(resume.id, mockPatchSeed),
+      ]);
+      setDocumentModelState(nextDocumentModel);
+      setMockSuggestionSets(nextMockPatches.items);
+      setSuggestionEmptyMessage(null);
+      setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
       return savedDraft;
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save draft.");
@@ -42,27 +104,56 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
     }
   }
 
+  async function ensureLatestDraftSaved() {
+    if (saveInFlightRef.current) {
+      await saveInFlightRef.current;
+      if (sourceTexRef.current === persistedSourceTexRef.current) {
+        return true;
+      }
+    }
+
+    if (sourceTexRef.current === persistedSourceTexRef.current) {
+      return true;
+    }
+
+    const savePromise = saveLatestDraft();
+    saveInFlightRef.current = savePromise;
+
+    try {
+      const savedDraft = await savePromise;
+      return sourceTexRef.current === persistedSourceTexRef.current || savedDraft !== null;
+    } finally {
+      if (saveInFlightRef.current === savePromise) {
+        saveInFlightRef.current = null;
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!isDirty) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void ensureLatestDraftSaved();
+    }, 800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isDirty, sourceTex]);
+
   async function handleCompile() {
     setIsCompiling(true);
     setError(null);
 
     try {
-      let draftVersion = version;
-      let compileSource = sourceTex;
-
-      if (isDirty) {
-        const savedDraft = await handleSave();
-        if (!savedDraft) {
-          return;
-        }
-
-        draftVersion = savedDraft.version;
-        compileSource = savedDraft.sourceTex;
+      const draftReady = await ensureLatestDraftSaved();
+      if (!draftReady) {
+        return;
       }
 
       const result = await compileDraft(resume.id, {
-        sourceTex: compileSource,
-        draftVersion,
+        sourceTex: sourceTexRef.current,
+        draftVersion: versionRef.current,
       });
       setCompileResult(result);
       setPreviewNonce(Date.now());
@@ -70,6 +161,216 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
       setError(compileError instanceof Error ? compileError.message : "Failed to compile draft.");
     } finally {
       setIsCompiling(false);
+    }
+  }
+
+  async function handleApplyMockPatch(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
+    setError(null);
+
+    try {
+      const updatedDraft = await applyPatch(resume.id, {
+        targetBlockId: proposal.targetBlockId,
+        startLine: proposal.startLine,
+        endLine: proposal.endLine,
+        beforeText: proposal.beforeText,
+        afterText: proposal.afterText,
+      });
+      await logFeedback(resume.id, {
+        suggestionMode: suggestionSet.mode,
+        action: "apply",
+        suggestionSetId: suggestionSet.id,
+        proposalId: proposal.id,
+        targetBlockId: proposal.targetBlockId,
+      });
+
+      sourceTexRef.current = updatedDraft.sourceTex;
+      persistedSourceTexRef.current = updatedDraft.sourceTex;
+      versionRef.current = updatedDraft.version;
+      setPersistedSourceTex(updatedDraft.sourceTex);
+      setSourceTex(updatedDraft.sourceTex);
+      setVersion(updatedDraft.version);
+      setUpdatedAt(updatedDraft.updatedAt);
+      setCompileResult(null);
+
+      const [nextDocumentModel, nextMockPatches] = await Promise.all([
+        getDocumentModel(resume.id),
+        getMockPatches(resume.id, mockPatchSeed),
+      ]);
+      setDocumentModelState(nextDocumentModel);
+      setMockSuggestionSets(nextMockPatches.items);
+      setSuggestionEmptyMessage(null);
+      return true;
+    } catch (applyError) {
+      setError(applyError instanceof Error ? applyError.message : "Failed to apply patch.");
+      return false;
+    }
+  }
+
+  async function handleDismissSuggestion(suggestionSet: MockSuggestionSetDto, proposal: MockPatchProposalDto) {
+    try {
+      await logFeedback(resume.id, {
+        suggestionMode: suggestionSet.mode,
+        action: "dismiss",
+        suggestionSetId: suggestionSet.id,
+        proposalId: proposal.id,
+        targetBlockId: proposal.targetBlockId,
+      });
+      return true;
+    } catch (dismissError) {
+      setError(dismissError instanceof Error ? dismissError.message : "Failed to record suggestion feedback.");
+      return false;
+    }
+  }
+
+  function handleSnapshotRestore(restoredDraft: WorkingDraftDto) {
+    setPersistedSourceTex(restoredDraft.sourceTex);
+    setSourceTex(restoredDraft.sourceTex);
+    setVersion(restoredDraft.version);
+    setUpdatedAt(restoredDraft.updatedAt);
+    setCompileResult(null);
+    setError(null);
+    void Promise.all([getDocumentModel(resume.id), getMockPatches(resume.id, mockPatchSeed)])
+      .then(([nextDocumentModel, nextMockPatches]) => {
+        setDocumentModelState(nextDocumentModel);
+        setMockSuggestionSets(nextMockPatches.items);
+        setSuggestionEmptyMessage(null);
+        setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+      })
+      .catch(() => null);
+  }
+
+  useEffect(() => {
+    void getMockPatches(resume.id, mockPatchSeed)
+      .then((result) => {
+        setMockSuggestionSets(result.items);
+        setSuggestionEmptyMessage(null);
+        setLastSuggestionRequest({ mode: "mock", seed: mockPatchSeed });
+      })
+      .catch(() => null);
+  }, [mockPatchSeed, resume.id]);
+
+  async function handleRetrySuggestionSet(suggestionSet: MockSuggestionSetDto) {
+    setError(null);
+    setSuggestionEmptyMessage(null);
+
+    if (suggestionSet.mode === "mock") {
+      const nextSeed = suggestionSet.retrySeed;
+      setMockPatchSeed(nextSeed);
+      return;
+    }
+
+    try {
+      if (lastSuggestionRequest.mode === "edit") {
+        const generated = await generateEditSuggestions(resume.id, {
+          targetBlockId: lastSuggestionRequest.targetBlockId,
+          instruction: lastSuggestionRequest.instruction,
+        });
+        setMockSuggestionSets(generated.items);
+        setSuggestionEmptyMessage(
+          generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
+        );
+        return;
+      }
+
+      if (lastSuggestionRequest.mode === "review") {
+        const generated = await generateReviewSuggestions(resume.id, {
+          instruction: lastSuggestionRequest.instruction,
+        });
+        setMockSuggestionSets(generated.items);
+        setSuggestionEmptyMessage(
+          generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
+        );
+        return;
+      }
+
+      if (lastSuggestionRequest.mode === "tailor") {
+        const generated = await generateTailorSuggestions(resume.id, {
+          jobDescription: lastSuggestionRequest.jobDescription,
+          instruction: lastSuggestionRequest.instruction,
+        });
+        setMockSuggestionSets(generated.items);
+        setSuggestionEmptyMessage(
+          generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
+        );
+        setSnapshotRefreshToken((current) => current + 1);
+      }
+    } catch (retryError) {
+      setError(retryError instanceof Error ? retryError.message : "Failed to regenerate suggestions.");
+    }
+  }
+
+  async function handleSuggestEdit(block: EditableBlockDto, instruction: string) {
+    setError(null);
+    setSuggestionEmptyMessage(null);
+
+    try {
+      const generated = await generateEditSuggestions(resume.id, {
+        targetBlockId: block.id,
+        instruction,
+      });
+      setMockSuggestionSets(generated.items);
+      setLastSuggestionRequest({ mode: "edit", targetBlockId: block.id, instruction });
+      setSuggestionEmptyMessage(
+        generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
+      );
+    } catch (suggestError) {
+      setError(suggestError instanceof Error ? suggestError.message : "Failed to generate edit suggestions.");
+    }
+  }
+
+  async function handleReviewResume() {
+    setError(null);
+    setIsReviewing(true);
+    setSuggestionEmptyMessage(null);
+
+    try {
+      const instruction = "Review the current resume and suggest stronger wording for the weakest editable blocks.";
+      const generated = await generateReviewSuggestions(resume.id, { instruction });
+      setMockSuggestionSets(generated.items);
+      setLastSuggestionRequest({ mode: "review", instruction });
+      setSuggestionEmptyMessage(
+        generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
+      );
+    } catch (reviewError) {
+      setError(reviewError instanceof Error ? reviewError.message : "Failed to generate review suggestions.");
+    } finally {
+      setIsReviewing(false);
+    }
+  }
+
+  async function handleTailorResume() {
+    const trimmedDescription = jobDescription.trim();
+
+    if (trimmedDescription.length < 20) {
+      setError("Job description must be at least 20 characters to generate tailoring suggestions.");
+      return;
+    }
+
+    setError(null);
+    setIsTailoring(true);
+    setSuggestionEmptyMessage(null);
+
+    try {
+      const draftReady = await ensureLatestDraftSaved();
+      if (!draftReady) {
+        return;
+      }
+
+      const instruction = "Tailor the resume wording toward the most important requirements in this job description.";
+      const generated = await generateTailorSuggestions(resume.id, {
+        jobDescription: trimmedDescription,
+        instruction,
+      });
+      setMockSuggestionSets(generated.items);
+      setLastSuggestionRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
+      setSuggestionEmptyMessage(
+        generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
+      );
+      setSnapshotRefreshToken((current) => current + 1);
+    } catch (tailorError) {
+      setError(tailorError instanceof Error ? tailorError.message : "Failed to generate tailoring suggestions.");
+    } finally {
+      setIsTailoring(false);
     }
   }
 
@@ -82,15 +383,29 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
         </div>
         <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
           <div style={{ display: "flex", gap: 10 }}>
-            <button disabled={isSaving || !isDirty || isCompiling} onClick={handleSave} style={buttonStyle} type="button">
-              {isSaving ? "Saving..." : "Save Draft"}
+            <button
+              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              onClick={handleReviewResume}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              {isReviewing ? "Reviewing..." : "Review Resume"}
             </button>
-            <button disabled={isSaving || isCompiling} onClick={handleCompile} style={secondaryButtonStyle} type="button">
+            <button
+              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              onClick={handleCompile}
+              style={secondaryButtonStyle}
+              type="button"
+            >
               {isCompiling ? "Compiling..." : "Compile"}
             </button>
           </div>
           <span style={{ color: isDirty ? "#f6d36e" : "#9ba3b4", fontSize: 13 }}>
-            {isDirty ? "Unsaved changes" : `Saved ${new Date(updatedAt).toLocaleString()}`}
+            {isSaving
+              ? "Saving..."
+              : isDirty
+                ? "Autosave pending..."
+                : `Saved ${new Date(updatedAt).toLocaleString()}`}
           </span>
         </div>
       </div>
@@ -147,6 +462,43 @@ export function ResumeEditor({ draft, resume }: ResumeEditorProps) {
               )}
             </div>
           </div>
+          <div style={tailorCardStyle}>
+            <strong style={{ fontSize: 15 }}>Tailor Resume</strong>
+            <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+              Paste a job description to generate a small set of validated tailoring suggestions.
+            </p>
+            <textarea
+              onChange={(event) => setJobDescription(event.target.value)}
+              placeholder="Paste a job description here..."
+              style={tailorTextareaStyle}
+              value={jobDescription}
+            />
+            <button
+              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              onClick={handleTailorResume}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              {isTailoring ? "Tailoring..." : "Tailor Resume"}
+            </button>
+          </div>
+          <DocumentModelPanel documentModel={documentModelState} onSuggestEdit={handleSuggestEdit} />
+          <SuggestionReviewPanel
+            emptyMessage={suggestionEmptyMessage}
+            isLoading={isReviewing || isTailoring}
+            onApply={handleApplyMockPatch}
+            onDismiss={handleDismissSuggestion}
+            onRetrySet={handleRetrySuggestionSet}
+            suggestionSets={mockSuggestionSets}
+          />
+          <SnapshotPanel
+            currentSourceTex={sourceTex}
+            ensureLatestDraft={ensureLatestDraftSaved}
+            initialSnapshots={initialSnapshots}
+            onRestore={handleSnapshotRestore}
+            refreshToken={snapshotRefreshToken}
+            resumeId={resume.id}
+          />
         </aside>
       </div>
       <div style={footerStyle}>
@@ -173,19 +525,13 @@ const headerStyle: CSSProperties = {
   alignItems: "flex-start"
 };
 
-const buttonStyle: CSSProperties = {
+const secondaryButtonStyle: CSSProperties = {
   padding: "10px 14px",
   border: "1px solid #3b4254",
   borderRadius: 12,
-  background: "#eef1f6",
-  color: "#0f1115",
-  cursor: "pointer"
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  ...buttonStyle,
   background: "#171a21",
-  color: "#eef1f6"
+  color: "#eef1f6",
+  cursor: "pointer"
 };
 
 const workspaceStyle: CSSProperties = {
@@ -237,6 +583,28 @@ const logsCardStyle: CSSProperties = {
   border: "1px solid #262b36",
   borderRadius: 14,
   background: "#171a21"
+};
+
+const tailorCardStyle: CSSProperties = {
+  display: "grid",
+  gap: 12,
+  padding: 16,
+  border: "1px solid #262b36",
+  borderRadius: 14,
+  background: "#171a21"
+};
+
+const tailorTextareaStyle: CSSProperties = {
+  minHeight: 140,
+  width: "100%",
+  resize: "vertical",
+  padding: 12,
+  border: "1px solid #30384a",
+  borderRadius: 12,
+  background: "#0f1115",
+  color: "#eef1f6",
+  font: "inherit",
+  lineHeight: 1.5
 };
 
 function logItemStyle(level: "info" | "error"): CSSProperties {

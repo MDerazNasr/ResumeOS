@@ -1,9 +1,21 @@
 import type {
+  ApplyPatchInput,
   CompileRequestInput,
   CompileResultDto,
+  CreateSnapshotInput,
   CreateResumeInput,
+  DocumentModelDto,
+  GenerateEditSuggestionsInput,
+  GenerateReviewSuggestionsInput,
+  GenerateTailorSuggestionsInput,
+  LogFeedbackInput,
+  MockSuggestionSetListDto,
+  RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
+  SnapshotDetailDto,
+  SnapshotDto,
+  SnapshotListResponseDto,
   UpdateDraftInput,
   UserDto,
   WorkingDraftDto
@@ -23,6 +35,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status}`);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json() as Promise<T>;
@@ -51,6 +67,58 @@ export function getDraft(resumeId: string): Promise<WorkingDraftDto> {
   return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/draft`);
 }
 
+export function getDocumentModel(resumeId: string): Promise<DocumentModelDto> {
+  return apiFetch<DocumentModelDto>(`/resumes/${resumeId}/document-model`);
+}
+
+export function getMockPatches(resumeId: string, seed = 0): Promise<MockSuggestionSetListDto> {
+  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/patches/mock?seed=${seed}`);
+}
+
+export function generateEditSuggestions(
+  resumeId: string,
+  input: GenerateEditSuggestionsInput,
+): Promise<MockSuggestionSetListDto> {
+  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/edit`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function generateReviewSuggestions(
+  resumeId: string,
+  input: GenerateReviewSuggestionsInput,
+): Promise<MockSuggestionSetListDto> {
+  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/review`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function generateTailorSuggestions(
+  resumeId: string,
+  input: GenerateTailorSuggestionsInput,
+): Promise<MockSuggestionSetListDto> {
+  return apiFetch<MockSuggestionSetListDto>(`/resumes/${resumeId}/suggestions/tailor`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function applyPatch(resumeId: string, input: ApplyPatchInput): Promise<WorkingDraftDto> {
+  return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/patches/apply`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function logFeedback(resumeId: string, input: LogFeedbackInput): Promise<void> {
+  return apiFetch<void>(`/resumes/${resumeId}/feedback`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
 export function saveDraft(resumeId: string, input: UpdateDraftInput): Promise<WorkingDraftDto> {
   return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/draft`, {
     method: "PUT",
@@ -60,6 +128,28 @@ export function saveDraft(resumeId: string, input: UpdateDraftInput): Promise<Wo
 
 export function compileDraft(resumeId: string, input: CompileRequestInput): Promise<CompileResultDto> {
   return apiFetch<CompileResultDto>(`/resumes/${resumeId}/compile`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function listSnapshots(resumeId: string): Promise<SnapshotListResponseDto> {
+  return apiFetch<SnapshotListResponseDto>(`/resumes/${resumeId}/snapshots`);
+}
+
+export function createSnapshot(resumeId: string, input: CreateSnapshotInput): Promise<SnapshotDto> {
+  return apiFetch<SnapshotDto>(`/resumes/${resumeId}/snapshots`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function getSnapshot(resumeId: string, snapshotId: string): Promise<SnapshotDetailDto> {
+  return apiFetch<SnapshotDetailDto>(`/resumes/${resumeId}/snapshots/${snapshotId}`);
+}
+
+export function restoreSnapshot(resumeId: string, input: RestoreSnapshotInput): Promise<WorkingDraftDto> {
+  return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/snapshots/restore`, {
     method: "POST",
     body: JSON.stringify(input)
   });
