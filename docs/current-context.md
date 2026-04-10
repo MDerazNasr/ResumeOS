@@ -53,6 +53,7 @@ That means:
 - apply light/dark mode at the app shell level
 - expose a settings-page theme toggle
 - move the main resume workspace panels onto shared theme variables
+- expose the theme switch directly in the authenticated app header
 
 ## Definition of Success for the Current Slice
 
@@ -60,6 +61,7 @@ That means:
 - the theme persists across reloads
 - the app shell reflects the active theme consistently
 - the main workspace panels reflect the active theme instead of staying visually hardcoded to dark mode
+- the theme can be switched directly from the main app pages without opening settings
 - backend tests pass
 - frontend production build passes
 

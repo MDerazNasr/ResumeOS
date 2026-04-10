@@ -285,6 +285,21 @@ Verified:
 - backend test suite still passes after the frontend theme-variable pass
 - frontend production build still passes with the updated workspace surfaces
 
+### 2026-04-10: Section 8 App-Header Theme Switch
+
+Exposed the theme control in the authenticated app shell so users no longer need to visit settings just to switch modes.
+
+Added:
+
+- reusable `ThemeToggle` switch component
+- `/app` layout header with app identity, settings link, and theme switch
+- shared authenticated app chrome across resumes, editor, and settings pages
+
+Verified:
+
+- backend test suite still passes after introducing the shared app layout
+- frontend production build still passes with the visible header switch
+
 ### 2026-04-10: Section 7 Minimal Settings Page
 
 Added the first dedicated authenticated settings surface on top of the existing backend settings model.
