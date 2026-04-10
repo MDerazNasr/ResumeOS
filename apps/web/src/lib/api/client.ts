@@ -9,7 +9,9 @@ import type {
   GenerateReviewSuggestionsInput,
   GenerateTailorSuggestionsInput,
   LogFeedbackInput,
+  LoginInput,
   PatchSetListDto,
+  RegisterInput,
   RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
@@ -49,6 +51,26 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getCurrentUser(): Promise<UserDto> {
   return apiFetch<UserDto>("/me");
+}
+
+export function registerUser(input: RegisterInput): Promise<UserDto> {
+  return apiFetch<UserDto>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function loginUser(input: LoginInput): Promise<UserDto> {
+  return apiFetch<UserDto>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function logoutUser(): Promise<void> {
+  return apiFetch<void>("/auth/logout", {
+    method: "POST"
+  });
 }
 
 export function getUserSettings(): Promise<UserSettingsDto> {

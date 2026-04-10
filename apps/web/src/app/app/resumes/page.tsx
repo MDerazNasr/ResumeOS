@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { AuthPanel } from "@/components/auth/AuthPanel";
 import { CreateResumeForm } from "@/components/resumes/CreateResumeForm";
 import { ResumeList } from "@/components/resumes/ResumeList";
 import { getCurrentUser, listResumes } from "@/lib/api/client";
@@ -16,7 +17,10 @@ export default async function ResumesPage() {
             {user.name} can create a resume, edit the raw LaTeX draft, and reopen the exact saved source later.
           </p>
         </div>
-        <CreateResumeForm />
+        <div style={heroSidebarStyle}>
+          <AuthPanel user={user} />
+          <CreateResumeForm />
+        </div>
       </section>
       <section style={{ display: "grid", gap: 16 }}>
         <h2 style={{ margin: 0, fontSize: 20 }}>Your Resumes</h2>
@@ -37,7 +41,13 @@ const pageStyle: CSSProperties = {
 
 const heroStyle: CSSProperties = {
   display: "grid",
+  gridTemplateColumns: "minmax(0, 1.2fr) minmax(320px, 0.8fr)",
   gap: 20
+};
+
+const heroSidebarStyle: CSSProperties = {
+  display: "grid",
+  gap: 16
 };
 
 const eyebrowStyle: CSSProperties = {

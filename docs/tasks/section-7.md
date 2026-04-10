@@ -21,6 +21,7 @@ Add real auth/session handling and persisted user settings so ResumeOS stops dep
 - [x] add auth routes for register/login/logout
 - [x] add settings routes for read/update
 - [x] connect editor mode persistence to backend settings
+- [x] add a minimal frontend auth flow for register/login/logout
 - [x] add backend tests for auth/session and settings behavior
 - [x] verify frontend production build passes
 
@@ -30,6 +31,7 @@ Add real auth/session handling and persisted user settings so ResumeOS stops dep
 - [x] existing resume routes resolve the authenticated user correctly
 - [x] user settings can be read and updated
 - [x] editor mode persists through the backend settings model
+- [x] the UI can show whether the user is on a real session or the temporary dev fallback
 - [x] backend tests pass
 - [x] frontend production build passes
 

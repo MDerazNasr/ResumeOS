@@ -63,6 +63,7 @@ That means:
 - frontend production build passes
 - the current demo path still falls back to the seeded dev user when no session exists
 - the editor now reads and writes its mode through `/settings`, with local storage only as a fallback cache
+- the resumes page now exposes a minimal register/login/logout flow and shows whether the current user is session-backed or the dev fallback
 
 ## Known Risks
 

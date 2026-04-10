@@ -22,6 +22,7 @@ DEV_USER = UserDto(
     id="usr_dev_resumeos",
     email="dev@resumeos.local",
     name="ResumeOS Dev",
+    authSource="dev_fallback",
 )
 
 
@@ -118,7 +119,7 @@ def register_user(input_data: RegisterInput, response: Response) -> UserDto:
         )
         connection.commit()
 
-    user = UserDto(id=user_id, email=input_data.email.strip(), name=input_data.name.strip())
+    user = UserDto(id=user_id, email=input_data.email.strip(), name=input_data.name.strip(), authSource="session")
     _create_session_for_user(user_id, response)
     return user
 
@@ -139,7 +140,7 @@ def login_user(input_data: LoginInput, response: Response) -> UserDto:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
 
     _create_session_for_user(row["id"], response)
-    return UserDto(id=row["id"], email=row["email"], name=row["name"])
+    return UserDto(id=row["id"], email=row["email"], name=row["name"], authSource="session")
 
 
 def logout_user(request: Request, response: Response) -> None:
@@ -217,7 +218,7 @@ def _get_user_from_session_token(session_token: str) -> UserDto | None:
     if row is None:
         return None
 
-    return UserDto(id=row["id"], email=row["email"], name=row["name"])
+    return UserDto(id=row["id"], email=row["email"], name=row["name"], authSource="session")
 
 
 def _hash_password(password: str) -> str:

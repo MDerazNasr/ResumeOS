@@ -191,6 +191,21 @@ Verified:
 - backend test suite passes after the editor/settings integration
 - frontend production build still passes after the settings client changes
 
+### 2026-04-10: Section 7 Minimal Frontend Auth Flow
+
+Added the first frontend surface for the new auth/session foundation without removing the dev fallback yet.
+
+Added:
+
+- visible session/fallback state via `authSource` on the current user contract
+- a minimal auth panel on the resumes page for register, login, and logout
+- UI copy that makes the temporary dev-fallback mode explicit instead of invisible
+
+Verified:
+
+- backend test suite still passes after the current-user contract expansion
+- frontend production build still passes with the new auth panel
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.
