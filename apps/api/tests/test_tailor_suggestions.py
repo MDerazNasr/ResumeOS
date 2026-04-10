@@ -1,15 +1,13 @@
 import os
 import unittest
 
-from fastapi.testclient import TestClient
-
-from app.main import app
+from tests.helpers import create_authenticated_client
 
 
 class TailorSuggestionsTestCase(unittest.TestCase):
     def setUp(self) -> None:
         os.environ["RESUMEOS_LLM_PROVIDER"] = "mock"
-        self.client = TestClient(app)
+        self.client = create_authenticated_client()
         created = self.client.post("/resumes", json={"title": "Tailor Resume"}).json()
         self.resume_id = created["id"]
 

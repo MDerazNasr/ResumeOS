@@ -1,11 +1,18 @@
 import type { CSSProperties } from "react";
+import { redirect } from "next/navigation";
 import { AuthPanel } from "@/components/auth/AuthPanel";
 import { CreateResumeForm } from "@/components/resumes/CreateResumeForm";
 import { ResumeList } from "@/components/resumes/ResumeList";
 import { getCurrentUser, listResumes } from "@/lib/api/client";
 
 export default async function ResumesPage() {
-  const [user, resumeList] = await Promise.all([getCurrentUser(), listResumes()]);
+  const user = await getCurrentUser();
+
+  if (user.authSource !== "session") {
+    redirect("/auth");
+  }
+
+  const resumeList = await listResumes();
 
   return (
     <main style={pageStyle}>

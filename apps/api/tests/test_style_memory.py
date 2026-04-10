@@ -1,20 +1,18 @@
 import os
 import unittest
 
-from fastapi.testclient import TestClient
-
-from app.main import app
 from app.services.style_memory import (
     get_relevant_style_examples_for_user,
     refresh_draft_style_examples_for_user,
     store_accepted_style_example_for_user,
 )
+from tests.helpers import create_authenticated_client
 
 
 class StyleMemoryTests(unittest.TestCase):
     def setUp(self) -> None:
         os.environ["RESUMEOS_LLM_PROVIDER"] = "mock"
-        self.client = TestClient(app)
+        self.client = create_authenticated_client()
         created = self.client.post("/resumes", json={"title": "Style Memory Test"})
         self.assertEqual(created.status_code, 200)
         self.resume_id = created.json()["id"]

@@ -26,7 +26,7 @@ from app.models.schemas import (
 )
 from app.services.compile import compile_resume_source_for_user
 from app.services.compile import get_latest_pdf_for_user
-from app.services.auth import get_current_user
+from app.services.auth import require_authenticated_user
 from app.services.document_model import get_document_model_for_user
 from app.services.edit_suggestions import generate_edit_suggestions_for_user, generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
 from app.services.feedback import log_feedback_for_user
@@ -52,30 +52,30 @@ router = APIRouter(prefix="/resumes", tags=["resumes"])
 
 
 @router.get("", response_model=ResumeListResponseDto)
-def list_resumes(current_user: UserDto = Depends(get_current_user)) -> ResumeListResponseDto:
+def list_resumes(current_user: UserDto = Depends(require_authenticated_user)) -> ResumeListResponseDto:
     return list_resumes_for_user(current_user.id)
 
 
 @router.post("", response_model=ResumeDto)
 def create_resume(
     input_data: CreateResumeInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> ResumeDto:
     return create_resume_for_user(current_user.id, input_data)
 
 
 @router.get("/{resume_id}", response_model=ResumeDto)
-def get_resume(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> ResumeDto:
+def get_resume(resume_id: str, current_user: UserDto = Depends(require_authenticated_user)) -> ResumeDto:
     return get_resume_for_user(current_user.id, resume_id)
 
 
 @router.get("/{resume_id}/draft", response_model=WorkingDraftDto)
-def get_draft(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> WorkingDraftDto:
+def get_draft(resume_id: str, current_user: UserDto = Depends(require_authenticated_user)) -> WorkingDraftDto:
     return get_draft_for_user(current_user.id, resume_id)
 
 
 @router.get("/{resume_id}/document-model", response_model=DocumentModelDto)
-def get_document_model(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> DocumentModelDto:
+def get_document_model(resume_id: str, current_user: UserDto = Depends(require_authenticated_user)) -> DocumentModelDto:
     return get_document_model_for_user(current_user.id, resume_id)
 
 
@@ -83,7 +83,7 @@ def get_document_model(resume_id: str, current_user: UserDto = Depends(get_curre
 def validate_patch(
     resume_id: str,
     input_data: ValidatePatchInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> PatchValidationResultDto:
     return validate_patch_for_user(current_user.id, resume_id, input_data)
 
@@ -92,7 +92,7 @@ def validate_patch(
 def list_seeded_patch_sets(
     resume_id: str,
     seed: int = 0,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> PatchSetListDto:
     return list_seeded_patch_sets_for_user(current_user.id, resume_id, seed)
 
@@ -101,7 +101,7 @@ def list_seeded_patch_sets(
 def generate_edit_suggestions(
     resume_id: str,
     input_data: GenerateEditSuggestionsInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> PatchSetListDto:
     return generate_edit_suggestions_for_user(current_user.id, resume_id, input_data)
 
@@ -110,7 +110,7 @@ def generate_edit_suggestions(
 def generate_review_suggestions(
     resume_id: str,
     input_data: GenerateReviewSuggestionsInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> PatchSetListDto:
     return generate_review_suggestions_for_user(current_user.id, resume_id, input_data)
 
@@ -119,7 +119,7 @@ def generate_review_suggestions(
 def generate_tailor_suggestions(
     resume_id: str,
     input_data: GenerateTailorSuggestionsInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> PatchSetListDto:
     return generate_tailor_suggestions_for_user(current_user.id, resume_id, input_data)
 
@@ -128,7 +128,7 @@ def generate_tailor_suggestions(
 def apply_patch(
     resume_id: str,
     input_data: ApplyPatchInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> WorkingDraftDto:
     return apply_patch_for_user(current_user.id, resume_id, input_data)
 
@@ -137,7 +137,7 @@ def apply_patch(
 def log_feedback(
     resume_id: str,
     input_data: LogFeedbackInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> None:
     log_feedback_for_user(current_user.id, resume_id, input_data)
 
@@ -146,7 +146,7 @@ def log_feedback(
 def update_draft(
     resume_id: str,
     input_data: UpdateDraftInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> WorkingDraftDto:
     return save_draft_for_user(current_user.id, resume_id, input_data.sourceTex, input_data.version)
 
@@ -155,7 +155,7 @@ def update_draft(
 def compile_resume(
     resume_id: str,
     input_data: CompileRequestInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> CompileResultDto:
     return compile_resume_source_for_user(
         current_user.id,
@@ -166,12 +166,12 @@ def compile_resume(
 
 
 @router.get("/{resume_id}/compile/latest.pdf")
-def get_latest_pdf(resume_id: str, current_user: UserDto = Depends(get_current_user)):
+def get_latest_pdf(resume_id: str, current_user: UserDto = Depends(require_authenticated_user)):
     return get_latest_pdf_for_user(current_user.id, resume_id)
 
 
 @router.get("/{resume_id}/snapshots", response_model=SnapshotListResponseDto)
-def list_snapshots(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> SnapshotListResponseDto:
+def list_snapshots(resume_id: str, current_user: UserDto = Depends(require_authenticated_user)) -> SnapshotListResponseDto:
     return list_snapshots_for_user(current_user.id, resume_id)
 
 
@@ -179,7 +179,7 @@ def list_snapshots(resume_id: str, current_user: UserDto = Depends(get_current_u
 def create_snapshot(
     resume_id: str,
     input_data: CreateSnapshotInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> SnapshotDto:
     return create_snapshot_for_user(current_user.id, resume_id, input_data)
 
@@ -188,7 +188,7 @@ def create_snapshot(
 def get_snapshot(
     resume_id: str,
     snapshot_id: str,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> SnapshotDetailDto:
     return get_snapshot_for_user(current_user.id, resume_id, snapshot_id)
 
@@ -197,6 +197,6 @@ def get_snapshot(
 def restore_snapshot(
     resume_id: str,
     input_data: RestoreSnapshotInput,
-    current_user: UserDto = Depends(get_current_user),
+    current_user: UserDto = Depends(require_authenticated_user),
 ) -> WorkingDraftDto:
     return restore_snapshot_for_user(current_user.id, resume_id, input_data.snapshotId)

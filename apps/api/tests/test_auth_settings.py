@@ -67,6 +67,14 @@ class AuthSettingsTests(unittest.TestCase):
         self.assertEqual(response.json()["email"], "dev@resumeos.local")
         self.assertEqual(response.json()["authSource"], "dev_fallback")
 
+    def test_settings_require_authenticated_session(self) -> None:
+        response = self.client.get("/settings")
+        self.assertEqual(response.status_code, 401)
+
+    def test_resume_routes_require_authenticated_session(self) -> None:
+        response = self.client.get("/resumes")
+        self.assertEqual(response.status_code, 401)
+
 
 if __name__ == "__main__":
     unittest.main()

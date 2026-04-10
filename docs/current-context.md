@@ -52,6 +52,7 @@ That means:
 - resolve current user from a session cookie
 - add persisted settings
 - connect editor preferences to the backend settings model
+- add a dedicated auth entry route and protect product routes from anonymous access
 
 ## Definition of Success for the Current Slice
 
@@ -64,6 +65,7 @@ That means:
 - the current demo path still falls back to the seeded dev user when no session exists
 - the editor now reads and writes its mode through `/settings`, with local storage only as a fallback cache
 - the resumes page now exposes a minimal register/login/logout flow and shows whether the current user is session-backed or the dev fallback
+- unauthenticated access to resume/settings routes is now blocked, with the frontend redirecting to `/auth` before protected data loads
 
 ## Known Risks
 
@@ -73,4 +75,4 @@ That means:
 - the current document-model parser is heuristic and intentionally conservative
 - auth changes touch every route through current-user resolution
 - cookie/session handling must work cleanly across the local frontend/backend split
-- the current fallback-to-dev behavior is temporary and should be removed once the frontend login flow exists
+- `/me` still exposes the dev-fallback state as a lightweight session probe, so we need to keep that distinction explicit in frontend route handling

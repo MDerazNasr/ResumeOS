@@ -166,6 +166,17 @@ def get_current_user(request: Request) -> UserDto:
     return DEV_USER
 
 
+def require_authenticated_user(request: Request) -> UserDto:
+    ensure_auth_schema()
+    session_token = request.cookies.get(SESSION_COOKIE_NAME)
+    if session_token:
+        user = _get_user_from_session_token(session_token)
+        if user is not None:
+            return user
+
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+
 def _create_session_for_user(user_id: str, response: Response) -> None:
     token = secrets.token_urlsafe(32)
     session_hash = _hash_session_token(token)

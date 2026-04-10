@@ -206,6 +206,22 @@ Verified:
 - backend test suite still passes after the current-user contract expansion
 - frontend production build still passes with the new auth panel
 
+### 2026-04-10: Section 7 Auth Route Protection
+
+Moved ResumeOS from a soft auth boundary to a real product gate while preserving `/me` as a lightweight session-status probe.
+
+Added:
+
+- backend `require_authenticated_user` enforcement for resume and settings routes
+- a dedicated `/auth` page for login/register instead of relying on inline fallback alone
+- frontend redirects from protected app routes to `/auth` before protected API calls fire
+- backend assertions that anonymous access to `/resumes` and `/settings` now returns `401`
+
+Verified:
+
+- backend test suite passes after tightening route protection
+- frontend production build passes with the new `/auth` route and redirects
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.
