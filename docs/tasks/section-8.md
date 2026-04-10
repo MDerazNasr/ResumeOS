@@ -18,6 +18,7 @@ Add persisted UI preferences on top of the new settings foundation, starting wit
 - [x] add a settings-page light/dark toggle
 - [x] move the main resume workspace panels onto shared theme variables
 - [x] expose the theme switch directly in the authenticated app header
+- [x] move remaining high-traffic auth/list/error surfaces onto shared theme variables
 - [x] verify backend tests pass
 - [x] verify frontend production build passes
 
@@ -28,5 +29,6 @@ Add persisted UI preferences on top of the new settings foundation, starting wit
 - [x] the app shell reflects the active theme
 - [x] the main resume workspace panels no longer look hardcoded to dark mode
 - [x] the user can toggle theme without leaving the main app pages
+- [x] major non-workspace surfaces no longer look dark-only in light mode
 - [x] backend tests pass
 - [x] frontend production build passes

@@ -49,34 +49,34 @@ const formStyle: CSSProperties = {
   display: "grid",
   gap: 12,
   padding: 20,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 16,
-  background: "#171a21"
+  background: "var(--surface)"
 };
 
 const labelStyle: CSSProperties = {
   display: "grid",
   gap: 8,
-  color: "#c8d0de",
+  color: "var(--soft)",
   fontSize: 14
 };
 
 const inputStyle: CSSProperties = {
   width: "100%",
   padding: "12px 14px",
-  border: "1px solid #313748",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#0f1115",
-  color: "#eef1f6"
+  background: "var(--surface-input)",
+  color: "var(--fg)"
 };
 
 const buttonStyle: CSSProperties = {
   width: "fit-content",
   padding: "10px 14px",
-  border: "1px solid #3b4254",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#eef1f6",
-  color: "#0f1115",
+  background: "var(--accent-bg)",
+  color: "var(--accent-fg)",
   cursor: "pointer"
 };
 

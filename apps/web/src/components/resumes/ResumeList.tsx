@@ -11,7 +11,7 @@ export function ResumeList({ resumes }: ResumeListProps) {
     return (
       <div style={emptyStateStyle}>
         <p style={{ margin: 0, fontSize: 18 }}>No resumes yet.</p>
-        <p style={{ margin: 0, color: "#9ba3b4" }}>Create a master resume to start editing raw LaTeX.</p>
+        <p style={{ margin: 0, color: "var(--muted)" }}>Create a master resume to start editing raw LaTeX.</p>
       </div>
     );
   }
@@ -22,9 +22,9 @@ export function ResumeList({ resumes }: ResumeListProps) {
         <Link href={`/app/resumes/${resume.id}`} key={resume.id} style={cardStyle}>
           <div style={{ display: "grid", gap: 6 }}>
             <strong style={{ fontSize: 18 }}>{resume.title}</strong>
-            <span style={{ color: "#9ba3b4", fontSize: 14 }}>{resume.slug}</span>
+            <span style={{ color: "var(--muted)", fontSize: 14 }}>{resume.slug}</span>
           </div>
-          <span style={{ color: "#9ba3b4", fontSize: 13 }}>
+          <span style={{ color: "var(--muted)", fontSize: 13 }}>
             Updated {new Date(resume.updatedAt).toLocaleString()}
           </span>
         </Link>
@@ -43,16 +43,16 @@ const cardStyle: CSSProperties = {
   justifyContent: "space-between",
   alignItems: "center",
   padding: 20,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 16,
-  background: "#171a21"
+  background: "var(--surface)"
 };
 
 const emptyStateStyle: CSSProperties = {
   display: "grid",
   gap: 8,
   padding: 24,
-  border: "1px dashed #313748",
+  border: "1px dashed var(--border-strong)",
   borderRadius: 16,
-  background: "#141821"
+  background: "var(--surface-elevated)"
 };

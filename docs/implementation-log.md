@@ -300,6 +300,22 @@ Verified:
 - backend test suite still passes after introducing the shared app layout
 - frontend production build still passes with the visible header switch
 
+### 2026-04-10: Section 8 Secondary Surface Theme Pass
+
+Extended the theme variable system into the remaining high-traffic non-workspace surfaces so light mode feels more coherent.
+
+Added:
+
+- auth panel theme-variable adoption
+- create-resume form and resume-list theme-variable adoption
+- editor shell/status card variable adoption
+- error and global-error surface variable adoption
+
+Verified:
+
+- backend test suite still passes after the broader frontend theme pass
+- frontend production build still passes with the updated secondary surfaces
+
 ### 2026-04-10: Section 7 Minimal Settings Page
 
 Added the first dedicated authenticated settings surface on top of the existing backend settings model.

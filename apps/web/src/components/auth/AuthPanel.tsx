@@ -117,13 +117,13 @@ const panelStyle: CSSProperties = {
   display: "grid",
   gap: 14,
   padding: 20,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 16,
-  background: "#171a21"
+  background: "var(--surface)"
 };
 
 const copyStyle: CSSProperties = {
-  color: "#9ba3b4",
+  color: "var(--muted)",
   fontSize: 14,
   lineHeight: 1.6
 };
@@ -142,10 +142,10 @@ const actionRowStyle: CSSProperties = {
 function toggleButtonStyle(isActive: boolean): CSSProperties {
   return {
     padding: "8px 10px",
-    border: `1px solid ${isActive ? "#7fa4ff" : "#3b4254"}`,
+    border: `1px solid ${isActive ? "var(--mode-review-fg)" : "var(--border-strong)"}`,
     borderRadius: 10,
-    background: isActive ? "#18253d" : "#171a21",
-    color: isActive ? "#dce8ff" : "#eef1f6",
+    background: isActive ? "var(--mode-review-bg)" : "var(--surface)",
+    color: isActive ? "var(--mode-review-fg)" : "var(--fg)",
     cursor: "pointer",
     fontSize: 12,
     fontWeight: 600,
@@ -160,33 +160,33 @@ const formStyle: CSSProperties = {
 const labelStyle: CSSProperties = {
   display: "grid",
   gap: 6,
-  color: "#c8d0de",
+  color: "var(--soft)",
   fontSize: 13
 };
 
 const inputStyle: CSSProperties = {
   width: "100%",
   padding: "10px 12px",
-  border: "1px solid #313748",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#0f1115",
-  color: "#eef1f6"
+  background: "var(--surface-input)",
+  color: "var(--fg)"
 };
 
 const primaryButtonStyle: CSSProperties = {
   width: "fit-content",
   padding: "10px 14px",
-  border: "1px solid #3b4254",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#eef1f6",
-  color: "#0f1115",
+  background: "var(--accent-bg)",
+  color: "var(--accent-fg)",
   cursor: "pointer"
 };
 
 const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  background: "#171a21",
-  color: "#eef1f6"
+  background: "var(--surface)",
+  color: "var(--fg)"
 };
 
 const linkButtonStyle: CSSProperties = {

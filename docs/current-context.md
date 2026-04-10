@@ -54,6 +54,7 @@ That means:
 - expose a settings-page theme toggle
 - move the main resume workspace panels onto shared theme variables
 - expose the theme switch directly in the authenticated app header
+- move remaining high-traffic auth/list/error surfaces onto shared theme variables
 
 ## Definition of Success for the Current Slice
 
@@ -62,6 +63,7 @@ That means:
 - the app shell reflects the active theme consistently
 - the main workspace panels reflect the active theme instead of staying visually hardcoded to dark mode
 - the theme can be switched directly from the main app pages without opening settings
+- major auth/list/error surfaces also reflect the active theme instead of defaulting back to dark styling
 - backend tests pass
 - frontend production build passes
 
@@ -74,4 +76,4 @@ That means:
 - auth changes touch every route through current-user resolution
 - cookie/session handling must work cleanly across the local frontend/backend split
 - the current UI is still largely hardcoded around the original dark shell, so theme support must centralize colors instead of patching isolated pages
-- many component-level colors are still inline in secondary surfaces like error pages and some list/auth forms, so Section 8 still needs a broader variable pass beyond the core workspace
+- some lower-traffic surfaces still use inline colors, but the highest-traffic authenticated and auth-entry paths now share the theme variable system

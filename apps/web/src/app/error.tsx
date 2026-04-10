@@ -37,17 +37,17 @@ const cardStyle: CSSProperties = {
   width: "100%",
   maxWidth: 640,
   padding: 28,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 18,
-  background: "#171a21",
+  background: "var(--surface)",
 };
 
 const eyebrowStyle: CSSProperties = {
   width: "fit-content",
   padding: "6px 10px",
-  border: "1px solid #313748",
+  border: "1px solid var(--border-strong)",
   borderRadius: 999,
-  color: "#c8d0de",
+  color: "var(--soft)",
   fontSize: 12,
   textTransform: "uppercase",
   letterSpacing: "0.08em",
@@ -55,16 +55,16 @@ const eyebrowStyle: CSSProperties = {
 
 const copyStyle: CSSProperties = {
   margin: 0,
-  color: "#9ba3b4",
+  color: "var(--muted)",
   lineHeight: 1.6,
 };
 
 const buttonStyle: CSSProperties = {
   width: "fit-content",
   padding: "10px 14px",
-  border: "1px solid #3b4254",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#eef1f6",
-  color: "#0f1115",
+  background: "var(--accent-bg)",
+  color: "var(--accent-fg)",
   cursor: "pointer",
 };
