@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { initVimMode } from "monaco-vim";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -33,15 +32,25 @@ export function LatexEditor({ editorMode = "standard", value, onChange }: LatexE
     vimModeRef.current = null;
 
     if (editorMode === "vim") {
-      vimModeRef.current = initVimMode(editor, statusNode);
-      setVimStatus(statusNode.textContent?.trim() || "Vim mode");
-      const observer = new MutationObserver(() => {
+      let isDisposed = false;
+      let observer: MutationObserver | null = null;
+
+      void import("monaco-vim").then(({ initVimMode }) => {
+        if (isDisposed) {
+          return;
+        }
+
+        vimModeRef.current = initVimMode(editor, statusNode);
         setVimStatus(statusNode.textContent?.trim() || "Vim mode");
+        observer = new MutationObserver(() => {
+          setVimStatus(statusNode.textContent?.trim() || "Vim mode");
+        });
+        observer.observe(statusNode, { childList: true, subtree: true, characterData: true });
       });
-      observer.observe(statusNode, { childList: true, subtree: true, characterData: true });
 
       return () => {
-        observer.disconnect();
+        isDisposed = true;
+        observer?.disconnect();
         vimModeRef.current?.dispose?.();
         vimModeRef.current = null;
       };
