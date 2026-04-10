@@ -72,3 +72,19 @@ CREATE TABLE IF NOT EXISTS style_examples (
   UNIQUE(resume_id, source_type, text),
   FOREIGN KEY(resume_id) REFERENCES resumes(id)
 );
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS user_settings (
+  user_id TEXT PRIMARY KEY,
+  editor_mode TEXT NOT NULL DEFAULT 'standard',
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);

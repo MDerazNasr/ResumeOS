@@ -159,6 +159,22 @@ Primary planning files:
 - [section-7-auth-settings.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-7-auth-settings.md)
 - [section-7.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-7.md)
 
+### 2026-04-09: Section 7 Backend Auth and Settings Foundation
+
+Implemented the first real auth/settings backend slice while preserving the current demo workflow.
+
+Added:
+
+- session-cookie auth primitives with register, login, logout, and current-user resolution
+- `user_settings` persistence and settings read/update routes
+- password hashing and session-token hashing using standard-library primitives
+- backend tests for auth/session and settings round trips
+
+Verified:
+
+- backend test suite passes after the auth/settings foundation was added
+- frontend production build still passes after the backend contract expansion
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

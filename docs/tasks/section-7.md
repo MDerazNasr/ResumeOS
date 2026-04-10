@@ -15,23 +15,23 @@ Add real auth/session handling and persisted user settings so ResumeOS stops dep
 ## Implementation Checklist
 
 - [x] document the Section 7 auth/settings boundary
-- [ ] add the initial backend auth/session model
-- [ ] add user settings persistence
-- [ ] replace the dev-user resolver with session-backed current-user resolution
-- [ ] add auth routes for register/login/logout
-- [ ] add settings routes for read/update
+- [x] add the initial backend auth/session model
+- [x] add user settings persistence
+- [x] replace the dev-user resolver with session-backed current-user resolution
+- [x] add auth routes for register/login/logout
+- [x] add settings routes for read/update
 - [ ] connect editor mode persistence to backend settings
-- [ ] add backend tests for auth/session and settings behavior
-- [ ] verify frontend production build passes
+- [x] add backend tests for auth/session and settings behavior
+- [x] verify frontend production build passes
 
 ## Verification Checklist
 
-- [ ] a user can register and log in
-- [ ] existing resume routes resolve the authenticated user correctly
-- [ ] user settings can be read and updated
+- [x] a user can register and log in
+- [x] existing resume routes resolve the authenticated user correctly
+- [x] user settings can be read and updated
 - [ ] editor mode persists through the backend settings model
-- [ ] backend tests pass
-- [ ] frontend production build passes
+- [x] backend tests pass
+- [x] frontend production build passes
 
 ## Notes
 

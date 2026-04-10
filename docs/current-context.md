@@ -61,6 +61,7 @@ That means:
 - editor mode can persist through backend settings
 - backend tests pass
 - frontend production build passes
+- the current demo path still falls back to the seeded dev user when no session exists
 
 ## Known Risks
 
@@ -70,3 +71,4 @@ That means:
 - the current document-model parser is heuristic and intentionally conservative
 - auth changes touch every route through current-user resolution
 - cookie/session handling must work cleanly across the local frontend/backend split
+- the current fallback-to-dev behavior is temporary and should be removed once the frontend login flow exists
