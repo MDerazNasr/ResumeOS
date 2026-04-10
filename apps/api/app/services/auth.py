@@ -18,13 +18,6 @@ from app.services.utils import utc_now_iso
 SESSION_COOKIE_NAME = "resumeos_session"
 SESSION_DURATION_DAYS = 14
 
-DEV_USER = UserDto(
-    id="usr_dev_resumeos",
-    email="dev@resumeos.local",
-    name="ResumeOS Dev",
-    authSource="dev_fallback",
-)
-
 
 def ensure_auth_schema() -> None:
     with get_connection() as connection:
@@ -58,30 +51,6 @@ def ensure_auth_schema() -> None:
             """
         )
         connection.commit()
-
-
-def ensure_dev_user_exists() -> None:
-    timestamp = utc_now_iso()
-    with get_connection() as connection:
-        connection.execute(
-            """
-            INSERT INTO users (id, email, name, password_hash, created_at, updated_at)
-            VALUES (?, ?, ?, NULL, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET email = excluded.email, name = excluded.name, updated_at = excluded.updated_at
-            """,
-            (DEV_USER.id, DEV_USER.email, DEV_USER.name, timestamp, timestamp),
-        )
-        connection.execute(
-            """
-            INSERT INTO user_settings (user_id, editor_mode, updated_at)
-            VALUES (?, 'standard', ?)
-            ON CONFLICT(user_id) DO NOTHING
-            """,
-            (DEV_USER.id, timestamp),
-        )
-        connection.commit()
-
-
 def register_user(input_data: RegisterInput, response: Response) -> UserDto:
     ensure_auth_schema()
     timestamp = utc_now_iso()
@@ -119,7 +88,7 @@ def register_user(input_data: RegisterInput, response: Response) -> UserDto:
         )
         connection.commit()
 
-    user = UserDto(id=user_id, email=input_data.email.strip(), name=input_data.name.strip(), authSource="session")
+    user = UserDto(id=user_id, email=input_data.email.strip(), name=input_data.name.strip())
     _create_session_for_user(user_id, response)
     return user
 
@@ -140,7 +109,7 @@ def login_user(input_data: LoginInput, response: Response) -> UserDto:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
 
     _create_session_for_user(row["id"], response)
-    return UserDto(id=row["id"], email=row["email"], name=row["name"], authSource="session")
+    return UserDto(id=row["id"], email=row["email"], name=row["name"])
 
 
 def logout_user(request: Request, response: Response) -> None:
@@ -156,17 +125,6 @@ def logout_user(request: Request, response: Response) -> None:
 
 
 def get_current_user(request: Request) -> UserDto:
-    ensure_auth_schema()
-    session_token = request.cookies.get(SESSION_COOKIE_NAME)
-    if session_token:
-        user = _get_user_from_session_token(session_token)
-        if user is not None:
-            return user
-
-    return DEV_USER
-
-
-def require_authenticated_user(request: Request) -> UserDto:
     ensure_auth_schema()
     session_token = request.cookies.get(SESSION_COOKIE_NAME)
     if session_token:
@@ -229,7 +187,7 @@ def _get_user_from_session_token(session_token: str) -> UserDto | None:
     if row is None:
         return None
 
-    return UserDto(id=row["id"], email=row["email"], name=row["name"], authSource="session")
+    return UserDto(id=row["id"], email=row["email"], name=row["name"])
 
 
 def _hash_password(password: str) -> str:

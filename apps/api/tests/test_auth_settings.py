@@ -23,7 +23,6 @@ class AuthSettingsTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["email"], f"auth-test-{self.unique_suffix}@example.com")
-        self.assertEqual(response.json()["authSource"], "session")
         self.assertIn("resumeos_session", response.cookies)
 
     def test_login_and_settings_round_trip(self) -> None:
@@ -59,13 +58,10 @@ class AuthSettingsTests(unittest.TestCase):
         me = client.get("/me")
         self.assertEqual(me.status_code, 200)
         self.assertEqual(me.json()["email"], email)
-        self.assertEqual(me.json()["authSource"], "session")
 
-    def test_me_falls_back_to_dev_user_without_session(self) -> None:
+    def test_me_requires_authenticated_session(self) -> None:
         response = self.client.get("/me")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["email"], "dev@resumeos.local")
-        self.assertEqual(response.json()["authSource"], "dev_fallback")
+        self.assertEqual(response.status_code, 401)
 
     def test_settings_require_authenticated_session(self) -> None:
         response = self.client.get("/settings")

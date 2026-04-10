@@ -7,7 +7,7 @@ import { loginUser, logoutUser, registerUser } from "@/lib/api/client";
 import type { UserDto } from "@/lib/api/types";
 
 type AuthPanelProps = {
-  user: UserDto;
+  user?: UserDto | null;
 };
 
 export function AuthPanel({ user }: AuthPanelProps) {
@@ -50,7 +50,7 @@ export function AuthPanel({ user }: AuthPanelProps) {
     }
   }
 
-  if (user.authSource === "session") {
+  if (user) {
     return (
       <section style={panelStyle}>
         <div style={{ display: "grid", gap: 6 }}>
@@ -70,9 +70,9 @@ export function AuthPanel({ user }: AuthPanelProps) {
   return (
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
-        <strong style={{ fontSize: 16 }}>Demo Auth</strong>
+        <strong style={{ fontSize: 16 }}>Sign In</strong>
         <span style={copyStyle}>
-          You are currently using the seeded dev fallback. Register or sign in to use a real session-backed account.
+          Register a new account or sign in to open your resumes, compile LaTeX, and review AI patch sets.
         </span>
       </div>
       <div style={toggleRowStyle}>

@@ -11,7 +11,7 @@ type ResumeEditorPageProps = {
 export default async function ResumeEditorPage({ params }: ResumeEditorPageProps) {
   const user = await getCurrentUser();
 
-  if (user.authSource !== "session") {
+  if (!user) {
     redirect("/auth");
   }
 

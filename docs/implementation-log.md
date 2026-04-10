@@ -222,6 +222,22 @@ Verified:
 - backend test suite passes after tightening route protection
 - frontend production build passes with the new `/auth` route and redirects
 
+### 2026-04-10: Section 7 Remove Dev Fallback Identity
+
+Finished the auth boundary by removing the hardcoded dev-fallback user from the live contract.
+
+Added:
+
+- `/me` now behaves like a real session endpoint and returns `401` when no session exists
+- frontend `getCurrentUser()` now treats `401` as unauthenticated state instead of a fake user
+- the auth page now renders directly from that unauthenticated state, while protected routes redirect before loading product data
+- backend tests now create authenticated clients explicitly instead of leaning on a seeded fallback identity
+
+Verified:
+
+- backend test suite passes after converting protected-route tests to real authenticated clients
+- frontend production build passes after removing `authSource` and the dev-fallback flow
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

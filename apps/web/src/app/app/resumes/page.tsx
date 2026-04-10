@@ -8,7 +8,7 @@ import { getCurrentUser, listResumes } from "@/lib/api/client";
 export default async function ResumesPage() {
   const user = await getCurrentUser();
 
-  if (user.authSource !== "session") {
+  if (!user) {
     redirect("/auth");
   }
 

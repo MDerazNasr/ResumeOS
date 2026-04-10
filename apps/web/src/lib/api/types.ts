@@ -2,7 +2,6 @@ export type UserDto = {
   id: string;
   email: string;
   name: string;
-  authSource: "session" | "dev_fallback";
 };
 
 export type RegisterInput = {

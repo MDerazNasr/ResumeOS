@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/api/client";
 export default async function AuthPage() {
   const user = await getCurrentUser();
 
-  if (user.authSource === "session") {
+  if (user) {
     redirect("/app/resumes");
   }
 
@@ -19,7 +19,7 @@ export default async function AuthPage() {
             Resume editing, snapshots, compile, and AI patch workflows now require a real session-backed account.
           </p>
         </div>
-        <AuthPanel user={user} />
+        <AuthPanel />
       </section>
     </main>
   );

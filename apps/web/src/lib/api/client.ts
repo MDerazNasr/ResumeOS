@@ -49,8 +49,15 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function getCurrentUser(): Promise<UserDto> {
-  return apiFetch<UserDto>("/me");
+export async function getCurrentUser(): Promise<UserDto | null> {
+  try {
+    return await apiFetch<UserDto>("/me");
+  } catch (error) {
+    if (error instanceof Error && error.message === "API request failed: 401") {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export function registerUser(input: RegisterInput): Promise<UserDto> {

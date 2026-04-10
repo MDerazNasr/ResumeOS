@@ -7,7 +7,6 @@ class UserDto(BaseModel):
     id: str
     email: str
     name: str
-    authSource: Literal["session", "dev_fallback"] = "dev_fallback"
 
 
 class RegisterInput(BaseModel):
