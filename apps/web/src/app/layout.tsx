@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
-import { ThemeHydrator, inlineThemeScript } from "@/components/auth/ThemeHydrator";
+import { ThemeHydrator } from "@/components/auth/ThemeHydrator";
+import { inlineThemeScript } from "@/components/auth/themeScript";
 import { getCurrentUser, getUserSettings } from "@/lib/api/client";
 
 export const metadata = {
