@@ -269,6 +269,22 @@ Verified:
 - backend test suite passes after extending the settings contract
 - frontend production build passes with the global theme shell and settings toggle
 
+### 2026-04-10: Section 8 Workspace Theme Variable Pass
+
+Moved the most important editor-adjacent panels away from fixed dark colors so light mode is usable beyond the app shell.
+
+Added:
+
+- shared theme variables for borders, surfaces, badges, accents, and diff backgrounds
+- document model panel theme-variable adoption
+- patch-set review panel theme-variable adoption
+- snapshot panel theme-variable adoption
+
+Verified:
+
+- backend test suite still passes after the frontend theme-variable pass
+- frontend production build still passes with the updated workspace surfaces
+
 ### 2026-04-10: Section 7 Minimal Settings Page
 
 Added the first dedicated authenticated settings surface on top of the existing backend settings model.

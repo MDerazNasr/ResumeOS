@@ -16,6 +16,7 @@ Add persisted UI preferences on top of the new settings foundation, starting wit
 - [x] extend backend settings with theme mode
 - [x] apply theme mode at the app shell level
 - [x] add a settings-page light/dark toggle
+- [x] move the main resume workspace panels onto shared theme variables
 - [x] verify backend tests pass
 - [x] verify frontend production build passes
 
@@ -24,5 +25,6 @@ Add persisted UI preferences on top of the new settings foundation, starting wit
 - [x] a signed-in user can switch between light and dark mode
 - [x] the selected theme persists across reloads
 - [x] the app shell reflects the active theme
+- [x] the main resume workspace panels no longer look hardcoded to dark mode
 - [x] backend tests pass
 - [x] frontend production build passes

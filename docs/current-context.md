@@ -52,12 +52,14 @@ That means:
 - extend backend settings with theme mode
 - apply light/dark mode at the app shell level
 - expose a settings-page theme toggle
+- move the main resume workspace panels onto shared theme variables
 
 ## Definition of Success for the Current Slice
 
 - a signed-in user can switch between light and dark mode
 - the theme persists across reloads
 - the app shell reflects the active theme consistently
+- the main workspace panels reflect the active theme instead of staying visually hardcoded to dark mode
 - backend tests pass
 - frontend production build passes
 
@@ -70,4 +72,4 @@ That means:
 - auth changes touch every route through current-user resolution
 - cookie/session handling must work cleanly across the local frontend/backend split
 - the current UI is still largely hardcoded around the original dark shell, so theme support must centralize colors instead of patching isolated pages
-- many component-level colors are still inline, so the current theme slice changes the app shell and settings surface first rather than fully retheming every workspace panel
+- many component-level colors are still inline in secondary surfaces like error pages and some list/auth forms, so Section 8 still needs a broader variable pass beyond the core workspace

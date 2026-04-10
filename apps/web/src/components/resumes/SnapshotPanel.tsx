@@ -110,7 +110,7 @@ export function SnapshotPanel({
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
         <strong style={{ fontSize: 16 }}>Snapshots</strong>
-        <span style={{ color: "#9ba3b4", fontSize: 13 }}>
+        <span style={{ color: "var(--muted)", fontSize: 13 }}>
           {snapshots.length === 0
             ? "Save named versions of the current working draft."
             : `${snapshots.length} saved ${snapshots.length === 1 ? "snapshot" : "snapshots"}.`}
@@ -129,7 +129,7 @@ export function SnapshotPanel({
       </form>
       <div style={listStyle}>
         {snapshots.length === 0 ? (
-          <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>No snapshots yet.</p>
+          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>No snapshots yet.</p>
         ) : (
           snapshots.map((snapshot) => (
             <div key={snapshot.id} style={snapshotItemStyle}>
@@ -138,7 +138,7 @@ export function SnapshotPanel({
                   <strong style={{ fontSize: 14 }}>{snapshot.name}</strong>
                   {snapshot === snapshots[0] ? <span style={badgeStyle}>Latest</span> : null}
                 </div>
-                <span style={{ color: "#9ba3b4", fontSize: 12 }}>
+                <span style={{ color: "var(--muted)", fontSize: 12 }}>
                   v{snapshot.sourceVersion} • {new Date(snapshot.createdAt).toLocaleString()}
                 </span>
               </div>
@@ -182,9 +182,9 @@ const panelStyle: CSSProperties = {
   display: "grid",
   gap: 16,
   padding: 20,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 16,
-  background: "#12151c",
+  background: "var(--surface-alt)",
 };
 
 const formStyle: CSSProperties = {
@@ -195,10 +195,10 @@ const formStyle: CSSProperties = {
 const inputStyle: CSSProperties = {
   width: "100%",
   padding: "10px 12px",
-  border: "1px solid #313748",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#0f1115",
-  color: "#eef1f6",
+  background: "var(--surface-input)",
+  color: "var(--fg)",
 };
 
 const buttonStyle: CSSProperties = {
@@ -206,15 +206,15 @@ const buttonStyle: CSSProperties = {
   padding: "10px 14px",
   border: "1px solid #3b4254",
   borderRadius: 12,
-  background: "#eef1f6",
-  color: "#0f1115",
+  background: "var(--accent-bg)",
+  color: "var(--accent-fg)",
   cursor: "pointer",
 };
 
 const secondaryButtonStyle: CSSProperties = {
   ...buttonStyle,
-  background: "#171a21",
-  color: "#eef1f6",
+  background: "var(--surface)",
+  color: "var(--fg)",
 };
 
 const listStyle: CSSProperties = {
@@ -228,9 +228,9 @@ const snapshotItemStyle: CSSProperties = {
   gap: 16,
   alignItems: "center",
   padding: 12,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 12,
-  background: "#171a21",
+  background: "var(--surface)",
 };
 
 const errorStyle: CSSProperties = {
@@ -246,8 +246,8 @@ const messageStyle: CSSProperties = {
 const badgeStyle: CSSProperties = {
   padding: "2px 8px",
   borderRadius: 999,
-  background: "#1f2937",
-  color: "#cfe2ff",
+  background: "var(--badge-bg)",
+  color: "var(--badge-fg)",
   fontSize: 11,
   fontWeight: 600,
   letterSpacing: "0.04em",

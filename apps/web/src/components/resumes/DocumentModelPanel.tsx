@@ -27,7 +27,7 @@ export function DocumentModelPanel({ documentModel, onSuggestEdit }: DocumentMod
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
         <strong style={{ fontSize: 16 }}>Document Model</strong>
-        <span style={{ color: "#9ba3b4", fontSize: 13 }}>
+        <span style={{ color: "var(--muted)", fontSize: 13 }}>
           Protected structure is separated from AI-editable text blocks.
         </span>
       </div>
@@ -43,11 +43,11 @@ export function DocumentModelPanel({ documentModel, onSuggestEdit }: DocumentMod
       </div>
       <div style={{ display: "grid", gap: 10 }}>
         <strong style={{ fontSize: 14 }}>Detected Editable Blocks</strong>
-        <span style={{ color: "#9ba3b4", fontSize: 12 }}>
+        <span style={{ color: "var(--muted)", fontSize: 12 }}>
           Validation is currently strict: future patch targets must match one editable block exactly.
         </span>
         {previewBlocks.length === 0 ? (
-          <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+          <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
             No editable blocks were detected for the current draft.
           </p>
         ) : (
@@ -56,7 +56,7 @@ export function DocumentModelPanel({ documentModel, onSuggestEdit }: DocumentMod
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                 <div style={{ display: "grid", gap: 4 }}>
                   <strong style={{ fontSize: 13 }}>{block.label}</strong>
-                  <span style={{ color: "#9ba3b4", fontSize: 12 }}>
+                  <span style={{ color: "var(--muted)", fontSize: 12 }}>
                     Lines {block.startLine}-{block.endLine} • Col {block.startColumn}-{block.endColumn}
                   </span>
                 </div>
@@ -98,9 +98,9 @@ const panelStyle: CSSProperties = {
   display: "grid",
   gap: 16,
   padding: 20,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 16,
-  background: "#12151c",
+  background: "var(--surface-alt)",
 };
 
 const metricsStyle: CSSProperties = {
@@ -113,13 +113,13 @@ const metricCardStyle: CSSProperties = {
   display: "grid",
   gap: 4,
   padding: 12,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 12,
-  background: "#171a21",
+  background: "var(--metric-bg)",
 };
 
 const metricLabelStyle: CSSProperties = {
-  color: "#9ba3b4",
+  color: "var(--muted)",
   fontSize: 12,
   textTransform: "uppercase",
   letterSpacing: "0.08em",
@@ -133,16 +133,16 @@ const blockCardStyle: CSSProperties = {
   display: "grid",
   gap: 6,
   padding: 12,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 12,
-  background: "#171a21",
+  background: "var(--surface)",
 };
 
 const badgeStyle: CSSProperties = {
   padding: "2px 8px",
   borderRadius: 999,
-  background: "#1f2937",
-  color: "#cfe2ff",
+  background: "var(--badge-bg)",
+  color: "var(--badge-fg)",
   fontSize: 11,
   fontWeight: 600,
   letterSpacing: "0.04em",
@@ -153,15 +153,15 @@ const buttonStyle: CSSProperties = {
   padding: "6px 10px",
   border: "1px solid #3b4254",
   borderRadius: 10,
-  background: "#171a21",
-  color: "#eef1f6",
+  background: "var(--surface)",
+  color: "var(--fg)",
   cursor: "pointer",
   fontSize: 12,
 };
 
 const textPreviewStyle: CSSProperties = {
   margin: 0,
-  color: "#eef1f6",
+  color: "var(--fg)",
   fontSize: 13,
   lineHeight: 1.5,
 };
@@ -169,17 +169,17 @@ const textPreviewStyle: CSSProperties = {
 const instructionLabelStyle: CSSProperties = {
   display: "grid",
   gap: 8,
-  color: "#9ba3b4",
+  color: "var(--muted)",
   fontSize: 12,
 };
 
 const instructionInputStyle: CSSProperties = {
   width: "100%",
   padding: "10px 12px",
-  border: "1px solid #313748",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#0f1115",
-  color: "#eef1f6",
+  background: "var(--surface-input)",
+  color: "var(--fg)",
   resize: "vertical",
   fontSize: 12,
   lineHeight: 1.5,
