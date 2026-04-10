@@ -101,6 +101,49 @@ Verified:
 - backend test suite passes after the retrieval-quality upgrade
 - frontend production build still passes after the backend-only ranking change
 
+### 2026-04-09: Editor Vim Mode Planning
+
+Opened a dedicated editor-enhancement branch after Section 6 merged into `main`.
+
+Planned scope:
+
+- add Monaco Vim integration
+- expose a standard/Vim toggle in the editor workspace
+- keep the slice focused on editor behavior only
+
+Primary planning file:
+
+- [editor-vim-mode.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/editor-vim-mode.md)
+
+### 2026-04-09: Editor Vim Mode Implementation
+
+Implemented the first editor-preference enhancement after Section 6 closed.
+
+Added:
+
+- `monaco-vim` integration in the LaTeX editor component
+- a standard/Vim mode toggle in the editor workspace header
+- a small mode/status readout under Monaco so the active Vim state is visible
+
+Verified:
+
+- frontend production build passes with Vim integration enabled
+- backend regression suite still passes after the editor-only change
+
+### 2026-04-09: Editor Vim Mode Persistence
+
+Added a small follow-up so the editor preference survives reloads instead of resetting to Standard on every page load.
+
+Added:
+
+- local browser persistence for the selected editor mode
+- startup restoration of the saved mode with Standard as the safe fallback
+
+Verified:
+
+- frontend production build still passes after persistence was added
+- backend regression suite still passes after the editor-state change
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

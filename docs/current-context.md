@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 6: style memory
+- Editor enhancement: Vim mode
 
 ## Completed Milestones
 
@@ -14,6 +14,7 @@ Active milestone:
 - Section 2B: real TeX compile execution and PDF preview implemented and verified
 - Section 2C: Monaco integration and compile test hardening implemented and verified
 - Section 5: patch-set workflow completed and merged into `main`
+- Section 6: style memory completed and merged into `main`
 - Section 4: protected document model and safe suggestion workflow completed and merged into `main`
 
 ## Current Constraints
@@ -42,27 +43,22 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Start Section 6 by adding a narrow style-memory layer on top of the now-stable patch-set workflow.
+Add the first editor preference enhancement: a standard/Vim mode toggle for the Monaco-based LaTeX editor.
 
 That means:
 
-- define persisted style examples
-- extract them from the current draft and accepted outcomes
-- retrieve a bounded style context for generation requests
-- thread that context into edit, review, and tailor flows
+- integrate Vim keybindings into Monaco
+- expose a simple mode toggle in the editor workspace
+- keep standard mode as the default
 
 ## Definition of Success for the Current Slice
 
-- style examples are stored in a first-pass local persistence model
-- edit, review, and tailor flows can retrieve a bounded style context
-- provider inputs visibly include style-memory context
-- patch sets now expose the retrieved style examples so the style-memory behavior is inspectable
-- accepted patch outcomes now contribute to style memory and are preferred during retrieval
-- local retrieval now also prefers fresher and more label-diverse examples when scores are close
-- patch validation and apply behavior remain unchanged
-- backend tests pass
+- the user can toggle between standard and Vim modes in the editor
+- standard mode remains unchanged by default
+- Vim mode provides active keybindings and visible mode feedback
+- the chosen editor mode now persists across reloads in the browser
 - frontend production build passes
-- the first version remains deterministic and local, without vector or embedding infrastructure
+- backend regression tests still pass after the editor-only change
 
 ## Known Risks
 
@@ -70,4 +66,4 @@ That means:
 - compile subprocesses need timeouts and temp-directory isolation
 - PDF serving needs a clean local artifact strategy before later migration to object storage
 - the current document-model parser is heuristic and intentionally conservative
-- simple style retrieval may need refinement before it feels strong enough for real users
+- Vim integration may require a frontend dependency and careful client-only setup
