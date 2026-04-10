@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 5: patch-set workflow
+- Section 6: style memory
 
 ## Completed Milestones
 
@@ -13,6 +13,7 @@ Active milestone:
 - Section 2A: compile contract and editor workspace scaffolded and verified
 - Section 2B: real TeX compile execution and PDF preview implemented and verified
 - Section 2C: Monaco integration and compile test hardening implemented and verified
+- Section 5: patch-set workflow completed and merged into `main`
 - Section 4: protected document model and safe suggestion workflow completed and merged into `main`
 
 ## Current Constraints
@@ -41,25 +42,27 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Start Section 5 by turning the current suggestion workflow into one first-class patch-set system.
+Start Section 6 by adding a narrow style-memory layer on top of the now-stable patch-set workflow.
 
-That now means:
+That means:
 
-- finish the remaining route and service naming cleanup around seeded baseline patch sets
-- keep validation, apply, retry, and feedback behavior intact under the patch-set naming
-- close Section 5 cleanly once the workflow is coherent end to end
+- define persisted style examples
+- extract them from the current draft and accepted outcomes
+- retrieve a bounded style context for generation requests
+- thread that context into edit, review, and tailor flows
 
 ## Definition of Success for the Current Slice
 
-- patch sets are represented through one shared contract
-- edit, review, and tailor all emit the new patch-set structure explicitly
-- patch application and feedback logging still work
-- the old mock-suggestion type aliases have been removed from the shared contract surface
-- the seeded baseline patch-set endpoint and client naming match the patch-set workflow language
-- the editor review panel and local state now also use patch-set terminology consistently
-- frontend review UI still renders grouped diff hunks correctly
+- style examples are stored in a first-pass local persistence model
+- edit, review, and tailor flows can retrieve a bounded style context
+- provider inputs visibly include style-memory context
+- patch sets now expose the retrieved style examples so the style-memory behavior is inspectable
+- accepted patch outcomes now contribute to style memory and are preferred during retrieval
+- local retrieval now also prefers fresher and more label-diverse examples when scores are close
+- patch validation and apply behavior remain unchanged
 - backend tests pass
 - frontend production build passes
+- the first version remains deterministic and local, without vector or embedding infrastructure
 
 ## Known Risks
 
@@ -67,3 +70,4 @@ That now means:
 - compile subprocesses need timeouts and temp-directory isolation
 - PDF serving needs a clean local artifact strategy before later migration to object storage
 - the current document-model parser is heuristic and intentionally conservative
+- simple style retrieval may need refinement before it feels strong enough for real users

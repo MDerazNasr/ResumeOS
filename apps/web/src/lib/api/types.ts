@@ -75,6 +75,7 @@ export type PatchSetDto = {
   mode: "mock" | "edit" | "review" | "tailor";
   title: string;
   summary: string;
+  styleExamples: string[];
   retrySeed: number;
   items: PatchHunkDto[];
 };

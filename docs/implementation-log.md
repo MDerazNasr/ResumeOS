@@ -23,6 +23,84 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-09: Section 6 Planning
+
+Opened the Section 6 branch from merged `main` after Section 5 was pushed and integrated.
+
+Planned scope:
+
+- add a first-pass style-memory layer
+- persist local style examples from the draft and accepted outcomes
+- retrieve a bounded style context for generation requests
+- thread that context into edit, review, and tailor without changing the patch workflow
+
+Primary planning files:
+
+- [section-6-style-memory.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-6-style-memory.md)
+- [section-6.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-6.md)
+
+### 2026-04-09: Section 6 First Style-Memory Slice
+
+Implemented the first local style-memory layer without introducing vector infrastructure.
+
+Added:
+
+- `style_examples` persistence in the local schema
+- a backend style-memory service that refreshes draft-derived style examples and retrieves a bounded relevant subset
+- style-context threading into edit, review, and tailor provider prompts
+- backend tests covering style-example persistence and retrieval
+
+Verified:
+
+- backend test suite passes after the style-memory integration
+- frontend production build still passes after the backend-only change
+
+### 2026-04-09: Section 6 Style-Memory Inspection Slice
+
+Exposed the retrieved style-memory examples through the patch-set contract so the personalization layer is visible instead of hidden in backend prompts.
+
+Added:
+
+- `styleExamples` on patch sets in the shared backend/frontend contract
+- edit, review, and tailor patch-set population with the retrieved style examples that informed generation
+- review-panel rendering of the retrieved style examples for each patch set
+- regression assertions that generated patch sets include bounded style-memory examples
+
+Verified:
+
+- backend test suite still passes after exposing style-memory metadata
+- frontend production build still passes with the new review-panel rendering
+
+### 2026-04-09: Section 6 Accepted Outcome Style Memory
+
+Extended style memory so the system learns not only from the current draft but also from text the user actually approved through patch application.
+
+Added:
+
+- accepted style-example persistence at patch-apply time
+- retrieval ranking that prefers accepted examples over plain draft-derived examples
+- regression tests confirming accepted outcomes are stored and preferred during retrieval
+
+Verified:
+
+- backend test suite passes after accepted-style-example persistence was added
+- frontend production build still passes after the backend-only retrieval upgrade
+
+### 2026-04-09: Section 6 Retrieval Quality Upgrade
+
+Improved local style-memory retrieval so it is less repetitive and more useful without needing embeddings yet.
+
+Added:
+
+- retrieval ranking that considers freshness alongside source-type and overlap score
+- greedy result selection that prefers label diversity before returning duplicate examples from the same area
+- regression coverage confirming varied examples are selected when strong alternatives exist
+
+Verified:
+
+- backend test suite passes after the retrieval-quality upgrade
+- frontend production build still passes after the backend-only ranking change
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

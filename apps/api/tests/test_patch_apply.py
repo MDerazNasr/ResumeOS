@@ -2,6 +2,7 @@ import unittest
 
 from fastapi.testclient import TestClient
 
+from app.db.database import get_connection
 from app.main import app
 
 
@@ -28,6 +29,21 @@ class PatchApplyTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.proposal["afterText"], response.json()["sourceTex"])
         self.assertGreater(response.json()["version"], 1)
+        with get_connection() as connection:
+            row = connection.execute(
+                """
+                SELECT source_type, text
+                FROM style_examples
+                WHERE resume_id = ? AND source_type = 'accepted'
+                ORDER BY updated_at DESC
+                LIMIT 1
+                """,
+                (self.resume_id,),
+            ).fetchone()
+
+        self.assertIsNotNone(row)
+        self.assertEqual(row["source_type"], "accepted")
+        self.assertEqual(row["text"], self.proposal["afterText"])
 
     def test_stale_patch_is_rejected(self) -> None:
         first_apply = self.client.post(
