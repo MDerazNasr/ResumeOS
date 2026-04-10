@@ -54,6 +54,7 @@ That means:
 - connect editor preferences to the backend settings model
 - add a dedicated auth entry route and protect product routes from anonymous access
 - remove the remaining dev-fallback identity from the live auth contract
+- expose a minimal authenticated settings surface for account/session and editor preferences
 
 ## Definition of Success for the Current Slice
 
@@ -66,6 +67,7 @@ That means:
 - the editor now reads and writes its mode through `/settings`, with local storage only as a fallback cache
 - unauthenticated access to resume/settings routes is now blocked, with the frontend redirecting to `/auth` before protected data loads
 - `/me` now returns a real session user or `401`; the frontend treats that as authenticated vs unauthenticated state instead of manufacturing a fallback user
+- `/app/settings` now exists as a dedicated page for sign-out and editor-mode preference changes
 
 ## Known Risks
 
@@ -75,4 +77,4 @@ That means:
 - the current document-model parser is heuristic and intentionally conservative
 - auth changes touch every route through current-user resolution
 - cookie/session handling must work cleanly across the local frontend/backend split
-- auth UX is still minimal and route-focused; there is not yet a dedicated full settings page or richer account management surface
+- auth UX is still intentionally minimal; settings cover editor mode and session management but not broader account management features

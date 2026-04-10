@@ -24,6 +24,7 @@ Add real auth/session handling and persisted user settings so ResumeOS stops dep
 - [x] add a minimal frontend auth flow for register/login/logout
 - [x] add a dedicated auth page and enforce session auth on product routes
 - [x] remove the temporary dev-user fallback from the live auth contract
+- [x] add a minimal authenticated settings page
 - [x] add backend tests for auth/session and settings behavior
 - [x] verify frontend production build passes
 
@@ -35,6 +36,7 @@ Add real auth/session handling and persisted user settings so ResumeOS stops dep
 - [x] editor mode persists through the backend settings model
 - [x] unauthenticated users are redirected to `/auth` before product routes load protected data
 - [x] `/me` only returns a real session user or `401`
+- [x] authenticated users can reach a settings page and update editor mode there
 - [x] backend tests pass
 - [x] frontend production build passes
 

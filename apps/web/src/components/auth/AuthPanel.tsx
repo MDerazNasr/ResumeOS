@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
@@ -59,9 +60,14 @@ export function AuthPanel({ user }: AuthPanelProps) {
             {user.name} · {user.email}
           </span>
         </div>
-        <button disabled={isSubmitting} onClick={() => void handleLogout()} style={secondaryButtonStyle} type="button">
-          {isSubmitting ? "Signing out..." : "Sign Out"}
-        </button>
+        <div style={actionRowStyle}>
+          <Link href="/app/settings" style={linkButtonStyle}>
+            Settings
+          </Link>
+          <button disabled={isSubmitting} onClick={() => void handleLogout()} style={secondaryButtonStyle} type="button">
+            {isSubmitting ? "Signing out..." : "Sign Out"}
+          </button>
+        </div>
         {error ? <p style={errorStyle}>{error}</p> : null}
       </section>
     );
@@ -127,6 +133,12 @@ const toggleRowStyle: CSSProperties = {
   gap: 8
 };
 
+const actionRowStyle: CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
 function toggleButtonStyle(isActive: boolean): CSSProperties {
   return {
     padding: "8px 10px",
@@ -175,6 +187,13 @@ const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
   background: "#171a21",
   color: "#eef1f6"
+};
+
+const linkButtonStyle: CSSProperties = {
+  ...secondaryButtonStyle,
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
 };
 
 const errorStyle: CSSProperties = {

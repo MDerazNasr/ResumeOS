@@ -238,6 +238,21 @@ Verified:
 - backend test suite passes after converting protected-route tests to real authenticated clients
 - frontend production build passes after removing `authSource` and the dev-fallback flow
 
+### 2026-04-10: Section 7 Minimal Settings Page
+
+Added the first dedicated authenticated settings surface on top of the existing backend settings model.
+
+Added:
+
+- `/app/settings` page for signed-in users
+- a settings panel for editor-mode changes and sign-out
+- a direct settings link from the signed-in account panel on the resumes page
+
+Verified:
+
+- backend test suite still passes with the new settings surface in place
+- frontend production build passes with the new route and client settings panel
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.
