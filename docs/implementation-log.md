@@ -175,6 +175,22 @@ Verified:
 - backend test suite passes after the auth/settings foundation was added
 - frontend production build still passes after the backend contract expansion
 
+### 2026-04-10: Section 7 Editor Settings Integration
+
+Connected the existing editor-mode preference to the new backend settings model without forcing a full login UI yet.
+
+Added:
+
+- frontend settings API client methods for reading and updating `/settings`
+- editor-mode hydration from backend settings with local storage retained as a fallback cache
+- editor-mode writes now update backend settings as the primary persistence path
+- test isolation fixes for the new auth/settings backend suite
+
+Verified:
+
+- backend test suite passes after the editor/settings integration
+- frontend production build still passes after the settings client changes
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

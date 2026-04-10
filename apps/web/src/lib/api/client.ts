@@ -17,7 +17,9 @@ import type {
   SnapshotDto,
   SnapshotListResponseDto,
   UpdateDraftInput,
+  UpdateUserSettingsInput,
   UserDto,
+  UserSettingsDto,
   WorkingDraftDto
 } from "./types";
 
@@ -26,6 +28,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {})
@@ -46,6 +49,17 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getCurrentUser(): Promise<UserDto> {
   return apiFetch<UserDto>("/me");
+}
+
+export function getUserSettings(): Promise<UserSettingsDto> {
+  return apiFetch<UserSettingsDto>("/settings");
+}
+
+export function updateUserSettings(input: UpdateUserSettingsInput): Promise<UserSettingsDto> {
+  return apiFetch<UserSettingsDto>("/settings", {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
 }
 
 export function listResumes(): Promise<ResumeListResponseDto> {

@@ -20,7 +20,7 @@ Add real auth/session handling and persisted user settings so ResumeOS stops dep
 - [x] replace the dev-user resolver with session-backed current-user resolution
 - [x] add auth routes for register/login/logout
 - [x] add settings routes for read/update
-- [ ] connect editor mode persistence to backend settings
+- [x] connect editor mode persistence to backend settings
 - [x] add backend tests for auth/session and settings behavior
 - [x] verify frontend production build passes
 
@@ -29,7 +29,7 @@ Add real auth/session handling and persisted user settings so ResumeOS stops dep
 - [x] a user can register and log in
 - [x] existing resume routes resolve the authenticated user correctly
 - [x] user settings can be read and updated
-- [ ] editor mode persists through the backend settings model
+- [x] editor mode persists through the backend settings model
 - [x] backend tests pass
 - [x] frontend production build passes
 

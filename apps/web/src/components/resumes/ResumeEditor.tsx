@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getSeededPatchSets, logFeedback, saveDraft } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { PatchSetReviewPanel } from "@/components/resumes/PatchSetReviewPanel";
@@ -54,6 +54,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const [snapshotRefreshToken, setSnapshotRefreshToken] = useState(0);
   const [lastPatchSetRequest, setLastPatchSetRequest] = useState<PatchSetRequestContext>({ mode: "mock", seed: 0 });
   const saveInFlightRef = useRef<Promise<WorkingDraftDto | null> | null>(null);
+  const editorModeHydratedRef = useRef(false);
   const sourceTexRef = useRef(sourceTex);
   const persistedSourceTexRef = useRef(persistedSourceTex);
   const versionRef = useRef(version);
@@ -81,14 +82,34 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     } catch {
       return;
     }
+
+    void getUserSettings()
+      .then((settings) => {
+        setEditorMode(settings.editorMode);
+        try {
+          window.localStorage.setItem(EDITOR_MODE_STORAGE_KEY, settings.editorMode);
+        } catch {
+          return;
+        }
+      })
+      .catch(() => null)
+      .finally(() => {
+        editorModeHydratedRef.current = true;
+      });
   }, []);
 
   useEffect(() => {
     try {
       window.localStorage.setItem(EDITOR_MODE_STORAGE_KEY, editorMode);
     } catch {
+      // keep going so backend settings can still persist
+    }
+
+    if (!editorModeHydratedRef.current) {
       return;
     }
+
+    void updateUserSettings({ editorMode }).catch(() => null);
   }, [editorMode]);
 
   async function saveLatestDraft() {

@@ -4,6 +4,14 @@ export type UserDto = {
   name: string;
 };
 
+export type UserSettingsDto = {
+  editorMode: "standard" | "vim";
+};
+
+export type UpdateUserSettingsInput = {
+  editorMode?: "standard" | "vim";
+};
+
 export type ResumeDto = {
   id: string;
   title: string;

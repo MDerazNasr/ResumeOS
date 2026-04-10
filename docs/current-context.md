@@ -62,6 +62,7 @@ That means:
 - backend tests pass
 - frontend production build passes
 - the current demo path still falls back to the seeded dev user when no session exists
+- the editor now reads and writes its mode through `/settings`, with local storage only as a fallback cache
 
 ## Known Risks
 
