@@ -1,13 +1,11 @@
 import unittest
 
-from fastapi.testclient import TestClient
-
-from app.main import app
+from tests.helpers import create_authenticated_client
 
 
 class SeededPatchSetTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.client = TestClient(app)
+        self.client = create_authenticated_client()
         created = self.client.post("/resumes", json={"title": "Seeded Patch Set Test"})
         self.assertEqual(created.status_code, 200)
         self.resume_id = created.json()["id"]

@@ -9,6 +9,25 @@ class UserDto(BaseModel):
     name: str
 
 
+class RegisterInput(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+    name: str = Field(min_length=1, max_length=120)
+    password: str = Field(min_length=8, max_length=200)
+
+
+class LoginInput(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=8, max_length=200)
+
+
+class UserSettingsDto(BaseModel):
+    editorMode: Literal["standard", "vim"]
+
+
+class UpdateUserSettingsInput(BaseModel):
+    editorMode: Literal["standard", "vim"] | None = None
+
+
 class ResumeDto(BaseModel):
     id: str
     title: str

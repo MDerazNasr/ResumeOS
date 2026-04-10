@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ResumeEditor } from "@/components/resumes/ResumeEditor";
-import { getDocumentModel, getDraft, getResume, listSnapshots } from "@/lib/api/client";
+import { getCurrentUser, getDocumentModel, getDraft, getResume, listSnapshots } from "@/lib/api/client";
 
 type ResumeEditorPageProps = {
   params: {
@@ -9,6 +9,12 @@ type ResumeEditorPageProps = {
 };
 
 export default async function ResumeEditorPage({ params }: ResumeEditorPageProps) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/auth");
+  }
+
   try {
     const [resume, draft, documentModel, snapshots] = await Promise.all([
       getResume(params.resumeId),

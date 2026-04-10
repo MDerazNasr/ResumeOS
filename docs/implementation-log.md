@@ -144,6 +144,115 @@ Verified:
 - frontend production build still passes after persistence was added
 - backend regression suite still passes after the editor-state change
 
+### 2026-04-09: Section 7 Planning
+
+Opened the next core product branch after the Vim-mode enhancement merged into `main`.
+
+Planned scope:
+
+- replace the hardcoded dev-user with real auth/session handling
+- add persisted user settings
+- move editor mode persistence onto the user settings model
+
+Primary planning files:
+
+- [section-7-auth-settings.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-7-auth-settings.md)
+- [section-7.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-7.md)
+
+### 2026-04-09: Section 7 Backend Auth and Settings Foundation
+
+Implemented the first real auth/settings backend slice while preserving the current demo workflow.
+
+Added:
+
+- session-cookie auth primitives with register, login, logout, and current-user resolution
+- `user_settings` persistence and settings read/update routes
+- password hashing and session-token hashing using standard-library primitives
+- backend tests for auth/session and settings round trips
+
+Verified:
+
+- backend test suite passes after the auth/settings foundation was added
+- frontend production build still passes after the backend contract expansion
+
+### 2026-04-10: Section 7 Editor Settings Integration
+
+Connected the existing editor-mode preference to the new backend settings model without forcing a full login UI yet.
+
+Added:
+
+- frontend settings API client methods for reading and updating `/settings`
+- editor-mode hydration from backend settings with local storage retained as a fallback cache
+- editor-mode writes now update backend settings as the primary persistence path
+- test isolation fixes for the new auth/settings backend suite
+
+Verified:
+
+- backend test suite passes after the editor/settings integration
+- frontend production build still passes after the settings client changes
+
+### 2026-04-10: Section 7 Minimal Frontend Auth Flow
+
+Added the first frontend surface for the new auth/session foundation without removing the dev fallback yet.
+
+Added:
+
+- visible session/fallback state via `authSource` on the current user contract
+- a minimal auth panel on the resumes page for register, login, and logout
+- UI copy that makes the temporary dev-fallback mode explicit instead of invisible
+
+Verified:
+
+- backend test suite still passes after the current-user contract expansion
+- frontend production build still passes with the new auth panel
+
+### 2026-04-10: Section 7 Auth Route Protection
+
+Moved ResumeOS from a soft auth boundary to a real product gate while preserving `/me` as a lightweight session-status probe.
+
+Added:
+
+- backend `require_authenticated_user` enforcement for resume and settings routes
+- a dedicated `/auth` page for login/register instead of relying on inline fallback alone
+- frontend redirects from protected app routes to `/auth` before protected API calls fire
+- backend assertions that anonymous access to `/resumes` and `/settings` now returns `401`
+
+Verified:
+
+- backend test suite passes after tightening route protection
+- frontend production build passes with the new `/auth` route and redirects
+
+### 2026-04-10: Section 7 Remove Dev Fallback Identity
+
+Finished the auth boundary by removing the hardcoded dev-fallback user from the live contract.
+
+Added:
+
+- `/me` now behaves like a real session endpoint and returns `401` when no session exists
+- frontend `getCurrentUser()` now treats `401` as unauthenticated state instead of a fake user
+- the auth page now renders directly from that unauthenticated state, while protected routes redirect before loading product data
+- backend tests now create authenticated clients explicitly instead of leaning on a seeded fallback identity
+
+Verified:
+
+- backend test suite passes after converting protected-route tests to real authenticated clients
+- frontend production build passes after removing `authSource` and the dev-fallback flow
+
+### 2026-04-10: Section 7 Minimal Settings Page
+
+Added the first dedicated authenticated settings surface on top of the existing backend settings model.
+
+Added:
+
+- `/app/settings` page for signed-in users
+- a settings panel for editor-mode changes and sign-out
+- a direct settings link from the signed-in account panel on the resumes page
+
+Verified:
+
+- backend test suite still passes with the new settings surface in place
+- frontend production build passes with the new route and client settings panel
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.
