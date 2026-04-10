@@ -56,6 +56,7 @@ That means:
 - the user can toggle between standard and Vim modes in the editor
 - standard mode remains unchanged by default
 - Vim mode provides active keybindings and visible mode feedback
+- the chosen editor mode now persists across reloads in the browser
 - frontend production build passes
 - backend regression tests still pass after the editor-only change
 

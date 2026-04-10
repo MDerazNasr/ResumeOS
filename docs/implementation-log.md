@@ -130,6 +130,20 @@ Verified:
 - frontend production build passes with Vim integration enabled
 - backend regression suite still passes after the editor-only change
 
+### 2026-04-09: Editor Vim Mode Persistence
+
+Added a small follow-up so the editor preference survives reloads instead of resetting to Standard on every page load.
+
+Added:
+
+- local browser persistence for the selected editor mode
+- startup restoration of the saved mode with Standard as the safe fallback
+
+Verified:
+
+- frontend production build still passes after persistence was added
+- backend regression suite still passes after the editor-state change
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

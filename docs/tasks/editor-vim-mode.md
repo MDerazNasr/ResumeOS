@@ -19,6 +19,7 @@ Add a user-facing toggle in the LaTeX editor so the user can switch between stan
 - [x] keep normal editing behavior unchanged when Vim mode is off
 - [x] show minimal Vim status or mode feedback when Vim mode is on
 - [x] verify frontend production build passes
+- [x] persist the selected editor mode across reloads
 
 ## Verification Checklist
 
@@ -26,6 +27,7 @@ Add a user-facing toggle in the LaTeX editor so the user can switch between stan
 - [x] Monaco remains usable in standard mode
 - [x] Vim keybindings are active in Vim mode
 - [x] frontend production build passes
+- [x] the selected editor mode survives a page reload on the same browser
 
 ## Notes
 

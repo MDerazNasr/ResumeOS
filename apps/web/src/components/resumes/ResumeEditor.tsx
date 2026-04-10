@@ -31,6 +31,8 @@ type PatchSetRequestContext =
   | { mode: "review"; instruction: string }
   | { mode: "tailor"; instruction: string; jobDescription: string };
 
+const EDITOR_MODE_STORAGE_KEY = "resumeos.editorMode";
+
 export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
   const [documentModelState, setDocumentModelState] = useState(documentModel);
   const [editorMode, setEditorMode] = useState<"standard" | "vim">("standard");
@@ -69,6 +71,25 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   useEffect(() => {
     versionRef.current = version;
   }, [version]);
+
+  useEffect(() => {
+    try {
+      const storedMode = window.localStorage.getItem(EDITOR_MODE_STORAGE_KEY);
+      if (storedMode === "standard" || storedMode === "vim") {
+        setEditorMode(storedMode);
+      }
+    } catch {
+      return;
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(EDITOR_MODE_STORAGE_KEY, editorMode);
+    } catch {
+      return;
+    }
+  }, [editorMode]);
 
   async function saveLatestDraft() {
     if (sourceTexRef.current === persistedSourceTexRef.current) {
