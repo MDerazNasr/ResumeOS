@@ -15,6 +15,7 @@ type SettingsPanelProps = {
 export function SettingsPanel({ user, settings }: SettingsPanelProps) {
   const router = useRouter();
   const [editorMode, setEditorMode] = useState(settings.editorMode);
+  const [themeMode, setThemeMode] = useState(settings.themeMode);
   const [isSaving, setIsSaving] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,34 @@ export function SettingsPanel({ user, settings }: SettingsPanelProps) {
       setStatus("Saved");
     } catch (updateError) {
       setEditorMode(previousMode);
+      setError(updateError instanceof Error ? updateError.message : "Failed to update settings.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleThemeChange(nextTheme: "dark" | "light") {
+    if (nextTheme === themeMode) {
+      return;
+    }
+
+    const previousTheme = themeMode;
+    setThemeMode(nextTheme);
+    setIsSaving(true);
+    setError(null);
+    setStatus(null);
+
+    try {
+      await updateUserSettings({ themeMode: nextTheme });
+      document.documentElement.dataset.theme = nextTheme;
+      try {
+        window.localStorage.setItem("resumeos.themeMode", nextTheme);
+      } catch {
+        // keep going; backend is the source of truth
+      }
+      setStatus("Saved");
+    } catch (updateError) {
+      setThemeMode(previousTheme);
       setError(updateError instanceof Error ? updateError.message : "Failed to update settings.");
     } finally {
       setIsSaving(false);
@@ -79,6 +108,19 @@ export function SettingsPanel({ user, settings }: SettingsPanelProps) {
               {isSigningOut ? "Signing out..." : "Sign out"}
             </button>
           </div>
+        </div>
+
+        <div style={sectionStyle}>
+          <strong style={sectionTitleStyle}>Theme</strong>
+          <div style={toggleRowStyle}>
+            <button onClick={() => void handleThemeChange("dark")} style={toggleButtonStyle(themeMode === "dark")} type="button">
+              Dark
+            </button>
+            <button onClick={() => void handleThemeChange("light")} style={toggleButtonStyle(themeMode === "light")} type="button">
+              Light
+            </button>
+          </div>
+          <span style={metaMutedStyle}>Applied across the app shell and saved to your account.</span>
         </div>
 
         <div style={sectionStyle}>

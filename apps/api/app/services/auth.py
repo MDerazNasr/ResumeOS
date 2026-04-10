@@ -45,11 +45,18 @@ def ensure_auth_schema() -> None:
             CREATE TABLE IF NOT EXISTS user_settings (
               user_id TEXT PRIMARY KEY,
               editor_mode TEXT NOT NULL DEFAULT 'standard',
+              theme_mode TEXT NOT NULL DEFAULT 'dark',
               updated_at TEXT NOT NULL,
               FOREIGN KEY(user_id) REFERENCES users(id)
             )
             """
         )
+        settings_columns = {
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(user_settings)").fetchall()
+        }
+        if "theme_mode" not in settings_columns:
+            connection.execute("ALTER TABLE user_settings ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'dark'")
         connection.commit()
 def register_user(input_data: RegisterInput, response: Response) -> UserDto:
     ensure_auth_schema()

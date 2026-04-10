@@ -17,10 +17,12 @@ export type LoginInput = {
 
 export type UserSettingsDto = {
   editorMode: "standard" | "vim";
+  themeMode: "dark" | "light";
 };
 
 export type UpdateUserSettingsInput = {
   editorMode?: "standard" | "vim";
+  themeMode?: "dark" | "light";
 };
 
 export type ResumeDto = {

@@ -238,6 +238,37 @@ Verified:
 - backend test suite passes after converting protected-route tests to real authenticated clients
 - frontend production build passes after removing `authSource` and the dev-fallback flow
 
+### 2026-04-10: Section 8 Planning
+
+Opened the next branch from merged `main` after Section 7 was integrated.
+
+Planned scope:
+
+- extend the persisted settings model with light/dark theme mode
+- apply the active theme at the app shell level
+- expose a settings-page theme toggle
+
+Primary planning files:
+
+- [section-8-ui-preferences.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-8-ui-preferences.md)
+- [section-8.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-8.md)
+
+### 2026-04-10: Section 8 Theme Preferences
+
+Added the first real app-level preference surface on top of the Section 7 settings model.
+
+Added:
+
+- backend `themeMode` persistence in user settings
+- app-shell theme application in the root layout
+- local theme hydration so the selected mode survives reloads cleanly
+- settings-page light/dark toggle alongside the existing editor-mode controls
+
+Verified:
+
+- backend test suite passes after extending the settings contract
+- frontend production build passes with the global theme shell and settings toggle
+
 ### 2026-04-10: Section 7 Minimal Settings Page
 
 Added the first dedicated authenticated settings surface on top of the existing backend settings model.
