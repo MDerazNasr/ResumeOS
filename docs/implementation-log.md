@@ -144,6 +144,21 @@ Verified:
 - frontend production build still passes after persistence was added
 - backend regression suite still passes after the editor-state change
 
+### 2026-04-09: Section 7 Planning
+
+Opened the next core product branch after the Vim-mode enhancement merged into `main`.
+
+Planned scope:
+
+- replace the hardcoded dev-user with real auth/session handling
+- add persisted user settings
+- move editor mode persistence onto the user settings model
+
+Primary planning files:
+
+- [section-7-auth-settings.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-7-auth-settings.md)
+- [section-7.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-7.md)
+
 ### 2026-04-08: Section 5 Planning
 
 Opened the Section 5 branch from merged `main` after Section 4 was pushed and integrated.

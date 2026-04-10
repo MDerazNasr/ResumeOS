@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Editor enhancement: Vim mode
+- Section 7: auth and user settings
 
 ## Completed Milestones
 
@@ -16,6 +16,7 @@ Active milestone:
 - Section 5: patch-set workflow completed and merged into `main`
 - Section 6: style memory completed and merged into `main`
 - Section 4: protected document model and safe suggestion workflow completed and merged into `main`
+- editor enhancement: Vim mode completed and merged into `main`
 
 ## Current Constraints
 
@@ -43,22 +44,23 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Add the first editor preference enhancement: a standard/Vim mode toggle for the Monaco-based LaTeX editor.
+Replace the hardcoded dev-user foundation with real auth/session handling and persisted user settings.
 
 That means:
 
-- integrate Vim keybindings into Monaco
-- expose a simple mode toggle in the editor workspace
-- keep standard mode as the default
+- add real registration/login/logout
+- resolve current user from a session cookie
+- add persisted settings
+- connect editor preferences to the backend settings model
 
 ## Definition of Success for the Current Slice
 
-- the user can toggle between standard and Vim modes in the editor
-- standard mode remains unchanged by default
-- Vim mode provides active keybindings and visible mode feedback
-- the chosen editor mode now persists across reloads in the browser
+- a user can register and log in
+- existing resume routes resolve the authenticated user correctly
+- user settings can be stored and read
+- editor mode can persist through backend settings
+- backend tests pass
 - frontend production build passes
-- backend regression tests still pass after the editor-only change
 
 ## Known Risks
 
@@ -66,4 +68,5 @@ That means:
 - compile subprocesses need timeouts and temp-directory isolation
 - PDF serving needs a clean local artifact strategy before later migration to object storage
 - the current document-model parser is heuristic and intentionally conservative
-- Vim integration may require a frontend dependency and careful client-only setup
+- auth changes touch every route through current-user resolution
+- cookie/session handling must work cleanly across the local frontend/backend split
