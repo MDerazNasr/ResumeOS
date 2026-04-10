@@ -33,6 +33,7 @@ type PatchSetRequestContext =
 
 export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
   const [documentModelState, setDocumentModelState] = useState(documentModel);
+  const [editorMode, setEditorMode] = useState<"standard" | "vim">("standard");
   const [patchSets, setPatchSets] = useState<PatchSetDto[]>([]);
   const [seededPatchSetSeed, setSeededPatchSetSeed] = useState(0);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
@@ -407,10 +408,31 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
                 ? "Autosave pending..."
                 : `Saved ${new Date(updatedAt).toLocaleString()}`}
           </span>
+          <div style={editorModeToggleStyle}>
+            <span style={{ color: "#9ba3b4", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Editor
+            </span>
+            <div style={editorModeButtonGroupStyle}>
+              <button
+                onClick={() => setEditorMode("standard")}
+                style={editorModeButtonStyle(editorMode === "standard")}
+                type="button"
+              >
+                Standard
+              </button>
+              <button
+                onClick={() => setEditorMode("vim")}
+                style={editorModeButtonStyle(editorMode === "vim")}
+                type="button"
+              >
+                Vim
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div style={workspaceStyle}>
-        <LatexEditor onChange={setSourceTex} value={sourceTex} />
+        <LatexEditor editorMode={editorMode} onChange={setSourceTex} value={sourceTex} />
         <aside style={panelStyle}>
           <div style={{ display: "grid", gap: 6 }}>
             <strong style={{ fontSize: 16 }}>Compile Panel</strong>
@@ -524,6 +546,30 @@ const headerStyle: CSSProperties = {
   gap: 24,
   alignItems: "flex-start"
 };
+
+const editorModeToggleStyle: CSSProperties = {
+  display: "grid",
+  gap: 8,
+  justifyItems: "end",
+};
+
+const editorModeButtonGroupStyle: CSSProperties = {
+  display: "inline-flex",
+  gap: 8,
+};
+
+function editorModeButtonStyle(isActive: boolean): CSSProperties {
+  return {
+    padding: "8px 10px",
+    border: `1px solid ${isActive ? "#7fa4ff" : "#3b4254"}`,
+    borderRadius: 10,
+    background: isActive ? "#18253d" : "#171a21",
+    color: isActive ? "#dce8ff" : "#eef1f6",
+    cursor: "pointer",
+    fontSize: 12,
+    fontWeight: 600,
+  };
+}
 
 const secondaryButtonStyle: CSSProperties = {
   padding: "10px 14px",
