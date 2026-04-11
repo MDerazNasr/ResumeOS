@@ -297,6 +297,22 @@ Verified:
 - frontend production build passes cleanly with `npm --workspace @resumeos/web run build`
 - the known Tailwind content warning no longer appears during the production build
 
+### 2026-04-10: Section 9 Runtime Verification Hardening
+
+Added a small explicit runtime check for the auth/app shell so the most common local regressions are caught by one repeatable command.
+
+Added:
+
+- a root `scripts/verify_runtime.sh` script
+- a root `verify:runtime` npm command
+- README documentation for the stable runtime verification step after starting the API and web servers
+
+Verified:
+
+- `/health` returns `200`
+- `/auth` returns `200`
+- protected routes like `/app/resumes`, `/app/settings`, and an editor route redirect to `/auth` instead of failing at runtime when unauthenticated
+
 ### 2026-04-10: Section 8 Planning
 
 Opened the next branch from merged `main` after Section 7 was integrated.

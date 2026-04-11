@@ -94,6 +94,13 @@ cd /Users/mderaznasr/Documents/GitHub/ResumeOS/apps/web
 npx next start --hostname 127.0.0.1 --port 3000
 ```
 
+Runtime verification:
+
+```bash
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS
+bash scripts/verify_runtime.sh
+```
+
 If the frontend gets into a bad state during local iteration, clear the build cache and rebuild:
 
 ```bash

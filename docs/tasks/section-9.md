@@ -15,8 +15,10 @@ Harden the current ResumeOS baseline so local development and verification are m
 - [x] document the Section 9 hardening boundary
 - [x] add a valid Tailwind content config to remove the known warning
 - [x] update local dev docs for the current stable workflow
+- [x] add a stable auth/app-shell runtime verification script
 - [x] verify backend tests pass
 - [x] verify frontend production build passes
+- [x] verify the live auth/app shell routes through the stable run path
 
 ## Verification Checklist
 
@@ -24,3 +26,6 @@ Harden the current ResumeOS baseline so local development and verification are m
 - [x] frontend production build passes
 - [x] the known Tailwind content warning is gone
 - [x] the README reflects the current startup and recovery workflow
+- [x] `/health` returns `200`
+- [x] `/auth` returns `200`
+- [x] protected app routes redirect to `/auth` instead of failing at runtime

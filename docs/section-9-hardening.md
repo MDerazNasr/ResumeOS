@@ -21,3 +21,4 @@ Improve developer reliability and production-readiness around the current core p
 - backend tests pass
 - frontend production build passes without the known Tailwind content warning
 - docs describe the stable local startup workflow
+- a repeatable runtime verification step exists for the auth/app shell routes

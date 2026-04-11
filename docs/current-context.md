@@ -46,13 +46,13 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Close out the current hardening slice and use the cleaner baseline for the next branch.
+Close out the current hardening branch and decide whether to merge it before the next major section.
 
 That means:
 
 - keep the stable local startup flow documented
 - keep the Tailwind config warning gone
-- use this cleaner baseline before the next feature section
+- keep a stable runtime verification path for auth and app-shell routes
 
 ## Definition of Success for the Current Slice
 
@@ -60,6 +60,7 @@ That means:
 - frontend production build passes
 - the known Tailwind build warning is gone
 - the local startup workflow in the README matches how the project is actually being run now
+- the stable runtime verification script passes against the live API and frontend
 
 ## Known Risks
 
