@@ -53,6 +53,7 @@ That means:
 - keep the stable local startup flow documented
 - keep the Tailwind config warning gone
 - keep a stable runtime verification path for auth and app-shell routes
+- keep that runtime verification aligned with the current Google-backed auth flow
 
 ## Definition of Success for the Current Slice
 
@@ -61,6 +62,7 @@ That means:
 - the known Tailwind build warning is gone
 - the local startup workflow in the README matches how the project is actually being run now
 - the stable runtime verification script passes against the live API and frontend
+- the runtime verification script reflects the current Google-backed auth behavior
 
 ## Known Risks
 

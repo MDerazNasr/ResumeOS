@@ -8,6 +8,7 @@ Improve developer reliability and production-readiness around the current core p
 
 - remove known local dev/build warnings where practical
 - tighten app-shell runtime verification around auth and theming
+- keep runtime verification aligned with the current Google-backed auth model
 - improve docs for stable local startup and recovery steps
 
 ## Out of Scope

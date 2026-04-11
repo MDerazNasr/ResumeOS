@@ -266,6 +266,22 @@ Added to the plan:
 - a persistent constraint/rule system for requirements like one-line bullets or concise phrasing
 - UI preference notes that light mode should be the default and the editor theme should follow the app theme
 
+### 2026-04-11: Section 9 Google-Auth Runtime Verification
+
+Updated the hardening/runtime verification layer so it matches the current Google-backed auth model instead of the earlier generic auth assumptions.
+
+Added:
+
+- runtime verification coverage for `/auth/google/status`
+- an assertion that Google auth reports `configured: true` when local OAuth env vars are present
+- README cleanup so the documented local API default matches `127.0.0.1`
+
+Verified:
+
+- backend test suite passes after the Google auth runtime verification update
+- frontend production build passes
+- `bash scripts/verify_runtime.sh` passes against the live local API and frontend
+
 ### 2026-04-10: Section 9 Planning
 
 Opened the next branch from merged `main` after Section 8 was integrated.

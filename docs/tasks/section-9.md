@@ -27,5 +27,7 @@ Harden the current ResumeOS baseline so local development and verification are m
 - [x] the known Tailwind content warning is gone
 - [x] the README reflects the current startup and recovery workflow
 - [x] `/health` returns `200`
+- [x] `/auth/google/status` returns `200`
+- [x] Google auth reports `configured: true` when local OAuth env vars are set
 - [x] `/auth` returns `200`
 - [x] protected app routes redirect to `/auth` instead of failing at runtime

@@ -27,6 +27,25 @@ check_status() {
   rm -f "$tmp"
 }
 
+check_body_contains() {
+  local url="$1"
+  local expected="$2"
+  local tmp
+  tmp="$(mktemp)"
+
+  curl -i -sS "$url" >"$tmp"
+
+  if ! grep -q "$expected" "$tmp"; then
+    echo "Expected response from $url to contain: $expected" >&2
+    cat "$tmp" >&2
+    rm -f "$tmp"
+    exit 1
+  fi
+
+  echo "OK body $url contains $expected"
+  rm -f "$tmp"
+}
+
 check_redirect() {
   local url="$1"
   local expected_location="$2"
@@ -60,6 +79,8 @@ check_redirect() {
 
 echo "Verifying ResumeOS runtime..."
 check_status "${API_BASE_URL}/health" "200"
+check_status "${API_BASE_URL}/auth/google/status" "200"
+check_body_contains "${API_BASE_URL}/auth/google/status" '"configured":true'
 check_status "${WEB_BASE_URL}/auth" "200"
 check_redirect "${WEB_BASE_URL}/app/resumes" "/auth"
 check_redirect "${WEB_BASE_URL}/app/settings" "/auth"

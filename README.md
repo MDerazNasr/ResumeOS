@@ -67,7 +67,7 @@ cd /Users/mderaznasr/Documents/GitHub/ResumeOS
 npm run dev:web:local
 ```
 
-Set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` if needed. By default the web app expects the API on `http://localhost:8000`.
+Set `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000` if needed. By default the web app expects the API on `http://127.0.0.1:8000`.
 
 ### Stable Local Verification
 
