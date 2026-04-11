@@ -67,7 +67,47 @@ cd /Users/mderaznasr/Documents/GitHub/ResumeOS
 npm run dev:web:local
 ```
 
-Set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` if needed. By default the web app expects the API on `http://localhost:8000`.
+Set `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000` if needed. By default the web app expects the API on `http://127.0.0.1:8000`.
+
+### Stable Local Verification
+
+For this repo, the most reliable local workflow is:
+
+1. run the API with `uvicorn`
+2. build the web app from the repo root
+3. run `next start` from `apps/web`
+
+API:
+
+```bash
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS/apps/api
+source .venv/bin/activate
+uvicorn app.main:app --port 8000
+```
+
+Web:
+
+```bash
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS
+npm --workspace @resumeos/web run build
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS/apps/web
+npx next start --hostname 127.0.0.1 --port 3000
+```
+
+Runtime verification:
+
+```bash
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS
+bash scripts/verify_runtime.sh
+```
+
+If the frontend gets into a bad state during local iteration, clear the build cache and rebuild:
+
+```bash
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS
+rm -rf apps/web/.next
+npm --workspace @resumeos/web run build
+```
 
 ### Edit Suggestion Provider
 

@@ -266,6 +266,69 @@ Added to the plan:
 - a persistent constraint/rule system for requirements like one-line bullets or concise phrasing
 - UI preference notes that light mode should be the default and the editor theme should follow the app theme
 
+### 2026-04-11: Section 9 Google-Auth Runtime Verification
+
+Updated the hardening/runtime verification layer so it matches the current Google-backed auth model instead of the earlier generic auth assumptions.
+
+Added:
+
+- runtime verification coverage for `/auth/google/status`
+- an assertion that Google auth reports `configured: true` when local OAuth env vars are present
+- README cleanup so the documented local API default matches `127.0.0.1`
+
+Verified:
+
+- backend test suite passes after the Google auth runtime verification update
+- frontend production build passes
+- `bash scripts/verify_runtime.sh` passes against the live local API and frontend
+
+### 2026-04-10: Section 9 Planning
+
+Opened the next branch from merged `main` after Section 8 was integrated.
+
+Planned scope:
+
+- remove the known Tailwind build warning
+- document the stable local startup and recovery workflow
+- tighten confidence around the current auth/theme app shell baseline
+
+Primary planning files:
+
+- [section-9-hardening.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-9-hardening.md)
+- [section-9.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-9.md)
+
+### 2026-04-10: Section 9 Stable Verification Hardening
+
+Closed the first hardening slice around local build reliability and baseline verification without changing product behavior.
+
+Added:
+
+- a root `tailwind.config.js` with explicit web content globs so the known Tailwind content warning is gone
+- README guidance for the current stable local verification workflow using `uvicorn`, a workspace build, and `next start`
+- clearer recovery guidance for clearing `apps/web/.next` and rebuilding when local frontend state gets corrupted
+
+Verified:
+
+- backend test suite passes with `python -m unittest discover -s tests`
+- frontend production build passes cleanly with `npm --workspace @resumeos/web run build`
+- the known Tailwind content warning no longer appears during the production build
+
+### 2026-04-10: Section 9 Runtime Verification Hardening
+
+Added a small explicit runtime check for the auth/app shell so the most common local regressions are caught by one repeatable command.
+
+Added:
+
+- a root `scripts/verify_runtime.sh` script
+- a root `verify:runtime` npm command
+- README documentation for the stable runtime verification step after starting the API and web servers
+
+Verified:
+
+- `/health` returns `200`
+- `/auth` returns `200`
+- protected routes like `/app/resumes`, `/app/settings`, and an editor route redirect to `/auth` instead of failing at runtime when unauthenticated
+
 ### 2026-04-10: Section 8 Planning
 
 Opened the next branch from merged `main` after Section 7 was integrated.
