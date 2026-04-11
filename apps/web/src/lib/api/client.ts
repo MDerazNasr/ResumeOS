@@ -24,16 +24,14 @@ import type {
   WorkingDraftDto
 } from "./types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const forwardedHeaders = await buildRequestHeaders(init?.headers);
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {})
-    },
+    headers: forwardedHeaders,
     cache: "no-store"
   });
 
@@ -46,6 +44,26 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+async function buildRequestHeaders(initHeaders?: HeadersInit): Promise<HeadersInit> {
+  const headers = new Headers(initHeaders);
+
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (typeof window === "undefined") {
+    const { cookies } = await import("next/headers");
+    const cookieStore = cookies();
+    const cookieHeader = cookieStore.toString();
+
+    if (cookieHeader && !headers.has("Cookie")) {
+      headers.set("Cookie", cookieHeader);
+    }
+  }
+
+  return headers;
 }
 
 export async function getCurrentUser(): Promise<UserDto | null> {

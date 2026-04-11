@@ -7,6 +7,7 @@ import secrets
 import uuid
 from urllib.parse import urlencode
 from datetime import UTC, datetime, timedelta
+from time import time
 
 import httpx
 from fastapi import HTTPException, Request, Response, status
@@ -23,6 +24,7 @@ SESSION_DURATION_DAYS = 14
 GOOGLE_AUTH_BASE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
+GOOGLE_STATE_MAX_AGE_SECONDS = 600
 
 
 def ensure_auth_schema() -> None:
@@ -89,7 +91,7 @@ def begin_google_auth() -> RedirectResponse:
     ensure_auth_schema()
     _require_google_auth_configured()
 
-    state = secrets.token_urlsafe(24)
+    state = _create_signed_oauth_state()
     response = RedirectResponse(url=_build_google_auth_url(state), status_code=status.HTTP_307_TEMPORARY_REDIRECT)
     response.set_cookie(
         GOOGLE_STATE_COOKIE_NAME,
@@ -98,7 +100,7 @@ def begin_google_auth() -> RedirectResponse:
         samesite="lax",
         secure=False,
         path="/",
-        max_age=600,
+        max_age=GOOGLE_STATE_MAX_AGE_SECONDS,
     )
     return response
 
@@ -108,7 +110,10 @@ def complete_google_auth(code: str, state: str | None, request: Request) -> Redi
     _require_google_auth_configured()
 
     expected_state = request.cookies.get(GOOGLE_STATE_COOKIE_NAME)
-    if not state or not expected_state or not hmac.compare_digest(state, expected_state):
+    if not state or not _is_valid_signed_oauth_state(state):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OAuth state.")
+
+    if expected_state is not None and not hmac.compare_digest(state, expected_state):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OAuth state.")
 
     token_data = exchange_google_code(code)
@@ -333,3 +338,41 @@ def _require_google_auth_configured() -> None:
 
 def _web_app_success_url() -> str:
     return os.getenv("RESUMEOS_WEB_BASE_URL", "http://127.0.0.1:3000") + "/app/resumes"
+
+
+def _create_signed_oauth_state() -> str:
+    nonce = secrets.token_urlsafe(24)
+    issued_at = str(int(time()))
+    payload = f"{nonce}.{issued_at}"
+    signature = _sign_oauth_state(payload)
+    return f"{payload}.{signature}"
+
+
+def _is_valid_signed_oauth_state(state: str) -> bool:
+    try:
+        nonce, issued_at_raw, signature = state.split(".", 2)
+    except ValueError:
+        return False
+
+    if not nonce or not issued_at_raw or not signature:
+        return False
+
+    payload = f"{nonce}.{issued_at_raw}"
+    expected_signature = _sign_oauth_state(payload)
+    if not hmac.compare_digest(signature, expected_signature):
+        return False
+
+    try:
+        issued_at = int(issued_at_raw)
+    except ValueError:
+        return False
+
+    if int(time()) - issued_at > GOOGLE_STATE_MAX_AGE_SECONDS:
+        return False
+
+    return True
+
+
+def _sign_oauth_state(payload: str) -> str:
+    secret = os.getenv("RESUMEOS_SESSION_SECRET", "resumeos-dev-session-secret")
+    return hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
