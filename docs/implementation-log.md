@@ -282,6 +282,37 @@ Verified:
 - frontend production build passes
 - `bash scripts/verify_runtime.sh` passes against the live local API and frontend
 
+### 2026-04-11: Section 10 Planning
+
+Opened the next branch from merged `main` after Section 9 was integrated.
+
+Planned scope:
+
+- turn patch-set review into a stronger red/green diff workflow
+- add approve-all and reject-all actions
+- add next/previous hunk navigation
+- keep the existing safe patch-set contract and backend validation unchanged
+
+Primary planning file:
+
+- [section-10-patch-review-ux.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-10-patch-review-ux.md)
+
+### 2026-04-11: Section 10 Diff Review UX
+
+Upgraded the patch review surface so it behaves more like reviewing code changes instead of scanning generic patch cards.
+
+Added:
+
+- stronger red/green diff styling with line-by-line presentation
+- next/previous hunk navigation
+- approve-all and reject-all actions for visible hunks
+- clearer active-hunk focus styling in the review panel
+
+Verified:
+
+- backend test suite passes after the UI-only review upgrade
+- frontend production build passes with the new review workflow
+
 ### 2026-04-10: Section 9 Planning
 
 Opened the next branch from merged `main` after Section 8 was integrated.

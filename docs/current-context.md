@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 9: hardening
+- Section 10: patch review UX
 
 ## Completed Milestones
 
@@ -19,6 +19,7 @@ Active milestone:
 - editor enhancement: Vim mode completed and merged into `main`
 - Section 7: auth and settings completed and merged into `main`
 - Section 8: UI preferences completed and merged into `main`
+- Section 9: hardening completed and merged into `main`
 
 ## Current Constraints
 
@@ -46,23 +47,22 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Close out the current hardening branch and decide whether to merge it before the next major section.
+Upgrade the current patch review surface so AI edits feel like reviewing code changes.
 
 That means:
 
-- keep the stable local startup flow documented
-- keep the Tailwind config warning gone
-- keep a stable runtime verification path for auth and app-shell routes
-- keep that runtime verification aligned with the current Google-backed auth flow
+- make additions and removals visually stronger
+- add approve-all and reject-all actions
+- add next/previous hunk navigation
+- keep the existing safe patch-set backend contract intact
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- the known Tailwind build warning is gone
-- the local startup workflow in the README matches how the project is actually being run now
-- the stable runtime verification script passes against the live API and frontend
-- the runtime verification script reflects the current Google-backed auth behavior
+- the patch review panel presents changes like a real red/green diff
+- users can move through hunks intentionally
+- users can approve or reject all visible hunks from the current patch sets
 
 ## Known Risks
 

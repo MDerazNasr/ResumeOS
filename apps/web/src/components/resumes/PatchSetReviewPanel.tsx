@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import type { PatchHunkDto, PatchSetDto } from "@/lib/api/types";
 
@@ -25,12 +25,46 @@ export function PatchSetReviewPanel({
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [dismissingId, setDismissingId] = useState<string | null>(null);
   const [retryingSetId, setRetryingSetId] = useState<string | null>(null);
-  const visiblePatchSets = patchSets
-    .map((patchSet) => ({
-      ...patchSet,
-      items: patchSet.items.filter((hunk) => !dismissedIds.includes(hunk.id)),
-    }))
-    .filter((patchSet) => patchSet.items.length > 0);
+  const [activeHunkId, setActiveHunkId] = useState<string | null>(null);
+  const [isApplyingAll, setIsApplyingAll] = useState(false);
+  const [isRejectingAll, setIsRejectingAll] = useState(false);
+
+  const visiblePatchSets = useMemo(
+    () =>
+      patchSets
+        .map((patchSet) => ({
+          ...patchSet,
+          items: patchSet.items.filter((hunk) => !dismissedIds.includes(hunk.id)),
+        }))
+        .filter((patchSet) => patchSet.items.length > 0),
+    [dismissedIds, patchSets],
+  );
+
+  const visibleHunks = useMemo(
+    () =>
+      visiblePatchSets.flatMap((patchSet) =>
+        patchSet.items.map((hunk) => ({
+          patchSet,
+          hunk,
+        })),
+      ),
+    [visiblePatchSets],
+  );
+
+  const activeHunkIndex = visibleHunks.findIndex(({ hunk }) => hunk.id === activeHunkId);
+  const activeHunkCountLabel =
+    visibleHunks.length === 0 || activeHunkIndex === -1 ? "No active hunk" : `Hunk ${activeHunkIndex + 1} of ${visibleHunks.length}`;
+
+  useEffect(() => {
+    if (visibleHunks.length === 0) {
+      setActiveHunkId(null);
+      return;
+    }
+
+    if (!activeHunkId || !visibleHunks.some(({ hunk }) => hunk.id === activeHunkId)) {
+      setActiveHunkId(visibleHunks[0]?.hunk.id ?? null);
+    }
+  }, [activeHunkId, visibleHunks]);
 
   async function handleApply(patchSet: PatchSetDto, hunk: PatchHunkDto) {
     setApplyingId(hunk.id);
@@ -69,14 +103,117 @@ export function PatchSetReviewPanel({
     }
   }
 
+  async function handleApplyAll() {
+    if (visibleHunks.length === 0) {
+      return;
+    }
+
+    setIsApplyingAll(true);
+
+    try {
+      for (const { patchSet, hunk } of visibleHunks) {
+        const applied = await onApply(patchSet, hunk);
+        if (!applied) {
+          break;
+        }
+
+        setDismissedIds((current) => [...current, hunk.id]);
+      }
+    } finally {
+      setIsApplyingAll(false);
+    }
+  }
+
+  async function handleRejectAll() {
+    if (visibleHunks.length === 0) {
+      return;
+    }
+
+    setIsRejectingAll(true);
+
+    try {
+      for (const { patchSet, hunk } of visibleHunks) {
+        const dismissed = await onDismiss(patchSet, hunk);
+        if (dismissed) {
+          setDismissedIds((current) => [...current, hunk.id]);
+        }
+      }
+    } finally {
+      setIsRejectingAll(false);
+    }
+  }
+
+  function moveActiveHunk(direction: "previous" | "next") {
+    if (visibleHunks.length === 0) {
+      return;
+    }
+
+    const currentIndex = activeHunkIndex === -1 ? 0 : activeHunkIndex;
+    const nextIndex =
+      direction === "previous"
+        ? Math.max(0, currentIndex - 1)
+        : Math.min(visibleHunks.length - 1, currentIndex + 1);
+
+    setActiveHunkId(visibleHunks[nextIndex]?.hunk.id ?? null);
+  }
+
+  const hasBusyAction =
+    applyingId !== null ||
+    dismissingId !== null ||
+    retryingSetId !== null ||
+    isApplyingAll ||
+    isRejectingAll;
+
   return (
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
         <strong style={{ fontSize: 16 }}>Patch Sets</strong>
         <span style={{ color: "var(--muted)", fontSize: 13 }}>
-          Structured patch sets rendered as validated hunks against the current draft.
+          Review AI changes like a code diff before they touch the draft.
         </span>
       </div>
+      {visibleHunks.length > 0 ? (
+        <div style={reviewToolbarStyle}>
+          <div style={{ display: "grid", gap: 4 }}>
+            <strong style={{ fontSize: 13 }}>Review Controls</strong>
+            <span style={{ color: "var(--muted)", fontSize: 12 }}>{activeHunkCountLabel}</span>
+          </div>
+          <div style={toolbarActionsStyle}>
+            <button
+              disabled={hasBusyAction || activeHunkIndex <= 0}
+              onClick={() => moveActiveHunk("previous")}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              Previous
+            </button>
+            <button
+              disabled={hasBusyAction || activeHunkIndex === -1 || activeHunkIndex >= visibleHunks.length - 1}
+              onClick={() => moveActiveHunk("next")}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              Next
+            </button>
+            <button
+              disabled={hasBusyAction || visibleHunks.length === 0}
+              onClick={() => void handleApplyAll()}
+              style={primaryButtonStyle}
+              type="button"
+            >
+              {isApplyingAll ? "Approving..." : "Approve All"}
+            </button>
+            <button
+              disabled={hasBusyAction || visibleHunks.length === 0}
+              onClick={() => void handleRejectAll()}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              {isRejectingAll ? "Rejecting..." : "Reject All"}
+            </button>
+          </div>
+        </div>
+      ) : null}
       {isLoading ? (
         <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           Generating patch sets for the current draft...
@@ -124,7 +261,11 @@ export function PatchSetReviewPanel({
               </div>
               <div style={{ display: "grid", gap: 12 }}>
                 {patchSet.items.map((hunk) => (
-                  <div key={hunk.id} style={proposalCardStyle}>
+                  <div
+                    key={hunk.id}
+                    onClick={() => setActiveHunkId(hunk.id)}
+                    style={proposalCardStyle(hunk.id === activeHunkId)}
+                  >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                       <div style={{ display: "grid", gap: 4 }}>
                         <strong style={{ fontSize: 14 }}>{hunk.label}</strong>
@@ -135,32 +276,32 @@ export function PatchSetReviewPanel({
                       <span style={badgeStyle}>{hunk.status}</span>
                     </div>
                     <div style={diffHunkStyle}>
-                      <div style={diffLineStyle("removed")}>
-                        <span style={lineMarkerStyle("removed")}>-</span>
-                        <code style={diffCodeStyle}>{hunk.beforeText}</code>
+                      <div style={diffHeaderStyle}>
+                        <span style={{ color: "var(--muted)" }}>Review Hunk</span>
+                        <span style={{ color: "var(--muted)" }}>
+                          {hunk.startLine === hunk.endLine ? `Line ${hunk.startLine}` : `Lines ${hunk.startLine}-${hunk.endLine}`}
+                        </span>
                       </div>
-                      <div style={diffLineStyle("added")}>
-                        <span style={lineMarkerStyle("added")}>+</span>
-                        <code style={diffCodeStyle}>{hunk.afterText}</code>
-                      </div>
+                      {renderDiffLines("removed", hunk.beforeText)}
+                      {renderDiffLines("added", hunk.afterText)}
                     </div>
                     <p style={rationaleStyle}>{hunk.rationale}</p>
                     <div style={actionsStyle}>
                       <button
-                        disabled={applyingId !== null || retryingSetId !== null || dismissingId !== null}
+                        disabled={hasBusyAction}
                         onClick={() => void handleApply(patchSet, hunk)}
                         style={primaryButtonStyle}
                         type="button"
                       >
-                        {applyingId === hunk.id ? "Applying..." : "Apply"}
+                        {applyingId === hunk.id ? "Approving..." : "Approve"}
                       </button>
                       <button
-                        disabled={applyingId !== null || retryingSetId !== null || dismissingId !== null}
+                        disabled={hasBusyAction}
                         onClick={() => void handleDismiss(patchSet, hunk)}
                         style={secondaryButtonStyle}
                         type="button"
                       >
-                        {dismissingId === hunk.id ? "Dismissing..." : "Dismiss"}
+                        {dismissingId === hunk.id ? "Rejecting..." : "Reject"}
                       </button>
                     </div>
                   </div>
@@ -183,14 +324,18 @@ const panelStyle: CSSProperties = {
   background: "var(--surface-alt)",
 };
 
-const proposalCardStyle: CSSProperties = {
-  display: "grid",
-  gap: 10,
-  padding: 12,
-  border: "1px solid var(--border)",
-  borderRadius: 12,
-  background: "var(--surface)",
-};
+function proposalCardStyle(isActive: boolean): CSSProperties {
+  return {
+    display: "grid",
+    gap: 10,
+    padding: 12,
+    border: `1px solid ${isActive ? "var(--mode-review-fg)" : "var(--border)"}`,
+    borderRadius: 12,
+    background: isActive ? "var(--surface-elevated)" : "var(--surface)",
+    boxShadow: isActive ? "0 0 0 1px var(--mode-review-fg) inset" : "none",
+    cursor: "pointer",
+  };
+}
 
 const setCardStyle: CSSProperties = {
   display: "grid",
@@ -272,10 +417,24 @@ function retryLabel(mode: PatchSetDto["mode"], isLoading: boolean): string {
 
 const diffHunkStyle: CSSProperties = {
   display: "grid",
-  gap: 8,
+  gap: 0,
   border: "1px solid var(--border)",
   borderRadius: 12,
   overflow: "hidden",
+  background: "var(--surface-elevated)",
+};
+
+const diffHeaderStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  padding: "10px 12px",
+  borderBottom: "1px solid var(--border)",
+  background: "var(--surface)",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
 };
 
 const rationaleStyle: CSSProperties = {
@@ -288,6 +447,7 @@ const rationaleStyle: CSSProperties = {
 const actionsStyle: CSSProperties = {
   display: "flex",
   gap: 8,
+  flexWrap: "wrap",
 };
 
 const primaryButtonStyle: CSSProperties = {
@@ -305,14 +465,33 @@ const secondaryButtonStyle: CSSProperties = {
   color: "var(--fg)",
 };
 
-function diffLineStyle(type: "added" | "removed"): CSSProperties {
+const reviewToolbarStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 16,
+  alignItems: "center",
+  padding: "12px 14px",
+  border: "1px solid var(--border)",
+  borderRadius: 14,
+  background: "var(--surface)",
+};
+
+const toolbarActionsStyle: CSSProperties = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  justifyContent: "flex-end",
+};
+
+function diffLineStyle(type: "added" | "removed", isFirst: boolean): CSSProperties {
   return {
     display: "grid",
-    gridTemplateColumns: "18px minmax(0, 1fr)",
+    gridTemplateColumns: "18px 48px minmax(0, 1fr)",
     gap: 10,
     padding: "10px 12px",
     background: type === "added" ? "var(--diff-add-bg)" : "var(--diff-remove-bg)",
     alignItems: "start",
+    borderTop: isFirst ? "none" : "1px solid var(--border)",
   };
 }
 
@@ -326,6 +505,14 @@ function lineMarkerStyle(type: "added" | "removed"): CSSProperties {
   };
 }
 
+const lineNumberStyle: CSSProperties = {
+  color: "var(--muted)",
+  fontSize: 12,
+  fontFamily: "var(--font-geist-mono, monospace)",
+  textAlign: "right",
+  paddingTop: 1,
+};
+
 const diffCodeStyle: CSSProperties = {
   color: "var(--fg)",
   fontSize: 12,
@@ -334,3 +521,15 @@ const diffCodeStyle: CSSProperties = {
   wordBreak: "break-word",
   fontFamily: "var(--font-geist-mono, monospace)",
 };
+
+function renderDiffLines(type: "added" | "removed", text: string) {
+  const lines = text.split("\n");
+
+  return lines.map((line, index) => (
+    <div key={`${type}-${index}-${line}`} style={diffLineStyle(type, index === 0)}>
+      <span style={lineMarkerStyle(type)}>{type === "added" ? "+" : "-"}</span>
+      <span style={lineNumberStyle}>{index + 1}</span>
+      <code style={diffCodeStyle}>{line || " "}</code>
+    </div>
+  ));
+}
