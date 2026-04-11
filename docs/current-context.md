@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 7: auth and user settings
+- Section 8: UI preferences
 
 ## Completed Milestones
 
@@ -17,6 +17,7 @@ Active milestone:
 - Section 6: style memory completed and merged into `main`
 - Section 4: protected document model and safe suggestion workflow completed and merged into `main`
 - editor enhancement: Vim mode completed and merged into `main`
+- Section 7: auth and settings completed and merged into `main`
 
 ## Current Constraints
 
@@ -44,30 +45,27 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Replace the hardcoded dev-user foundation with real auth/session handling and persisted user settings.
+Build on the new settings foundation with the first real app-level preference surface.
 
 That means:
 
-- add real registration/login/logout
-- resolve current user from a session cookie
-- add persisted settings
-- connect editor preferences to the backend settings model
-- add a dedicated auth entry route and protect product routes from anonymous access
-- remove the remaining dev-fallback identity from the live auth contract
-- expose a minimal authenticated settings surface for account/session and editor preferences
+- extend backend settings with theme mode
+- apply light/dark mode at the app shell level
+- expose a settings-page theme toggle
+- move the main resume workspace panels onto shared theme variables
+- expose the theme switch directly in the authenticated app header
+- move remaining high-traffic auth/list/error surfaces onto shared theme variables
 
 ## Definition of Success for the Current Slice
 
-- a user can register and log in
-- existing resume routes resolve the authenticated user correctly
-- user settings can be stored and read
-- editor mode can persist through backend settings
+- a signed-in user can switch between light and dark mode
+- the theme persists across reloads
+- the app shell reflects the active theme consistently
+- the main workspace panels reflect the active theme instead of staying visually hardcoded to dark mode
+- the theme can be switched directly from the main app pages without opening settings
+- major auth/list/error surfaces also reflect the active theme instead of defaulting back to dark styling
 - backend tests pass
 - frontend production build passes
-- the editor now reads and writes its mode through `/settings`, with local storage only as a fallback cache
-- unauthenticated access to resume/settings routes is now blocked, with the frontend redirecting to `/auth` before protected data loads
-- `/me` now returns a real session user or `401`; the frontend treats that as authenticated vs unauthenticated state instead of manufacturing a fallback user
-- `/app/settings` now exists as a dedicated page for sign-out and editor-mode preference changes
 
 ## Known Risks
 
@@ -77,4 +75,5 @@ That means:
 - the current document-model parser is heuristic and intentionally conservative
 - auth changes touch every route through current-user resolution
 - cookie/session handling must work cleanly across the local frontend/backend split
-- auth UX is still intentionally minimal; settings cover editor mode and session management but not broader account management features
+- the current UI is still largely hardcoded around the original dark shell, so theme support must centralize colors instead of patching isolated pages
+- some lower-traffic surfaces still use inline colors, but the highest-traffic authenticated and auth-entry paths now share the theme variable system

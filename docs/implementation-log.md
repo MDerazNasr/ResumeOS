@@ -238,6 +238,84 @@ Verified:
 - backend test suite passes after converting protected-route tests to real authenticated clients
 - frontend production build passes after removing `authSource` and the dev-fallback flow
 
+### 2026-04-10: Section 8 Planning
+
+Opened the next branch from merged `main` after Section 7 was integrated.
+
+Planned scope:
+
+- extend the persisted settings model with light/dark theme mode
+- apply the active theme at the app shell level
+- expose a settings-page theme toggle
+
+Primary planning files:
+
+- [section-8-ui-preferences.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-8-ui-preferences.md)
+- [section-8.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-8.md)
+
+### 2026-04-10: Section 8 Theme Preferences
+
+Added the first real app-level preference surface on top of the Section 7 settings model.
+
+Added:
+
+- backend `themeMode` persistence in user settings
+- app-shell theme application in the root layout
+- local theme hydration so the selected mode survives reloads cleanly
+- settings-page light/dark toggle alongside the existing editor-mode controls
+
+Verified:
+
+- backend test suite passes after extending the settings contract
+- frontend production build passes with the global theme shell and settings toggle
+
+### 2026-04-10: Section 8 Workspace Theme Variable Pass
+
+Moved the most important editor-adjacent panels away from fixed dark colors so light mode is usable beyond the app shell.
+
+Added:
+
+- shared theme variables for borders, surfaces, badges, accents, and diff backgrounds
+- document model panel theme-variable adoption
+- patch-set review panel theme-variable adoption
+- snapshot panel theme-variable adoption
+
+Verified:
+
+- backend test suite still passes after the frontend theme-variable pass
+- frontend production build still passes with the updated workspace surfaces
+
+### 2026-04-10: Section 8 App-Header Theme Switch
+
+Exposed the theme control in the authenticated app shell so users no longer need to visit settings just to switch modes.
+
+Added:
+
+- reusable `ThemeToggle` switch component
+- `/app` layout header with app identity, settings link, and theme switch
+- shared authenticated app chrome across resumes, editor, and settings pages
+
+Verified:
+
+- backend test suite still passes after introducing the shared app layout
+- frontend production build still passes with the visible header switch
+
+### 2026-04-10: Section 8 Secondary Surface Theme Pass
+
+Extended the theme variable system into the remaining high-traffic non-workspace surfaces so light mode feels more coherent.
+
+Added:
+
+- auth panel theme-variable adoption
+- create-resume form and resume-list theme-variable adoption
+- editor shell/status card variable adoption
+- error and global-error surface variable adoption
+
+Verified:
+
+- backend test suite still passes after the broader frontend theme pass
+- frontend production build still passes with the updated secondary surfaces
+
 ### 2026-04-10: Section 7 Minimal Settings Page
 
 Added the first dedicated authenticated settings surface on top of the existing backend settings model.

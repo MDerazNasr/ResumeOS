@@ -73,20 +73,20 @@ export function PatchSetReviewPanel({
     <section style={panelStyle}>
       <div style={{ display: "grid", gap: 6 }}>
         <strong style={{ fontSize: 16 }}>Patch Sets</strong>
-        <span style={{ color: "#9ba3b4", fontSize: 13 }}>
+        <span style={{ color: "var(--muted)", fontSize: 13 }}>
           Structured patch sets rendered as validated hunks against the current draft.
         </span>
       </div>
       {isLoading ? (
-        <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           Generating patch sets for the current draft...
         </p>
       ) : visiblePatchSets.length === 0 && patchSets.length > 0 ? (
-        <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           All current patch hunks were dismissed. Regenerate a patch set to try again.
         </p>
       ) : visiblePatchSets.length === 0 ? (
-        <p style={{ margin: 0, color: "#9ba3b4", lineHeight: 1.6 }}>
+        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
           {emptyMessage ?? "No patch sets are available for the current draft."}
         </p>
       ) : (
@@ -128,7 +128,7 @@ export function PatchSetReviewPanel({
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
                       <div style={{ display: "grid", gap: 4 }}>
                         <strong style={{ fontSize: 14 }}>{hunk.label}</strong>
-                        <span style={{ color: "#9ba3b4", fontSize: 12 }}>
+                        <span style={{ color: "var(--muted)", fontSize: 12 }}>
                           {hunk.operation} • lines {hunk.startLine}-{hunk.endLine}
                         </span>
                       </div>
@@ -178,32 +178,32 @@ const panelStyle: CSSProperties = {
   display: "grid",
   gap: 16,
   padding: 20,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 16,
-  background: "#12151c",
+  background: "var(--surface-alt)",
 };
 
 const proposalCardStyle: CSSProperties = {
   display: "grid",
   gap: 10,
   padding: 12,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 12,
-  background: "#171a21",
+  background: "var(--surface)",
 };
 
 const setCardStyle: CSSProperties = {
   display: "grid",
   gap: 14,
   padding: 14,
-  border: "1px solid #313748",
+  border: "1px solid var(--border-strong)",
   borderRadius: 14,
-  background: "#151922",
+  background: "var(--surface-elevated)",
 };
 
 const setSummaryStyle: CSSProperties = {
   margin: 0,
-  color: "#9ba3b4",
+  color: "var(--muted)",
   fontSize: 13,
   lineHeight: 1.5,
 };
@@ -212,13 +212,13 @@ const styleExamplesStyle: CSSProperties = {
   display: "grid",
   gap: 8,
   padding: 10,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 12,
-  background: "#11151d",
+  background: "var(--style-memory-bg)",
 };
 
 const styleExamplesLabelStyle: CSSProperties = {
-  color: "#9ba3b4",
+  color: "var(--muted)",
   fontSize: 11,
   fontWeight: 700,
   letterSpacing: "0.08em",
@@ -226,7 +226,7 @@ const styleExamplesLabelStyle: CSSProperties = {
 };
 
 const styleExampleCodeStyle: CSSProperties = {
-  color: "#d9e2f1",
+  color: "var(--fg)",
   fontSize: 12,
   lineHeight: 1.5,
   whiteSpace: "pre-wrap",
@@ -237,8 +237,8 @@ const styleExampleCodeStyle: CSSProperties = {
 const badgeStyle: CSSProperties = {
   padding: "2px 8px",
   borderRadius: 999,
-  background: "#183424",
-  color: "#b5f0c9",
+  background: "var(--mode-mock-bg)",
+  color: "var(--mode-mock-fg)",
   fontSize: 11,
   fontWeight: 600,
   letterSpacing: "0.04em",
@@ -248,12 +248,12 @@ const badgeStyle: CSSProperties = {
 function modeBadgeStyle(mode: PatchSetDto["mode"]): CSSProperties {
   const palette =
     mode === "tailor"
-      ? { background: "#2b1f12", color: "#ffd7a3" }
+      ? { background: "var(--mode-tailor-bg)", color: "var(--mode-tailor-fg)" }
       : mode === "review"
-        ? { background: "#142434", color: "#b8dcff" }
+        ? { background: "var(--mode-review-bg)", color: "var(--mode-review-fg)" }
         : mode === "edit"
-          ? { background: "#1f1f33", color: "#d8d0ff" }
-          : { background: "#243127", color: "#b5f0c9" };
+          ? { background: "var(--mode-edit-bg)", color: "var(--mode-edit-fg)" }
+          : { background: "var(--mode-mock-bg)", color: "var(--mode-mock-fg)" };
 
   return {
     ...badgeStyle,
@@ -273,14 +273,14 @@ function retryLabel(mode: PatchSetDto["mode"], isLoading: boolean): string {
 const diffHunkStyle: CSSProperties = {
   display: "grid",
   gap: 8,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 12,
   overflow: "hidden",
 };
 
 const rationaleStyle: CSSProperties = {
   margin: 0,
-  color: "#9ba3b4",
+  color: "var(--muted)",
   fontSize: 12,
   lineHeight: 1.5,
 };
@@ -294,15 +294,15 @@ const primaryButtonStyle: CSSProperties = {
   padding: "8px 12px",
   border: "1px solid #3b4254",
   borderRadius: 12,
-  background: "#eef1f6",
-  color: "#0f1115",
+  background: "var(--accent-bg)",
+  color: "var(--accent-fg)",
   cursor: "pointer",
 };
 
 const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  background: "#171a21",
-  color: "#eef1f6",
+  background: "var(--surface)",
+  color: "var(--fg)",
 };
 
 function diffLineStyle(type: "added" | "removed"): CSSProperties {
@@ -311,7 +311,7 @@ function diffLineStyle(type: "added" | "removed"): CSSProperties {
     gridTemplateColumns: "18px minmax(0, 1fr)",
     gap: 10,
     padding: "10px 12px",
-    background: type === "added" ? "#13261a" : "#2a1417",
+    background: type === "added" ? "var(--diff-add-bg)" : "var(--diff-remove-bg)",
     alignItems: "start",
   };
 }
@@ -327,7 +327,7 @@ function lineMarkerStyle(type: "added" | "removed"): CSSProperties {
 }
 
 const diffCodeStyle: CSSProperties = {
-  color: "#eef1f6",
+  color: "var(--fg)",
   fontSize: 12,
   lineHeight: 1.6,
   whiteSpace: "pre-wrap",

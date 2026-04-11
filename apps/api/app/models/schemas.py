@@ -22,10 +22,12 @@ class LoginInput(BaseModel):
 
 class UserSettingsDto(BaseModel):
     editorMode: Literal["standard", "vim"]
+    themeMode: Literal["dark", "light"]
 
 
 class UpdateUserSettingsInput(BaseModel):
     editorMode: Literal["standard", "vim"] | None = None
+    themeMode: Literal["dark", "light"] | None = None
 
 
 class ResumeDto(BaseModel):

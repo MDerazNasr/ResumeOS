@@ -566,7 +566,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         </aside>
       </div>
       <div style={footerStyle}>
-        <span style={{ color: "#9ba3b4", fontSize: 13 }}>Draft version {version}</span>
+        <span style={{ color: "var(--muted)", fontSize: 13 }}>Draft version {version}</span>
         {error ? <span style={{ color: "#ff8d8d", fontSize: 13 }}>{error}</span> : null}
       </div>
     </section>
@@ -603,10 +603,10 @@ const editorModeButtonGroupStyle: CSSProperties = {
 function editorModeButtonStyle(isActive: boolean): CSSProperties {
   return {
     padding: "8px 10px",
-    border: `1px solid ${isActive ? "#7fa4ff" : "#3b4254"}`,
+    border: `1px solid ${isActive ? "var(--mode-review-fg)" : "var(--border-strong)"}`,
     borderRadius: 10,
-    background: isActive ? "#18253d" : "#171a21",
-    color: isActive ? "#dce8ff" : "#eef1f6",
+    background: isActive ? "var(--mode-review-bg)" : "var(--surface)",
+    color: isActive ? "var(--mode-review-fg)" : "var(--fg)",
     cursor: "pointer",
     fontSize: 12,
     fontWeight: 600,
@@ -615,10 +615,10 @@ function editorModeButtonStyle(isActive: boolean): CSSProperties {
 
 const secondaryButtonStyle: CSSProperties = {
   padding: "10px 14px",
-  border: "1px solid #3b4254",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#171a21",
-  color: "#eef1f6",
+  background: "var(--surface)",
+  color: "var(--fg)",
   cursor: "pointer"
 };
 
@@ -633,53 +633,53 @@ const panelStyle: CSSProperties = {
   display: "grid",
   gap: 16,
   padding: 20,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 16,
-  background: "#12151c"
+  background: "var(--surface-alt)"
 };
 
 const statusCardStyle: CSSProperties = {
   display: "grid",
   gap: 6,
   padding: 16,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 14,
-  background: "#171a21"
+  background: "var(--surface)"
 };
 
 const previewCardStyle: CSSProperties = {
   display: "grid",
   gap: 10,
   padding: 16,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 14,
-  background: "#171a21"
+  background: "var(--surface)"
 };
 
 const previewFrameStyle: CSSProperties = {
   width: "100%",
   minHeight: 440,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 12,
-  background: "#0f1115"
+  background: "var(--surface-input)"
 };
 
 const logsCardStyle: CSSProperties = {
   display: "grid",
   gap: 12,
   padding: 16,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 14,
-  background: "#171a21"
+  background: "var(--surface)"
 };
 
 const tailorCardStyle: CSSProperties = {
   display: "grid",
   gap: 12,
   padding: 16,
-  border: "1px solid #262b36",
+  border: "1px solid var(--border)",
   borderRadius: 14,
-  background: "#171a21"
+  background: "var(--surface)"
 };
 
 const tailorTextareaStyle: CSSProperties = {
@@ -687,10 +687,10 @@ const tailorTextareaStyle: CSSProperties = {
   width: "100%",
   resize: "vertical",
   padding: 12,
-  border: "1px solid #30384a",
+  border: "1px solid var(--border-strong)",
   borderRadius: 12,
-  background: "#0f1115",
-  color: "#eef1f6",
+  background: "var(--surface-input)",
+  color: "var(--fg)",
   font: "inherit",
   lineHeight: 1.5
 };
@@ -700,9 +700,9 @@ function logItemStyle(level: "info" | "error"): CSSProperties {
     display: "grid",
     gap: 8,
     padding: 12,
-    border: `1px solid ${level === "error" ? "#5a2a2a" : "#2c3b54"}`,
+    border: `1px solid ${level === "error" ? "#b78585" : "var(--border-strong)"}`,
     borderRadius: 12,
-    background: level === "error" ? "#221416" : "#131d2b",
+    background: level === "error" ? "var(--diff-remove-bg)" : "var(--surface-elevated)",
   };
 }
 
