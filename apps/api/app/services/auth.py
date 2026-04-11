@@ -4,19 +4,27 @@ import hashlib
 import hmac
 import os
 import secrets
-import sqlite3
 import uuid
+from urllib.parse import urlencode
 from datetime import UTC, datetime, timedelta
+from time import time
 
+import httpx
 from fastapi import HTTPException, Request, Response, status
+from fastapi.responses import RedirectResponse
 
 from app.db.database import get_connection
-from app.models.schemas import LoginInput, RegisterInput, UserDto
+from app.models.schemas import GoogleAuthStatusDto, UserDto
 from app.services.utils import utc_now_iso
 
 
 SESSION_COOKIE_NAME = "resumeos_session"
+GOOGLE_STATE_COOKIE_NAME = "resumeos_google_state"
 SESSION_DURATION_DAYS = 14
+GOOGLE_AUTH_BASE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
+GOOGLE_STATE_MAX_AGE_SECONDS = 600
 
 
 def ensure_auth_schema() -> None:
@@ -25,8 +33,8 @@ def ensure_auth_schema() -> None:
             row["name"]
             for row in connection.execute("PRAGMA table_info(users)").fetchall()
         }
-        if "password_hash" not in columns:
-            connection.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
+        if "google_sub" not in columns:
+            connection.execute("ALTER TABLE users ADD COLUMN google_sub TEXT")
 
         connection.execute(
             """
@@ -38,6 +46,13 @@ def ensure_auth_schema() -> None:
               expires_at TEXT NOT NULL,
               FOREIGN KEY(user_id) REFERENCES users(id)
             )
+            """
+        )
+        connection.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub_unique
+            ON users(google_sub)
+            WHERE google_sub IS NOT NULL
             """
         )
         connection.execute(
@@ -58,65 +73,57 @@ def ensure_auth_schema() -> None:
         if "theme_mode" not in settings_columns:
             connection.execute("ALTER TABLE user_settings ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'dark'")
         connection.commit()
-def register_user(input_data: RegisterInput, response: Response) -> UserDto:
+
+
+def get_google_auth_status() -> GoogleAuthStatusDto:
+    return GoogleAuthStatusDto(configured=is_google_auth_configured())
+
+
+def is_google_auth_configured() -> bool:
+    return bool(
+        os.getenv("RESUMEOS_GOOGLE_CLIENT_ID")
+        and os.getenv("RESUMEOS_GOOGLE_CLIENT_SECRET")
+        and os.getenv("RESUMEOS_GOOGLE_REDIRECT_URI")
+    )
+
+
+def begin_google_auth() -> RedirectResponse:
     ensure_auth_schema()
-    timestamp = utc_now_iso()
-    user_id = f"usr_{uuid.uuid4().hex[:12]}"
-    password_hash = _hash_password(input_data.password)
+    _require_google_auth_configured()
 
-    with get_connection() as connection:
-        existing = connection.execute(
-            "SELECT 1 FROM users WHERE lower(email) = lower(?)",
-            (input_data.email.strip(),),
-        ).fetchone()
-        if existing is not None:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email is already registered.")
-
-        connection.execute(
-            """
-            INSERT INTO users (id, email, name, password_hash, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                user_id,
-                input_data.email.strip(),
-                input_data.name.strip(),
-                password_hash,
-                timestamp,
-                timestamp,
-            ),
-        )
-        connection.execute(
-            """
-            INSERT INTO user_settings (user_id, editor_mode, updated_at)
-            VALUES (?, 'standard', ?)
-            """,
-            (user_id, timestamp),
-        )
-        connection.commit()
-
-    user = UserDto(id=user_id, email=input_data.email.strip(), name=input_data.name.strip())
-    _create_session_for_user(user_id, response)
-    return user
+    state = _create_signed_oauth_state()
+    response = RedirectResponse(url=_build_google_auth_url(state), status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+    response.set_cookie(
+        GOOGLE_STATE_COOKIE_NAME,
+        state,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        path="/",
+        max_age=GOOGLE_STATE_MAX_AGE_SECONDS,
+    )
+    return response
 
 
-def login_user(input_data: LoginInput, response: Response) -> UserDto:
+def complete_google_auth(code: str, state: str | None, request: Request) -> RedirectResponse:
     ensure_auth_schema()
-    with get_connection() as connection:
-        row = connection.execute(
-            """
-            SELECT id, email, name, password_hash
-            FROM users
-            WHERE lower(email) = lower(?)
-            """,
-            (input_data.email.strip(),),
-        ).fetchone()
+    _require_google_auth_configured()
 
-    if row is None or row["password_hash"] is None or not _verify_password(input_data.password, row["password_hash"]):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
+    expected_state = request.cookies.get(GOOGLE_STATE_COOKIE_NAME)
+    if not state or not _is_valid_signed_oauth_state(state):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OAuth state.")
 
-    _create_session_for_user(row["id"], response)
-    return UserDto(id=row["id"], email=row["email"], name=row["name"])
+    if expected_state is not None and not hmac.compare_digest(state, expected_state):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OAuth state.")
+
+    token_data = exchange_google_code(code)
+    profile = fetch_google_profile(token_data["access_token"])
+    user = _upsert_google_user(profile)
+
+    response = RedirectResponse(url=_web_app_success_url(), status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+    response.delete_cookie(GOOGLE_STATE_COOKIE_NAME, path="/")
+    _create_session_for_user(user.id, response)
+    return response
 
 
 def logout_user(request: Request, response: Response) -> None:
@@ -140,6 +147,41 @@ def get_current_user(request: Request) -> UserDto:
             return user
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+
+def exchange_google_code(code: str) -> dict[str, str]:
+    payload = {
+        "code": code,
+        "client_id": os.environ["RESUMEOS_GOOGLE_CLIENT_ID"],
+        "client_secret": os.environ["RESUMEOS_GOOGLE_CLIENT_SECRET"],
+        "redirect_uri": os.environ["RESUMEOS_GOOGLE_REDIRECT_URI"],
+        "grant_type": "authorization_code",
+    }
+    with httpx.Client(timeout=10.0) as client:
+        response = client.post(GOOGLE_TOKEN_URL, data=payload)
+        response.raise_for_status()
+        data = response.json()
+
+    access_token = data.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Google token exchange failed.")
+
+    return data
+
+
+def fetch_google_profile(access_token: str) -> dict[str, str]:
+    with httpx.Client(timeout=10.0) as client:
+        response = client.get(
+            GOOGLE_USERINFO_URL,
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        response.raise_for_status()
+        data = response.json()
+
+    if not data.get("sub") or not data.get("email") or not data.get("name"):
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Google profile response was incomplete.")
+
+    return data
 
 
 def _create_session_for_user(user_id: str, response: Response) -> None:
@@ -196,23 +238,141 @@ def _get_user_from_session_token(session_token: str) -> UserDto | None:
 
     return UserDto(id=row["id"], email=row["email"], name=row["name"])
 
-
-def _hash_password(password: str) -> str:
-    salt = secrets.token_hex(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 200_000).hex()
-    return f"{salt}${digest}"
-
-
-def _verify_password(password: str, stored_hash: str) -> bool:
-    try:
-        salt, digest = stored_hash.split("$", 1)
-    except ValueError:
-        return False
-
-    candidate = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 200_000).hex()
-    return hmac.compare_digest(candidate, digest)
-
-
 def _hash_session_token(session_token: str) -> str:
     secret = os.getenv("RESUMEOS_SESSION_SECRET", "resumeos-dev-session-secret")
     return hashlib.sha256(f"{secret}:{session_token}".encode("utf-8")).hexdigest()
+
+
+def _build_google_auth_url(state: str) -> str:
+    query = urlencode(
+        {
+            "client_id": os.environ["RESUMEOS_GOOGLE_CLIENT_ID"],
+            "redirect_uri": os.environ["RESUMEOS_GOOGLE_REDIRECT_URI"],
+            "response_type": "code",
+            "scope": "openid email profile",
+            "state": state,
+            "access_type": "offline",
+            "prompt": "consent",
+        }
+    )
+    return f"{GOOGLE_AUTH_BASE_URL}?{query}"
+
+
+def _upsert_google_user(profile: dict[str, str]) -> UserDto:
+    ensure_auth_schema()
+    timestamp = utc_now_iso()
+    google_sub = profile["sub"]
+    email = profile["email"].strip()
+    name = profile["name"].strip()
+
+    with get_connection() as connection:
+        existing_google = connection.execute(
+            """
+            SELECT id, email, name
+            FROM users
+            WHERE google_sub = ?
+            """,
+            (google_sub,),
+        ).fetchone()
+        if existing_google is not None:
+            connection.execute(
+                """
+                UPDATE users
+                SET email = ?, name = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (email, name, timestamp, existing_google["id"]),
+            )
+            connection.commit()
+            return UserDto(id=existing_google["id"], email=email, name=name)
+
+        existing_email = connection.execute(
+            """
+            SELECT id, email, name
+            FROM users
+            WHERE lower(email) = lower(?)
+            """,
+            (email,),
+        ).fetchone()
+        if existing_email is not None:
+            connection.execute(
+                """
+                UPDATE users
+                SET google_sub = ?, name = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (google_sub, name, timestamp, existing_email["id"]),
+            )
+            _ensure_user_settings(connection, existing_email["id"], timestamp)
+            connection.commit()
+            return UserDto(id=existing_email["id"], email=existing_email["email"], name=name)
+
+        user_id = f"usr_{uuid.uuid4().hex[:12]}"
+        connection.execute(
+            """
+            INSERT INTO users (id, email, name, google_sub, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (user_id, email, name, google_sub, timestamp, timestamp),
+        )
+        _ensure_user_settings(connection, user_id, timestamp)
+        connection.commit()
+        return UserDto(id=user_id, email=email, name=name)
+
+
+def _ensure_user_settings(connection, user_id: str, timestamp: str) -> None:
+    connection.execute(
+        """
+        INSERT INTO user_settings (user_id, editor_mode, theme_mode, updated_at)
+        VALUES (?, 'standard', 'dark', ?)
+        ON CONFLICT(user_id) DO NOTHING
+        """,
+        (user_id, timestamp),
+    )
+
+
+def _require_google_auth_configured() -> None:
+    if not is_google_auth_configured():
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Google auth is not configured.")
+
+
+def _web_app_success_url() -> str:
+    return os.getenv("RESUMEOS_WEB_BASE_URL", "http://127.0.0.1:3000") + "/app/resumes"
+
+
+def _create_signed_oauth_state() -> str:
+    nonce = secrets.token_urlsafe(24)
+    issued_at = str(int(time()))
+    payload = f"{nonce}.{issued_at}"
+    signature = _sign_oauth_state(payload)
+    return f"{payload}.{signature}"
+
+
+def _is_valid_signed_oauth_state(state: str) -> bool:
+    try:
+        nonce, issued_at_raw, signature = state.split(".", 2)
+    except ValueError:
+        return False
+
+    if not nonce or not issued_at_raw or not signature:
+        return False
+
+    payload = f"{nonce}.{issued_at_raw}"
+    expected_signature = _sign_oauth_state(payload)
+    if not hmac.compare_digest(signature, expected_signature):
+        return False
+
+    try:
+        issued_at = int(issued_at_raw)
+    except ValueError:
+        return False
+
+    if int(time()) - issued_at > GOOGLE_STATE_MAX_AGE_SECONDS:
+        return False
+
+    return True
+
+
+def _sign_oauth_state(payload: str) -> str:
+    secret = os.getenv("RESUMEOS_SESSION_SECRET", "resumeos-dev-session-secret")
+    return hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()

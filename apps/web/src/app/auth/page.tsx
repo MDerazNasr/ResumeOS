@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { AuthPanel } from "@/components/auth/AuthPanel";
-import { getCurrentUser } from "@/lib/api/client";
+import { getCurrentUser, getGoogleAuthStatus } from "@/lib/api/client";
 
 export default async function AuthPage() {
-  const user = await getCurrentUser();
+  const [user, googleAuth] = await Promise.all([getCurrentUser(), getGoogleAuthStatus()]);
 
   if (user) {
     redirect("/app/resumes");
@@ -16,10 +16,10 @@ export default async function AuthPage() {
           <span style={eyebrowStyle}>Section 7</span>
           <h1 style={{ margin: 0, fontSize: 36 }}>Sign In to ResumeOS</h1>
           <p style={copyStyle}>
-            Resume editing, snapshots, compile, and AI patch workflows now require a real session-backed account.
+            Resume editing, snapshots, compile, and AI patch workflows now use a Google-backed session.
           </p>
         </div>
-        <AuthPanel />
+        <AuthPanel googleAuth={googleAuth} />
       </section>
     </main>
   );

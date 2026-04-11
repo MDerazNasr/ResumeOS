@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 
-from app.models.schemas import LoginInput, RegisterInput, UpdateUserSettingsInput, UserDto, UserSettingsDto
-from app.services.auth import get_current_user, login_user, logout_user, register_user
+from app.models.schemas import GoogleAuthStatusDto, UpdateUserSettingsInput, UserDto, UserSettingsDto
+from app.services.auth import begin_google_auth, complete_google_auth, get_current_user, get_google_auth_status, logout_user
 from app.services.settings import get_user_settings, update_user_settings
 
 
@@ -13,14 +13,23 @@ def read_current_user(current_user: UserDto = Depends(get_current_user)) -> User
     return current_user
 
 
-@router.post("/auth/register", response_model=UserDto)
-def register(input_data: RegisterInput, response: Response) -> UserDto:
-    return register_user(input_data, response)
+@router.get("/auth/google/status", response_model=GoogleAuthStatusDto)
+def google_status() -> GoogleAuthStatusDto:
+    return get_google_auth_status()
 
 
-@router.post("/auth/login", response_model=UserDto)
-def login(input_data: LoginInput, response: Response) -> UserDto:
-    return login_user(input_data, response)
+@router.get("/auth/google/start")
+def google_start():
+    return begin_google_auth()
+
+
+@router.get("/auth/google/callback")
+def google_callback(
+    request: Request,
+    code: str = Query(min_length=1),
+    state: str | None = None,
+):
+    return complete_google_auth(code, state, request)
 
 
 @router.post("/auth/logout", status_code=204)

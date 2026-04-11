@@ -4,15 +4,8 @@ export type UserDto = {
   name: string;
 };
 
-export type RegisterInput = {
-  email: string;
-  name: string;
-  password: string;
-};
-
-export type LoginInput = {
-  email: string;
-  password: string;
+export type GoogleAuthStatusDto = {
+  configured: boolean;
 };
 
 export type UserSettingsDto = {

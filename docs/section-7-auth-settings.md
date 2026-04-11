@@ -20,7 +20,7 @@ This section turns the app from a single-user prototype into a multi-user produc
 
 Initial scope:
 
-- real user registration and login
+- real user authentication and sign-in
 - cookie-backed session handling
 - backend user resolution from session state instead of the dev stub
 - a persisted user settings model
@@ -43,8 +43,7 @@ Section 7 should add two backend areas:
 
 The `auth` layer should own:
 
-- registration
-- login
+- provider sign-in
 - logout
 - session cookie lifecycle
 - current-user resolution
@@ -58,11 +57,11 @@ The editor should consume settings through the app layer rather than directly ta
 
 ## First Slice
 
-The first implementation slice should stay narrow:
+The current implementation ended up with a cleaner auth boundary than the original draft:
 
-1. add `password_hash` support to users
+1. add provider-backed sign-in instead of building out local password management
 2. add a `user_settings` table
-3. implement register, login, logout, and `GET /me` from a real cookie-backed session
+3. implement Google OAuth start/callback, logout, and `GET /me` from a real cookie-backed session
 4. add `GET /settings` and `PATCH /settings`
 5. wire editor mode persistence to use backend settings with local storage only as a temporary fallback
 
@@ -70,7 +69,7 @@ The first implementation slice should stay narrow:
 
 Section 7 is successful when:
 
-- a user can register and log in
+- a user can sign in and resume a session
 - API routes resolve the current user from a real session
 - settings can be stored and read per user
 - editor mode can persist through the backend user settings model
