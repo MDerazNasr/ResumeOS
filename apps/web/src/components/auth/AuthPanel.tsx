@@ -4,39 +4,18 @@ import Link from "next/link";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
-import { loginUser, logoutUser, registerUser } from "@/lib/api/client";
-import type { UserDto } from "@/lib/api/types";
+import { getGoogleAuthStartUrl, logoutUser } from "@/lib/api/client";
+import type { GoogleAuthStatusDto, UserDto } from "@/lib/api/types";
 
 type AuthPanelProps = {
   user?: UserDto | null;
+  googleAuth?: GoogleAuthStatusDto;
 };
 
-export function AuthPanel({ user }: AuthPanelProps) {
+export function AuthPanel({ user, googleAuth }: AuthPanelProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      if (mode === "register") {
-        await registerUser({ email, name, password });
-      } else {
-        await loginUser({ email, password });
-      }
-      router.refresh();
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Authentication failed.");
-      setIsSubmitting(false);
-    }
-  }
 
   async function handleLogout() {
     setIsSubmitting(true);
@@ -78,36 +57,18 @@ export function AuthPanel({ user }: AuthPanelProps) {
       <div style={{ display: "grid", gap: 6 }}>
         <strong style={{ fontSize: 16 }}>Sign In</strong>
         <span style={copyStyle}>
-          Register a new account or sign in to open your resumes, compile LaTeX, and review AI patch sets.
+          Use Google to open your resumes, compile LaTeX, and review AI patch sets without managing a separate password.
         </span>
       </div>
-      <div style={toggleRowStyle}>
-        <button onClick={() => setMode("login")} style={toggleButtonStyle(mode === "login")} type="button">
-          Login
-        </button>
-        <button onClick={() => setMode("register")} style={toggleButtonStyle(mode === "register")} type="button">
-          Register
-        </button>
-      </div>
-      <form onSubmit={handleSubmit} style={formStyle}>
-        {mode === "register" ? (
-          <label style={labelStyle}>
-            Name
-            <input onChange={(event) => setName(event.target.value)} style={inputStyle} value={name} />
-          </label>
-        ) : null}
-        <label style={labelStyle}>
-          Email
-          <input onChange={(event) => setEmail(event.target.value)} style={inputStyle} value={email} />
-        </label>
-        <label style={labelStyle}>
-          Password
-          <input onChange={(event) => setPassword(event.target.value)} style={inputStyle} type="password" value={password} />
-        </label>
-        <button disabled={isSubmitting || email.trim().length === 0 || password.trim().length < 8 || (mode === "register" && name.trim().length === 0)} style={primaryButtonStyle} type="submit">
-          {isSubmitting ? (mode === "register" ? "Registering..." : "Signing in...") : mode === "register" ? "Register" : "Sign In"}
-        </button>
-      </form>
+      {googleAuth?.configured ? (
+        <a href={getGoogleAuthStartUrl()} style={primaryLinkStyle}>
+          Continue with Google
+        </a>
+      ) : (
+        <p style={warningStyle}>
+          Google sign-in is not configured yet. Set the Google OAuth environment variables on the API before trying to sign in.
+        </p>
+      )}
       {error ? <p style={errorStyle}>{error}</p> : null}
     </section>
   );
@@ -128,49 +89,10 @@ const copyStyle: CSSProperties = {
   lineHeight: 1.6
 };
 
-const toggleRowStyle: CSSProperties = {
-  display: "inline-flex",
-  gap: 8
-};
-
 const actionRowStyle: CSSProperties = {
   display: "flex",
   gap: 10,
   flexWrap: "wrap",
-};
-
-function toggleButtonStyle(isActive: boolean): CSSProperties {
-  return {
-    padding: "8px 10px",
-    border: `1px solid ${isActive ? "var(--mode-review-fg)" : "var(--border-strong)"}`,
-    borderRadius: 10,
-    background: isActive ? "var(--mode-review-bg)" : "var(--surface)",
-    color: isActive ? "var(--mode-review-fg)" : "var(--fg)",
-    cursor: "pointer",
-    fontSize: 12,
-    fontWeight: 600,
-  };
-}
-
-const formStyle: CSSProperties = {
-  display: "grid",
-  gap: 10
-};
-
-const labelStyle: CSSProperties = {
-  display: "grid",
-  gap: 6,
-  color: "var(--soft)",
-  fontSize: 13
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  border: "1px solid var(--border-strong)",
-  borderRadius: 12,
-  background: "var(--surface-input)",
-  color: "var(--fg)"
 };
 
 const primaryButtonStyle: CSSProperties = {
@@ -181,6 +103,14 @@ const primaryButtonStyle: CSSProperties = {
   background: "var(--accent-bg)",
   color: "var(--accent-fg)",
   cursor: "pointer"
+};
+
+const primaryLinkStyle: CSSProperties = {
+  ...primaryButtonStyle,
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 const secondaryButtonStyle: CSSProperties = {
@@ -200,4 +130,11 @@ const errorStyle: CSSProperties = {
   margin: 0,
   color: "#ff8d8d",
   fontSize: 13
+};
+
+const warningStyle: CSSProperties = {
+  margin: 0,
+  color: "var(--muted)",
+  fontSize: 13,
+  lineHeight: 1.6,
 };

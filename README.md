@@ -11,10 +11,10 @@ ResumeOS is an AI-assisted resume IDE for technical job seekers. The product is 
 
 ## Current Status
 
-Section 1 is scaffolded:
+Current baseline includes:
 
-- `apps/web`: minimal Next.js UI for creating a resume and editing the raw LaTeX working draft
-- `apps/api`: FastAPI service for local dev auth, resume CRUD, and draft persistence
+- `apps/web`: Next.js UI for auth, resume editing, snapshots, compile, and patch review
+- `apps/api`: FastAPI service for Google-backed session auth, resume workflows, and compile
 - `packages/shared`: shared DTO definitions for resume and user contracts
 
 ## Local Development
@@ -40,6 +40,17 @@ cd /Users/mderaznasr/Documents/GitHub/ResumeOS/apps/api
 source .venv/bin/activate
 python -m unittest discover -s tests
 ```
+
+For Google sign-in locally, set:
+
+```bash
+export RESUMEOS_GOOGLE_CLIENT_ID=your_google_client_id
+export RESUMEOS_GOOGLE_CLIENT_SECRET=your_google_client_secret
+export RESUMEOS_GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
+export RESUMEOS_WEB_BASE_URL=http://127.0.0.1:3000
+```
+
+If those variables are missing, the auth page stays available but the Google sign-in button will show as unavailable.
 
 ### Web
 

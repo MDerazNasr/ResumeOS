@@ -8,10 +8,9 @@ import type {
   GenerateEditSuggestionsInput,
   GenerateReviewSuggestionsInput,
   GenerateTailorSuggestionsInput,
+  GoogleAuthStatusDto,
   LogFeedbackInput,
-  LoginInput,
   PatchSetListDto,
-  RegisterInput,
   RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
@@ -60,18 +59,12 @@ export async function getCurrentUser(): Promise<UserDto | null> {
   }
 }
 
-export function registerUser(input: RegisterInput): Promise<UserDto> {
-  return apiFetch<UserDto>("/auth/register", {
-    method: "POST",
-    body: JSON.stringify(input)
-  });
+export function getGoogleAuthStatus(): Promise<GoogleAuthStatusDto> {
+  return apiFetch<GoogleAuthStatusDto>("/auth/google/status");
 }
 
-export function loginUser(input: LoginInput): Promise<UserDto> {
-  return apiFetch<UserDto>("/auth/login", {
-    method: "POST",
-    body: JSON.stringify(input)
-  });
+export function getGoogleAuthStartUrl(): string {
+  return `${API_BASE_URL}/auth/google/start`;
 }
 
 export function logoutUser(): Promise<void> {

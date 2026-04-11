@@ -2,9 +2,14 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
+  google_sub TEXT UNIQUE,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub_unique
+ON users(google_sub)
+WHERE google_sub IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS resumes (
   id TEXT PRIMARY KEY,
