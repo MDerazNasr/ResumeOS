@@ -254,6 +254,18 @@ Verified:
 - backend test suite passes with the Google auth replacement
 - frontend production build passes after removing the register/login UI
 
+### 2026-04-11: AI Roadmap Clarification
+
+Reframed the architecture plan so it matches the intended product more closely instead of stopping at the current patch-generation foundation.
+
+Added to the plan:
+
+- a dedicated patch-review UX slice for IDE-style diff review with approve/reject-all and hunk navigation
+- a conversational AI chat layer that can discuss the resume and emit patch sets
+- a holistic PDF + LaTeX review layer so the model can reason about rendered structure and layout
+- a persistent constraint/rule system for requirements like one-line bullets or concise phrasing
+- UI preference notes that light mode should be the default and the editor theme should follow the app theme
+
 ### 2026-04-10: Section 8 Planning
 
 Opened the next branch from merged `main` after Section 7 was integrated.

@@ -38,6 +38,7 @@ The frontend should be a Next.js app responsible for:
 
 - Monaco-based LaTeX editor
 - editor preferences such as standard or Vim keybindings
+- editor theme that follows the active app theme
 - PDF preview pane
 - AI sidebar for Edit, Review, and Tailor modes
 - diff review UI with accept/reject per hunk
@@ -206,6 +207,59 @@ Initial safe shape:
 - route those suggestions through the same validation, diff review, and apply flow as Edit and Review
 
 This mode should create a snapshot automatically before generating suggestions so the user can always return to the base version.
+
+## Conversational AI Layer
+
+ResumeOS should not stop at one-shot edit requests. It should also support a persistent chat workflow where the user can talk through the resume with the model.
+
+That chat layer should support:
+
+- back-and-forth conversation about the resume
+- follow-up questions grounded in the current draft
+- turning chat turns into structured patch sets
+- preserving context about prior instructions and decisions
+
+The chat layer should remain subordinate to the patch workflow:
+
+- chat can suggest edits
+- chat can explain critiques
+- chat can answer questions about the resume
+- but actual document mutations should still flow through validated patch application
+
+## Holistic Resume Understanding
+
+ResumeOS should eventually let the AI reason over both:
+
+- the LaTeX/source structure
+- the rendered PDF output
+
+That is necessary for product-quality feedback about:
+
+- structure and section flow
+- visual density
+- spacing and readability
+- bullet length and wrapping
+- whether a resume reads coherently as a finished artifact, not just as isolated source blocks
+
+This means the AI roadmap should include a layer that combines:
+
+- source-aware context from the document model
+- rendered-artifact context from the latest compiled PDF
+- compile metadata where relevant
+
+## User Rules and Constraints
+
+ResumeOS should support durable user-editing rules that the AI must follow across edit, review, and tailor requests.
+
+Examples:
+
+- keep each bullet to one line
+- prefer concise bullets
+- avoid first-person voice
+- keep project bullets to one sentence
+- limit summary length
+
+These rules should be treated as first-class generation constraints, not ad hoc prompt text the user must repeat each time.
 
 ## Style Memory
 
@@ -472,6 +526,30 @@ Acceptance:
 - accepted hunks update the draft
 - rejected hunks do nothing
 
+### Section 5A: Patch Review UX
+
+Goal:
+
+- make AI edits feel like reviewing changes in a codebase, not generic suggestion cards
+
+Build:
+
+- stronger red/green diff rendering
+- approve all
+- reject all
+- next/previous hunk navigation
+- clearer per-hunk review controls
+
+Deliverable:
+
+- user can review AI edits the way they would review IDE or PR suggestions
+
+Acceptance:
+
+- additions and removals are visually distinct
+- all-hunk actions exist
+- user can move through hunks intentionally instead of scanning a flat list
+
 ### Section 6: AI Edit Mode
 
 Goal:
@@ -561,6 +639,73 @@ Acceptance:
 - style examples are retrieved per request
 - results meaningfully shape generated suggestions
 
+### Section 9A: Conversational Chat UX
+
+Goal:
+
+- add the persistent LLM chat workflow on top of the safe patch system
+
+Build:
+
+- chat sidebar
+- conversation history
+- mode switching within chat
+- patch-set generation from chat turns
+- follow-up question handling
+
+Deliverable:
+
+- user can talk with the AI about the resume and turn that conversation into structured edits
+
+Acceptance:
+
+- chat supports back-and-forth turns
+- chat can emit patch sets into the same review/apply flow
+- conversation stays grounded in the current resume state
+
+### Section 9B: Holistic PDF + LaTeX Review
+
+Goal:
+
+- let the AI reason over the rendered resume, not only the source blocks
+
+Build:
+
+- PDF-aware review context
+- compile-artifact attachment into AI review requests
+- heuristics for structure, density, and layout observations
+
+Deliverable:
+
+- the AI can critique flow, structure, and visual fit from the whole resume
+
+Acceptance:
+
+- review can reference both textual content and rendered layout concerns
+- PDF-aware feedback integrates with the same patch/review workflow where possible
+
+### Section 9C: Constraint and Rule System
+
+Goal:
+
+- make durable user instructions part of the product, not one-off prompt text
+
+Build:
+
+- persisted user rules
+- rule injection into edit/review/tailor/chat prompts
+- UI for managing those rules
+
+Deliverable:
+
+- user constraints like one-line bullets influence future AI output consistently
+
+Acceptance:
+
+- rules persist across sessions
+- generation respects saved rules
+- rules can be updated without editing prompt templates manually
+
 ### Section 10: Feedback and Learning
 
 Goal:
@@ -592,6 +737,8 @@ Build:
 
 - auth hardening
 - persisted UI preferences such as light/dark theme
+- light mode as the default theme
+- editor theme synchronized with the active app theme
 - rate limiting
 - job timeouts
 - compile sandboxing
