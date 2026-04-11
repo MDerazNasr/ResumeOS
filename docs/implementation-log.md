@@ -266,6 +266,37 @@ Added to the plan:
 - a persistent constraint/rule system for requirements like one-line bullets or concise phrasing
 - UI preference notes that light mode should be the default and the editor theme should follow the app theme
 
+### 2026-04-10: Section 9 Planning
+
+Opened the next branch from merged `main` after Section 8 was integrated.
+
+Planned scope:
+
+- remove the known Tailwind build warning
+- document the stable local startup and recovery workflow
+- tighten confidence around the current auth/theme app shell baseline
+
+Primary planning files:
+
+- [section-9-hardening.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/section-9-hardening.md)
+- [section-9.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-9.md)
+
+### 2026-04-10: Section 9 Stable Verification Hardening
+
+Closed the first hardening slice around local build reliability and baseline verification without changing product behavior.
+
+Added:
+
+- a root `tailwind.config.js` with explicit web content globs so the known Tailwind content warning is gone
+- README guidance for the current stable local verification workflow using `uvicorn`, a workspace build, and `next start`
+- clearer recovery guidance for clearing `apps/web/.next` and rebuilding when local frontend state gets corrupted
+
+Verified:
+
+- backend test suite passes with `python -m unittest discover -s tests`
+- frontend production build passes cleanly with `npm --workspace @resumeos/web run build`
+- the known Tailwind content warning no longer appears during the production build
+
 ### 2026-04-10: Section 8 Planning
 
 Opened the next branch from merged `main` after Section 7 was integrated.
