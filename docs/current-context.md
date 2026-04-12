@@ -55,6 +55,7 @@ That means:
 - add approve-all and reject-all actions
 - add next/previous hunk navigation
 - make active-hunk progression clearer after approve/reject actions
+- surface generated patch sets and failures high in the editor workspace
 - keep the existing safe patch-set backend contract intact
 
 ## Definition of Success for the Current Slice
@@ -65,6 +66,7 @@ That means:
 - users can move through hunks intentionally
 - users can approve or reject all visible hunks from the current patch sets
 - the active hunk advances predictably and completion state is clear
+- generated patch sets and tailoring failures are visible without digging through the layout
 
 ## Known Risks
 
@@ -75,3 +77,14 @@ That means:
 - auth changes touch every route through current-user resolution
 - cookie/session handling must work cleanly across the local frontend/backend split
 - the local Next runtime still behaves less reliably than the production build in this environment, so the docs need to steer people toward the stable workflow explicitly
+
+## Next Planned Branch
+
+Move patch review into Monaco itself so AI edits feel like an IDE review workflow instead of a separate side panel.
+
+That next slice should include:
+
+- inline Monaco diff decorations for additions and removals
+- per-hunk accept/reject actions in the editor
+- next/previous hunk navigation that follows the editor decorations
+- keep the current backend patch-set validation and apply path unchanged

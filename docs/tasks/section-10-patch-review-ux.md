@@ -28,6 +28,7 @@ Make AI edits feel like reviewing code changes instead of reading generic sugges
 - [x] verify backend tests pass
 - [x] verify frontend production build passes
 - [x] make hunk progression clearer after approve/reject actions
+- [x] surface generated patch sets and errors high enough in the workspace that users can actually see them
 
 ## Verification Checklist
 
@@ -37,3 +38,4 @@ Make AI edits feel like reviewing code changes instead of reading generic sugges
 - [x] users can move through hunks intentionally
 - [x] users can approve or reject all visible hunks from the current patch sets
 - [x] the active hunk advances predictably after review actions
+- [x] generated edits, review results, and tailoring failures are visible without hunting through the footer

@@ -23,6 +23,26 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-12: Section 10 Patch Visibility Fix
+
+Closed a real usability gap in the patch-review workflow.
+
+What changed:
+
+- moved the patch-review area to the top of the editor sidebar so generated edits are visible immediately
+- added top-level activity and error banners so failed tailor/edit actions are not hidden in the footer
+- auto-scrolls the workspace to the patch-review area after edit, review, and tailor generation
+
+Why:
+
+- generation was already wired and passing tests, but the UI made successful results easy to miss
+- the fix needed to improve visibility and navigation, not change the suggestion backend
+
+Verified:
+
+- backend test suite passes after the review-visibility update
+- frontend production build passes after the layout and status-message changes
+
 ### 2026-04-09: Section 6 Planning
 
 Opened the Section 6 branch from merged `main` after Section 5 was pushed and integrated.
