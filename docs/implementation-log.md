@@ -23,6 +23,28 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-12: Section 10 Inline Editor Review
+
+Moved the patch-review workflow into Monaco so the AI editing loop behaves more like an IDE.
+
+Added:
+
+- inline Monaco hunk highlighting tied to the active patch set state
+- an inline review widget for the active hunk with previous/next, accept/reject, and approve-all/reject-all controls
+- keyboard shortcuts for current-hunk and batch review actions
+- tighter editor-native styling so the review flow reads more like a code editor than a detached form
+
+Why this shape:
+
+- the backend patch workflow was already safe enough; the gap was product ergonomics
+- review should happen where the source is, not only in a sidebar
+- moving the active hunk state into the editor container made Monaco and the review panel share one coherent review state
+
+Verified:
+
+- backend test suite passes after the inline-review integration
+- frontend production build passes after the Monaco decoration and widget work
+
 ### 2026-04-12: Section 10 Patch Visibility Fix
 
 Closed a real usability gap in the patch-review workflow.

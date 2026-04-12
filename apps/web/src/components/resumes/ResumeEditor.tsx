@@ -38,6 +38,8 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const [documentModelState, setDocumentModelState] = useState(documentModel);
   const [editorMode, setEditorMode] = useState<"standard" | "vim">("standard");
   const [patchSets, setPatchSets] = useState<PatchSetDto[]>([]);
+  const [dismissedPatchHunkIds, setDismissedPatchHunkIds] = useState<string[]>([]);
+  const [activePatchHunkId, setActivePatchHunkId] = useState<string | null>(null);
   const [seededPatchSetSeed, setSeededPatchSetSeed] = useState(0);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
@@ -62,6 +64,15 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const versionRef = useRef(version);
 
   const isDirty = useMemo(() => sourceTex !== persistedSourceTex, [persistedSourceTex, sourceTex]);
+  const visiblePatchEntries = useMemo(
+    () =>
+      patchSets.flatMap((patchSet) =>
+        patchSet.items
+          .filter((hunk) => !dismissedPatchHunkIds.includes(hunk.id))
+          .map((hunk) => ({ patchSet, hunk })),
+      ),
+    [dismissedPatchHunkIds, patchSets],
+  );
 
   useEffect(() => {
     sourceTexRef.current = sourceTex;
@@ -74,6 +85,23 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   useEffect(() => {
     versionRef.current = version;
   }, [version]);
+
+  useEffect(() => {
+    const visibleHunks = patchSets.flatMap((patchSet) =>
+      patchSet.items.filter((hunk) => !dismissedPatchHunkIds.includes(hunk.id)),
+    );
+
+    if (visibleHunks.length === 0) {
+      if (activePatchHunkId !== null) {
+        setActivePatchHunkId(null);
+      }
+      return;
+    }
+
+    if (!activePatchHunkId || !visibleHunks.some((hunk) => hunk.id === activePatchHunkId)) {
+      setActivePatchHunkId(visibleHunks[0]?.id ?? null);
+    }
+  }, [activePatchHunkId, dismissedPatchHunkIds, patchSets]);
 
   function focusPatchReview() {
     patchReviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -152,6 +180,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       ]);
       setDocumentModelState(nextDocumentModel);
       setPatchSets(nextPatchSets.items);
+      setDismissedPatchHunkIds([]);
       setPatchSetEmptyMessage(null);
       setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       return savedDraft;
@@ -253,13 +282,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setVersion(updatedDraft.version);
       setUpdatedAt(updatedDraft.updatedAt);
       setCompileResult(null);
+      setDismissedPatchHunkIds((current) => (current.includes(hunk.id) ? current : [...current, hunk.id]));
 
-      const [nextDocumentModel, nextPatchSets] = await Promise.all([
-        getDocumentModel(resume.id),
-        getSeededPatchSets(resume.id, seededPatchSetSeed),
-      ]);
+      const nextDocumentModel = await getDocumentModel(resume.id);
       setDocumentModelState(nextDocumentModel);
-      setPatchSets(nextPatchSets.items);
       setPatchSetEmptyMessage(null);
       setActivityMessage(`Applied "${hunk.label}" to the working draft.`);
       return true;
@@ -280,6 +306,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         proposalId: hunk.id,
         targetBlockId: hunk.targetBlockId,
       });
+      setDismissedPatchHunkIds((current) => [...current, hunk.id]);
       setActivityMessage(`Rejected "${hunk.label}".`);
       return true;
     } catch (dismissError) {
@@ -300,6 +327,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       .then(([nextDocumentModel, nextPatchSets]) => {
         setDocumentModelState(nextDocumentModel);
         setPatchSets(nextPatchSets.items);
+        setDismissedPatchHunkIds([]);
         setPatchSetEmptyMessage(null);
         setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       })
@@ -310,6 +338,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     void getSeededPatchSets(resume.id, seededPatchSetSeed)
       .then((result) => {
         setPatchSets(result.items);
+        setDismissedPatchHunkIds([]);
         setPatchSetEmptyMessage(null);
         setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       })
@@ -336,6 +365,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           instruction: lastPatchSetRequest.instruction,
         });
         setPatchSets(generated.items);
+        setDismissedPatchHunkIds([]);
         setPatchSetEmptyMessage(
           generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
         );
@@ -349,6 +379,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           instruction: lastPatchSetRequest.instruction,
         });
         setPatchSets(generated.items);
+        setDismissedPatchHunkIds([]);
         setPatchSetEmptyMessage(
           generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
         );
@@ -363,6 +394,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           instruction: lastPatchSetRequest.instruction,
         });
         setPatchSets(generated.items);
+        setDismissedPatchHunkIds([]);
         setPatchSetEmptyMessage(
           generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
         );
@@ -372,6 +404,70 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       }
     } catch (retryError) {
       setError(retryError instanceof Error ? retryError.message : "Failed to regenerate suggestions.");
+    }
+  }
+
+  function moveActivePatchHunk(direction: "previous" | "next") {
+    if (visiblePatchEntries.length === 0) {
+      return;
+    }
+
+    const currentIndex = visiblePatchEntries.findIndex(({ hunk }) => hunk.id === activePatchHunkId);
+    const nextIndex =
+      direction === "previous"
+        ? Math.max(0, (currentIndex === -1 ? 0 : currentIndex) - 1)
+        : Math.min(visiblePatchEntries.length - 1, (currentIndex === -1 ? 0 : currentIndex) + 1);
+
+    setActivePatchHunkId(visiblePatchEntries[nextIndex]?.hunk.id ?? null);
+  }
+
+  async function handleApplyAllVisiblePatchHunks() {
+    setError(null);
+    setActivityMessage(null);
+
+    const currentEntries = [...visiblePatchEntries];
+    if (currentEntries.length === 0) {
+      return;
+    }
+
+    let appliedCount = 0;
+
+    for (const entry of currentEntries) {
+      const applied = await handleApplyPatchSetHunk(entry.patchSet, entry.hunk);
+      if (!applied) {
+        break;
+      }
+      appliedCount += 1;
+    }
+
+    setActivePatchHunkId(null);
+    if (appliedCount > 0) {
+      setActivityMessage(`Approved ${appliedCount} hunk${appliedCount === 1 ? "" : "s"}.`);
+    }
+  }
+
+  async function handleRejectAllVisiblePatchHunks() {
+    setError(null);
+    setActivityMessage(null);
+
+    const currentEntries = [...visiblePatchEntries];
+    if (currentEntries.length === 0) {
+      return;
+    }
+
+    let rejectedCount = 0;
+
+    for (const entry of currentEntries) {
+      const dismissed = await handleDismissPatchSetHunk(entry.patchSet, entry.hunk);
+      if (!dismissed) {
+        break;
+      }
+      rejectedCount += 1;
+    }
+
+    setActivePatchHunkId(null);
+    if (rejectedCount > 0) {
+      setActivityMessage(`Rejected ${rejectedCount} hunk${rejectedCount === 1 ? "" : "s"}.`);
     }
   }
 
@@ -386,6 +482,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         instruction,
       });
       setPatchSets(generated.items);
+      setDismissedPatchHunkIds([]);
       setLastPatchSetRequest({ mode: "edit", targetBlockId: block.id, instruction });
       setPatchSetEmptyMessage(
         generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
@@ -407,6 +504,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       const instruction = "Review the current resume and suggest stronger wording for the weakest editable blocks.";
       const generated = await generateReviewSuggestions(resume.id, { instruction });
       setPatchSets(generated.items);
+      setDismissedPatchHunkIds([]);
       setLastPatchSetRequest({ mode: "review", instruction });
       setPatchSetEmptyMessage(
         generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
@@ -446,6 +544,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         instruction,
       });
       setPatchSets(generated.items);
+      setDismissedPatchHunkIds([]);
       setLastPatchSetRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
       setPatchSetEmptyMessage(
         generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
@@ -519,12 +618,28 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       {error ? <div style={errorBannerStyle}>{error}</div> : null}
       {!error && activityMessage ? <div style={activityBannerStyle}>{activityMessage}</div> : null}
       <div style={workspaceStyle}>
-        <LatexEditor editorMode={editorMode} onChange={setSourceTex} value={sourceTex} />
+        <LatexEditor
+          activeHunkId={activePatchHunkId}
+          dismissedHunkIds={dismissedPatchHunkIds}
+          editorMode={editorMode}
+          onApplyAll={handleApplyAllVisiblePatchHunks}
+          onApplyHunk={handleApplyPatchSetHunk}
+          onChange={setSourceTex}
+          onDismissAll={handleRejectAllVisiblePatchHunks}
+          onDismissHunk={handleDismissPatchSetHunk}
+          onNavigateHunk={moveActivePatchHunk}
+          onSelectHunk={setActivePatchHunkId}
+          patchSets={patchSets}
+          value={sourceTex}
+        />
         <aside style={panelStyle}>
           <div ref={patchReviewRef}>
             <PatchSetReviewPanel
+              activeHunkId={activePatchHunkId}
+              dismissedIds={dismissedPatchHunkIds}
               emptyMessage={patchSetEmptyMessage}
               isLoading={isReviewing || isTailoring}
+              onActiveHunkChange={setActivePatchHunkId}
               onApply={handleApplyPatchSetHunk}
               onDismiss={handleDismissPatchSetHunk}
               onRetrySet={handleRetryPatchSet}

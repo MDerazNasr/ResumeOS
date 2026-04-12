@@ -47,23 +47,21 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Upgrade the current patch review surface so AI edits feel like reviewing code changes.
+Finish Section 10 by making the patch review experience feel native to the editor.
 
 That means:
 
-- make additions and removals visually stronger
-- add approve-all and reject-all actions
-- add next/previous hunk navigation
-- make active-hunk progression clearer after approve/reject actions
-- surface generated patch sets and failures high in the editor workspace
+- inline Monaco diff decorations should reflect the active patch hunk
+- users should be able to accept, reject, navigate, and batch-handle hunks from inside the editor
+- the side panel should remain useful, but it should no longer be the primary place where review happens
 - keep the existing safe patch-set backend contract intact
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- the patch review panel presents changes like a real red/green diff
-- users can move through hunks intentionally
+- Monaco shows inline hunk highlighting and an active review widget
+- users can move through hunks intentionally from the editor
 - users can approve or reject all visible hunks from the current patch sets
 - the active hunk advances predictably and completion state is clear
 - generated patch sets and tailoring failures are visible without digging through the layout
@@ -80,11 +78,11 @@ That means:
 
 ## Next Planned Branch
 
-Move patch review into Monaco itself so AI edits feel like an IDE review workflow instead of a separate side panel.
+Add the conversational AI chat layer on top of the now-stable patch review workflow.
 
 That next slice should include:
 
-- inline Monaco diff decorations for additions and removals
-- per-hunk accept/reject actions in the editor
-- next/previous hunk navigation that follows the editor decorations
-- keep the current backend patch-set validation and apply path unchanged
+- persistent per-resume chat sidebar
+- chat turns grounded in the current draft and style memory
+- chat responses that can produce patch sets through the same validation/apply path
+- no direct document mutation outside reviewed patch application

@@ -5,27 +5,31 @@ import type { CSSProperties } from "react";
 import type { PatchHunkDto, PatchSetDto } from "@/lib/api/types";
 
 type PatchSetReviewPanelProps = {
+  activeHunkId: string | null;
+  dismissedIds: string[];
   onRetrySet: (patchSet: PatchSetDto) => Promise<void>;
   onApply: (patchSet: PatchSetDto, hunk: PatchHunkDto) => Promise<boolean>;
   onDismiss: (patchSet: PatchSetDto, hunk: PatchHunkDto) => Promise<boolean>;
+  onActiveHunkChange: (hunkId: string | null) => void;
   isLoading?: boolean;
   emptyMessage?: string | null;
   patchSets: PatchSetDto[];
 };
 
 export function PatchSetReviewPanel({
+  activeHunkId,
+  dismissedIds,
   onApply,
   onDismiss,
   onRetrySet,
+  onActiveHunkChange,
   patchSets,
   isLoading = false,
   emptyMessage = null,
 }: PatchSetReviewPanelProps) {
-  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [dismissingId, setDismissingId] = useState<string | null>(null);
   const [retryingSetId, setRetryingSetId] = useState<string | null>(null);
-  const [activeHunkId, setActiveHunkId] = useState<string | null>(null);
   const [isApplyingAll, setIsApplyingAll] = useState(false);
   const [isRejectingAll, setIsRejectingAll] = useState(false);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
@@ -58,14 +62,14 @@ export function PatchSetReviewPanel({
 
   useEffect(() => {
     if (visibleHunks.length === 0) {
-      setActiveHunkId(null);
+      onActiveHunkChange(null);
       return;
     }
 
     if (!activeHunkId || !visibleHunks.some(({ hunk }) => hunk.id === activeHunkId)) {
-      setActiveHunkId(visibleHunks[0]?.hunk.id ?? null);
+      onActiveHunkChange(visibleHunks[0]?.hunk.id ?? null);
     }
-  }, [activeHunkId, visibleHunks]);
+  }, [activeHunkId, onActiveHunkChange, visibleHunks]);
 
   useEffect(() => {
     if (visibleHunks.length > 0) {
@@ -73,21 +77,17 @@ export function PatchSetReviewPanel({
     }
   }, [visibleHunks.length]);
 
-  function dismissHunkFromView(hunkId: string) {
-    setDismissedIds((current) => [...current, hunkId]);
-  }
-
   function setNextActiveHunk(removedHunkId: string) {
     const currentIndex = visibleHunks.findIndex(({ hunk }) => hunk.id === removedHunkId);
     const remainingHunks = visibleHunks.filter(({ hunk }) => hunk.id !== removedHunkId);
 
     if (remainingHunks.length === 0) {
-      setActiveHunkId(null);
+      onActiveHunkChange(null);
       return;
     }
 
     const nextIndex = currentIndex === -1 ? 0 : Math.min(currentIndex, remainingHunks.length - 1);
-    setActiveHunkId(remainingHunks[nextIndex]?.hunk.id ?? null);
+    onActiveHunkChange(remainingHunks[nextIndex]?.hunk.id ?? null);
   }
 
   async function handleApply(patchSet: PatchSetDto, hunk: PatchHunkDto) {
@@ -97,7 +97,6 @@ export function PatchSetReviewPanel({
       const applied = await onApply(patchSet, hunk);
       if (applied) {
         setNextActiveHunk(hunk.id);
-        dismissHunkFromView(hunk.id);
       }
     } finally {
       setApplyingId(null);
@@ -109,7 +108,6 @@ export function PatchSetReviewPanel({
 
     try {
       await onRetrySet(patchSet);
-      setDismissedIds([]);
       setCompletionMessage(null);
     } finally {
       setRetryingSetId(null);
@@ -123,7 +121,6 @@ export function PatchSetReviewPanel({
       const dismissed = await onDismiss(patchSet, hunk);
       if (dismissed) {
         setNextActiveHunk(hunk.id);
-        dismissHunkFromView(hunk.id);
       }
     } finally {
       setDismissingId(null);
@@ -143,10 +140,8 @@ export function PatchSetReviewPanel({
         if (!applied) {
           break;
         }
-
-        dismissHunkFromView(hunk.id);
       }
-      setActiveHunkId(null);
+      onActiveHunkChange(null);
       setCompletionMessage("All visible hunks were approved.");
     } finally {
       setIsApplyingAll(false);
@@ -163,11 +158,11 @@ export function PatchSetReviewPanel({
     try {
       for (const { patchSet, hunk } of visibleHunks) {
         const dismissed = await onDismiss(patchSet, hunk);
-        if (dismissed) {
-          dismissHunkFromView(hunk.id);
+        if (!dismissed) {
+          break;
         }
       }
-      setActiveHunkId(null);
+      onActiveHunkChange(null);
       setCompletionMessage("All visible hunks were rejected.");
     } finally {
       setIsRejectingAll(false);
@@ -185,7 +180,7 @@ export function PatchSetReviewPanel({
         ? Math.max(0, currentIndex - 1)
         : Math.min(visibleHunks.length - 1, currentIndex + 1);
 
-    setActiveHunkId(visibleHunks[nextIndex]?.hunk.id ?? null);
+    onActiveHunkChange(visibleHunks[nextIndex]?.hunk.id ?? null);
   }
 
   const hasBusyAction =
@@ -298,7 +293,7 @@ export function PatchSetReviewPanel({
                 {patchSet.items.map((hunk) => (
                   <div
                     key={hunk.id}
-                    onClick={() => setActiveHunkId(hunk.id)}
+                    onClick={() => onActiveHunkChange(hunk.id)}
                     style={proposalCardStyle(hunk.id === activeHunkId)}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
