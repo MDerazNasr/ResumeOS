@@ -28,6 +28,7 @@ export function PatchSetReviewPanel({
   const [activeHunkId, setActiveHunkId] = useState<string | null>(null);
   const [isApplyingAll, setIsApplyingAll] = useState(false);
   const [isRejectingAll, setIsRejectingAll] = useState(false);
+  const [completionMessage, setCompletionMessage] = useState<string | null>(null);
 
   const visiblePatchSets = useMemo(
     () =>
@@ -66,13 +67,37 @@ export function PatchSetReviewPanel({
     }
   }, [activeHunkId, visibleHunks]);
 
+  useEffect(() => {
+    if (visibleHunks.length > 0) {
+      setCompletionMessage(null);
+    }
+  }, [visibleHunks.length]);
+
+  function dismissHunkFromView(hunkId: string) {
+    setDismissedIds((current) => [...current, hunkId]);
+  }
+
+  function setNextActiveHunk(removedHunkId: string) {
+    const currentIndex = visibleHunks.findIndex(({ hunk }) => hunk.id === removedHunkId);
+    const remainingHunks = visibleHunks.filter(({ hunk }) => hunk.id !== removedHunkId);
+
+    if (remainingHunks.length === 0) {
+      setActiveHunkId(null);
+      return;
+    }
+
+    const nextIndex = currentIndex === -1 ? 0 : Math.min(currentIndex, remainingHunks.length - 1);
+    setActiveHunkId(remainingHunks[nextIndex]?.hunk.id ?? null);
+  }
+
   async function handleApply(patchSet: PatchSetDto, hunk: PatchHunkDto) {
     setApplyingId(hunk.id);
 
     try {
       const applied = await onApply(patchSet, hunk);
       if (applied) {
-        setDismissedIds((current) => [...current, hunk.id]);
+        setNextActiveHunk(hunk.id);
+        dismissHunkFromView(hunk.id);
       }
     } finally {
       setApplyingId(null);
@@ -85,6 +110,7 @@ export function PatchSetReviewPanel({
     try {
       await onRetrySet(patchSet);
       setDismissedIds([]);
+      setCompletionMessage(null);
     } finally {
       setRetryingSetId(null);
     }
@@ -96,7 +122,8 @@ export function PatchSetReviewPanel({
     try {
       const dismissed = await onDismiss(patchSet, hunk);
       if (dismissed) {
-        setDismissedIds((current) => [...current, hunk.id]);
+        setNextActiveHunk(hunk.id);
+        dismissHunkFromView(hunk.id);
       }
     } finally {
       setDismissingId(null);
@@ -117,8 +144,10 @@ export function PatchSetReviewPanel({
           break;
         }
 
-        setDismissedIds((current) => [...current, hunk.id]);
+        dismissHunkFromView(hunk.id);
       }
+      setActiveHunkId(null);
+      setCompletionMessage("All visible hunks were approved.");
     } finally {
       setIsApplyingAll(false);
     }
@@ -135,9 +164,11 @@ export function PatchSetReviewPanel({
       for (const { patchSet, hunk } of visibleHunks) {
         const dismissed = await onDismiss(patchSet, hunk);
         if (dismissed) {
-          setDismissedIds((current) => [...current, hunk.id]);
+          dismissHunkFromView(hunk.id);
         }
       }
+      setActiveHunkId(null);
+      setCompletionMessage("All visible hunks were rejected.");
     } finally {
       setIsRejectingAll(false);
     }
@@ -172,6 +203,7 @@ export function PatchSetReviewPanel({
           Review AI changes like a code diff before they touch the draft.
         </span>
       </div>
+      {completionMessage ? <p style={completionMessageStyle}>{completionMessage}</p> : null}
       {visibleHunks.length > 0 ? (
         <div style={reviewToolbarStyle}>
           <div style={{ display: "grid", gap: 4 }}>
@@ -237,6 +269,9 @@ export function PatchSetReviewPanel({
                     <span style={modeBadgeStyle(patchSet.mode)}>{patchSet.mode}</span>
                   </div>
                   <p style={setSummaryStyle}>{patchSet.summary}</p>
+                  <span style={setMetaStyle}>
+                    {patchSet.items.length} visible {patchSet.items.length === 1 ? "hunk" : "hunks"}
+                  </span>
                   {patchSet.styleExamples.length > 0 ? (
                     <div style={styleExamplesStyle}>
                       <span style={styleExamplesLabelStyle}>Style memory</span>
@@ -351,6 +386,11 @@ const setSummaryStyle: CSSProperties = {
   color: "var(--muted)",
   fontSize: 13,
   lineHeight: 1.5,
+};
+
+const setMetaStyle: CSSProperties = {
+  color: "var(--muted)",
+  fontSize: 12,
 };
 
 const styleExamplesStyle: CSSProperties = {
@@ -481,6 +521,17 @@ const toolbarActionsStyle: CSSProperties = {
   gap: 8,
   flexWrap: "wrap",
   justifyContent: "flex-end",
+};
+
+const completionMessageStyle: CSSProperties = {
+  margin: 0,
+  padding: "10px 12px",
+  border: "1px solid var(--border)",
+  borderRadius: 12,
+  background: "var(--mode-mock-bg)",
+  color: "var(--fg)",
+  fontSize: 13,
+  lineHeight: 1.5,
 };
 
 function diffLineStyle(type: "added" | "removed", isFirst: boolean): CSSProperties {

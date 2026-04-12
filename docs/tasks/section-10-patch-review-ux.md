@@ -27,6 +27,7 @@ Make AI edits feel like reviewing code changes instead of reading generic sugges
 - [x] add next/previous hunk navigation
 - [x] verify backend tests pass
 - [x] verify frontend production build passes
+- [x] make hunk progression clearer after approve/reject actions
 
 ## Verification Checklist
 
@@ -35,3 +36,4 @@ Make AI edits feel like reviewing code changes instead of reading generic sugges
 - [x] additions and removals are more visually distinct
 - [x] users can move through hunks intentionally
 - [x] users can approve or reject all visible hunks from the current patch sets
+- [x] the active hunk advances predictably after review actions

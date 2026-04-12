@@ -54,6 +54,7 @@ That means:
 - make additions and removals visually stronger
 - add approve-all and reject-all actions
 - add next/previous hunk navigation
+- make active-hunk progression clearer after approve/reject actions
 - keep the existing safe patch-set backend contract intact
 
 ## Definition of Success for the Current Slice
@@ -63,6 +64,7 @@ That means:
 - the patch review panel presents changes like a real red/green diff
 - users can move through hunks intentionally
 - users can approve or reject all visible hunks from the current patch sets
+- the active hunk advances predictably and completion state is clear
 
 ## Known Risks
 

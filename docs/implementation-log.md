@@ -313,6 +313,21 @@ Verified:
 - backend test suite passes after the UI-only review upgrade
 - frontend production build passes with the new review workflow
 
+### 2026-04-12: Section 10 Review Flow Progression
+
+Refined the review flow so working through hunks feels more intentional instead of leaving navigation state ambiguous after actions.
+
+Added:
+
+- active-hunk auto-advance after approve/reject
+- per-set visible-hunk counts
+- clearer completion messaging after approve-all or reject-all
+
+Verified:
+
+- backend test suite still passes after the review-flow refinement
+- frontend production build still passes with the updated progression logic
+
 ### 2026-04-10: Section 9 Planning
 
 Opened the next branch from merged `main` after Section 8 was integrated.
