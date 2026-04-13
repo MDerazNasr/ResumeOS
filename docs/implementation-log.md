@@ -23,6 +23,47 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-12: Section 11 Chat Layer Planning
+
+Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.
+
+Planned scope:
+
+- add a persistent per-resume chat thread
+- ground assistant replies in the current draft and style-memory context
+- let chat responses produce patch sets through the existing validated review path
+- avoid direct document mutation from chat
+
+Why this shape:
+
+- the safe patch-review foundation already exists, so chat should plug into it rather than invent a second editing path
+- the first slice should make chat visible and persistent before adding richer conversational behaviors
+
+### 2026-04-12: Section 11 Chat Layer Implementation
+
+Implemented the first real conversational layer on top of the safe patch workflow.
+
+Added:
+
+- persistent per-resume chat threads and stored user/assistant messages
+- chat routes for fetching a thread and sending new messages
+- an `AI Chat` sidebar in the editor workspace
+- chat intent routing across question, edit, review, and tailor requests
+- per-turn linkage showing whether an assistant reply generated patch sets
+- recent-message grounding so follow-up replies can see short conversation history
+- provider-backed assistant replies so chat can use the same provider abstraction as patch generation
+
+Why this shape:
+
+- the product needs real back-and-forth interaction, but document mutation still has to flow through validated patch application
+- grounding replies in recent turns is the minimum needed to make the chat feel conversational instead of transactional
+- threading chat through the provider interface keeps the architecture consistent when switching from mock to OpenAI-backed behavior
+
+Verified:
+
+- backend test suite passes after chat persistence, routing, and provider integration
+- frontend production build passes after the chat sidebar and editor integration
+
 ### 2026-04-12: Section 10 Inline Editor Review
 
 Moved the patch-review workflow into Monaco so the AI editing loop behaves more like an IDE.

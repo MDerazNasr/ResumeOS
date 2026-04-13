@@ -1,7 +1,10 @@
 import type {
   ApplyPatchInput,
+  ChatResponseDto,
+  ChatThreadDto,
   CompileRequestInput,
   CompileResultDto,
+  CreateChatMessageInput,
   CreateSnapshotInput,
   CreateResumeInput,
   DocumentModelDto,
@@ -204,6 +207,17 @@ export function getSnapshot(resumeId: string, snapshotId: string): Promise<Snaps
 
 export function restoreSnapshot(resumeId: string, input: RestoreSnapshotInput): Promise<WorkingDraftDto> {
   return apiFetch<WorkingDraftDto>(`/resumes/${resumeId}/snapshots/restore`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function getChatThread(resumeId: string): Promise<ChatThreadDto> {
+  return apiFetch<ChatThreadDto>(`/resumes/${resumeId}/chat`);
+}
+
+export function createChatMessage(resumeId: string, input: CreateChatMessageInput): Promise<ChatResponseDto> {
+  return apiFetch<ChatResponseDto>(`/resumes/${resumeId}/chat/messages`, {
     method: "POST",
     body: JSON.stringify(input)
   });

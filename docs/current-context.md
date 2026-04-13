@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 10: patch review UX
+- Section 11: chat layer
 
 ## Completed Milestones
 
@@ -20,6 +20,7 @@ Active milestone:
 - Section 7: auth and settings completed and merged into `main`
 - Section 8: UI preferences completed and merged into `main`
 - Section 9: hardening completed and merged into `main`
+- Section 10: inline patch review UX completed on a feature branch
 
 ## Current Constraints
 
@@ -39,7 +40,7 @@ Active milestone:
 
 - editor page is a two-pane workspace
 - left pane: Monaco-based LaTeX editor
-- right pane: compile status, real PDF preview, snapshots, document model summary, and suggestion review
+- right pane: AI chat, compile status, real PDF preview, snapshots, document model summary, and suggestion review
 - the review surface now speaks in terms of patch sets instead of generic suggestions
 - the workspace now also includes a first tailoring input for job descriptions
 - tailoring now creates a pre-tailor snapshot before suggestions are generated
@@ -47,24 +48,23 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Finish Section 10 by making the patch review experience feel native to the editor.
+Deepen the conversational AI layer without bypassing the safe patch workflow.
 
 That means:
 
-- inline Monaco diff decorations should reflect the active patch hunk
-- users should be able to accept, reject, navigate, and batch-handle hunks from inside the editor
-- the side panel should remain useful, but it should no longer be the primary place where review happens
-- keep the existing safe patch-set backend contract intact
+- improve conversational quality using recent message history
+- keep chat replies model/provider-backed
+- make chat-to-patch-set linkage clearer per assistant turn
+- preserve document mutation constraints through validated patch application
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- Monaco shows inline hunk highlighting and an active review widget
-- users can move through hunks intentionally from the editor
-- users can approve or reject all visible hunks from the current patch sets
-- the active hunk advances predictably and completion state is clear
-- generated patch sets and tailoring failures are visible without digging through the layout
+- a resume has a persistent chat thread
+- users can send a message and get an assistant reply grounded in the current resume and recent conversation
+- chat can produce patch sets that appear in the existing review workflow
+- each assistant turn can report whether it produced patch sets
 
 ## Known Risks
 
@@ -78,11 +78,10 @@ That means:
 
 ## Next Planned Branch
 
-Add the conversational AI chat layer on top of the now-stable patch review workflow.
+After the chat foundation lands, deepen the chat workflow.
 
 That next slice should include:
 
-- persistent per-resume chat sidebar
-- chat turns grounded in the current draft and style memory
-- chat responses that can produce patch sets through the same validation/apply path
-- no direct document mutation outside reviewed patch application
+- stronger follow-up handling across recent turns
+- richer response formatting for question vs edit/review/tailor
+- optional streaming once the current synchronous chat path is stable

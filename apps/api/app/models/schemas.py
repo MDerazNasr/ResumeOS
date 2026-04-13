@@ -190,3 +190,28 @@ class CreateSnapshotInput(BaseModel):
 
 class RestoreSnapshotInput(BaseModel):
     snapshotId: str
+
+
+class ChatMessageDto(BaseModel):
+    id: str
+    role: Literal["user", "assistant"]
+    content: str
+    createdAt: str
+
+
+class ChatThreadDto(BaseModel):
+    id: str
+    resumeId: str
+    messages: list[ChatMessageDto]
+
+
+class CreateChatMessageInput(BaseModel):
+    content: str = Field(min_length=1, max_length=6000)
+
+
+class ChatResponseDto(BaseModel):
+    thread: ChatThreadDto
+    chatIntent: Literal["question", "edit", "review", "tailor"]
+    generatedPatchSetSummary: str | None = None
+    assistantMessageId: str
+    patchSets: list[PatchSetDto] = []

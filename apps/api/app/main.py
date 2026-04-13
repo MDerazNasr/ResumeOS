@@ -6,6 +6,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.resumes import router as resumes_router
 from app.db.database import initialize_database
 from app.services.auth import ensure_auth_schema
+from app.services.chat import ensure_chat_schema
 
 
 app = FastAPI(title="ResumeOS API", version="0.1.0")
@@ -30,3 +31,4 @@ app.include_router(resumes_router)
 def startup() -> None:
     initialize_database()
     ensure_auth_schema()
+    ensure_chat_schema()

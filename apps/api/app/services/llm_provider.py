@@ -27,6 +27,16 @@ class TailorSuggestionPrompt:
     blocks: list[EditSuggestionPrompt]
 
 
+@dataclass
+class ChatConversationPrompt:
+    user_message: str
+    detected_intent: str
+    recent_messages: list[tuple[str, str]]
+    editable_block_count: int
+    style_examples: list[str]
+    patch_set_summary: str | None
+
+
 class EditSuggestionProvider:
     def generate_rewrites(self, prompt: EditSuggestionPrompt) -> list[str]:
         raise NotImplementedError
@@ -35,6 +45,9 @@ class EditSuggestionProvider:
         raise NotImplementedError
 
     def generate_tailor_rewrites(self, prompt: TailorSuggestionPrompt) -> dict[str, list[str]]:
+        raise NotImplementedError
+
+    def generate_chat_reply(self, prompt: ChatConversationPrompt) -> str:
         raise NotImplementedError
 
 
@@ -92,6 +105,27 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
             result[block.text] = candidates
 
         return result
+
+    def generate_chat_reply(self, prompt: ChatConversationPrompt) -> str:
+        style_hint = prompt.style_examples[0] if prompt.style_examples else "No strong prior style example was available."
+        history_hint = (
+            f" I also considered {len(prompt.recent_messages)} recent chat message"
+            f"{'' if len(prompt.recent_messages) == 1 else 's'}."
+            if prompt.recent_messages
+            else ""
+        )
+        if prompt.patch_set_summary:
+            return (
+                f"I read that as a {prompt.detected_intent} request. "
+                f"{prompt.patch_set_summary}{history_hint} Review those changes inline in the editor before applying them."
+            )
+
+        return (
+            f"I read that as a {prompt.detected_intent} request. "
+            f"The current resume has {prompt.editable_block_count} editable blocks. "
+            f"Closest style memory example: \"{style_hint}\".{history_hint} "
+            "Ask for a review, an edit, or a tailored pass when you want concrete patch sets."
+        )
 
 
 class OpenAIEditSuggestionProvider(EditSuggestionProvider):
@@ -249,6 +283,47 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                 result[original] = [candidate.strip() for candidate in candidates if isinstance(candidate, str) and candidate.strip()]
 
         return result
+
+    def generate_chat_reply(self, prompt: ChatConversationPrompt) -> str:
+        response = httpx.post(
+            f"{self.base_url}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self.model,
+                "temperature": 0.4,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are the chat layer for an AI-assisted resume editor. "
+                            "Respond concisely. "
+                            "If patch sets were generated, explain what they cover and remind the user to review them inline. "
+                            "If no patch sets were generated, answer conversationally using the provided resume context."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": json.dumps(
+                            {
+                                "user_message": prompt.user_message,
+                                "detected_intent": prompt.detected_intent,
+                                "recent_messages": prompt.recent_messages,
+                                "editable_block_count": prompt.editable_block_count,
+                                "style_examples": prompt.style_examples,
+                                "patch_set_summary": prompt.patch_set_summary,
+                            }
+                        ),
+                    },
+                ],
+            },
+            timeout=20.0,
+        )
+        response.raise_for_status()
+        content = response.json()["choices"][0]["message"]["content"]
+        return content.strip()
 
 
 def _extract_emphasized_terms(job_description: str) -> list[str]:

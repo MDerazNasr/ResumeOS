@@ -94,3 +94,20 @@ CREATE TABLE IF NOT EXISTS user_settings (
   updated_at TEXT NOT NULL,
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS chat_threads (
+  id TEXT PRIMARY KEY,
+  resume_id TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY(resume_id) REFERENCES resumes(id)
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id TEXT PRIMARY KEY,
+  thread_id TEXT NOT NULL,
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY(thread_id) REFERENCES chat_threads(id)
+);

@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { ResumeEditor } from "@/components/resumes/ResumeEditor";
-import { getCurrentUser, getDocumentModel, getDraft, getResume, listSnapshots } from "@/lib/api/client";
+import { getChatThread, getCurrentUser, getDocumentModel, getDraft, getResume, listSnapshots } from "@/lib/api/client";
 
 type ResumeEditorPageProps = {
   params: {
@@ -16,11 +16,12 @@ export default async function ResumeEditorPage({ params }: ResumeEditorPageProps
   }
 
   try {
-    const [resume, draft, documentModel, snapshots] = await Promise.all([
+    const [resume, draft, documentModel, snapshots, chatThread] = await Promise.all([
       getResume(params.resumeId),
       getDraft(params.resumeId),
       getDocumentModel(params.resumeId),
       listSnapshots(params.resumeId),
+      getChatThread(params.resumeId),
     ]);
 
     return (
@@ -28,6 +29,7 @@ export default async function ResumeEditorPage({ params }: ResumeEditorPageProps
         <ResumeEditor
           documentModel={documentModel}
           draft={draft}
+          initialChatMessages={chatThread.messages}
           initialSnapshots={snapshots.items}
           resume={resume}
         />

@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends
 
 from app.models.schemas import (
     ApplyPatchInput,
+    ChatResponseDto,
+    ChatThreadDto,
     CompileRequestInput,
+    CreateChatMessageInput,
     CompileResultDto,
     CreateSnapshotInput,
     CreateResumeInput,
@@ -27,6 +30,7 @@ from app.models.schemas import (
 from app.services.compile import compile_resume_source_for_user
 from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
+from app.services.chat import create_chat_message_for_user, get_chat_thread_for_user
 from app.services.document_model import get_document_model_for_user
 from app.services.edit_suggestions import generate_edit_suggestions_for_user, generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
 from app.services.feedback import log_feedback_for_user
@@ -131,6 +135,23 @@ def apply_patch(
     current_user: UserDto = Depends(get_current_user),
 ) -> WorkingDraftDto:
     return apply_patch_for_user(current_user.id, resume_id, input_data)
+
+
+@router.get("/{resume_id}/chat", response_model=ChatThreadDto)
+def get_chat_thread(
+    resume_id: str,
+    current_user: UserDto = Depends(get_current_user),
+) -> ChatThreadDto:
+    return get_chat_thread_for_user(current_user.id, resume_id)
+
+
+@router.post("/{resume_id}/chat/messages", response_model=ChatResponseDto)
+def create_chat_message(
+    resume_id: str,
+    input_data: CreateChatMessageInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> ChatResponseDto:
+    return create_chat_message_for_user(current_user.id, resume_id, input_data)
 
 
 @router.post("/{resume_id}/feedback", status_code=204)

@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
+import { ChatSidebar } from "@/components/resumes/ChatSidebar";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { PatchSetReviewPanel } from "@/components/resumes/PatchSetReviewPanel";
 import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
 import type {
+  ChatMessageDto,
   CompileResultDto,
   DocumentModelDto,
   EditableBlockDto,
@@ -21,6 +23,7 @@ import type {
 type ResumeEditorProps = {
   documentModel: DocumentModelDto;
   draft: WorkingDraftDto;
+  initialChatMessages: ChatMessageDto[];
   initialSnapshots: SnapshotDto[];
   resume: ResumeDto;
 };
@@ -33,7 +36,7 @@ type PatchSetRequestContext =
 
 const EDITOR_MODE_STORAGE_KEY = "resumeos.editorMode";
 
-export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
+export function ResumeEditor({ documentModel, draft, initialChatMessages, initialSnapshots, resume }: ResumeEditorProps) {
   const patchReviewRef = useRef<HTMLDivElement | null>(null);
   const [documentModelState, setDocumentModelState] = useState(documentModel);
   const [editorMode, setEditorMode] = useState<"standard" | "vim">("standard");
@@ -114,6 +117,16 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
     const hunkCount = items.reduce((total, patchSet) => total + patchSet.items.length, 0);
     return `Loaded ${items.length} patch set${items.length === 1 ? "" : "s"} with ${hunkCount} hunk${hunkCount === 1 ? "" : "s"}.`;
+  }
+
+  function loadPatchSets(items: PatchSetDto[], emptyLabel: string | null = null, activityLabel: string | null = null) {
+    setPatchSets(items);
+    setDismissedPatchHunkIds([]);
+    setPatchSetEmptyMessage(emptyLabel);
+    if (activityLabel) {
+      setActivityMessage(activityLabel);
+    }
+    focusPatchReview();
   }
 
   useEffect(() => {
@@ -364,13 +377,11 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           targetBlockId: lastPatchSetRequest.targetBlockId,
           instruction: lastPatchSetRequest.instruction,
         });
-        setPatchSets(generated.items);
-        setDismissedPatchHunkIds([]);
-        setPatchSetEmptyMessage(
+        loadPatchSets(
+          generated.items,
           generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
+          buildPatchSetSummary(generated.items, "No valid edit suggestions were generated."),
         );
-        setActivityMessage(buildPatchSetSummary(generated.items, "No valid edit suggestions were generated."));
-        focusPatchReview();
         return;
       }
 
@@ -378,13 +389,11 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         const generated = await generateReviewSuggestions(resume.id, {
           instruction: lastPatchSetRequest.instruction,
         });
-        setPatchSets(generated.items);
-        setDismissedPatchHunkIds([]);
-        setPatchSetEmptyMessage(
+        loadPatchSets(
+          generated.items,
           generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
+          buildPatchSetSummary(generated.items, "No valid review suggestions were generated."),
         );
-        setActivityMessage(buildPatchSetSummary(generated.items, "No valid review suggestions were generated."));
-        focusPatchReview();
         return;
       }
 
@@ -393,14 +402,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           jobDescription: lastPatchSetRequest.jobDescription,
           instruction: lastPatchSetRequest.instruction,
         });
-        setPatchSets(generated.items);
-        setDismissedPatchHunkIds([]);
-        setPatchSetEmptyMessage(
+        loadPatchSets(
+          generated.items,
           generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
+          buildPatchSetSummary(generated.items, "No valid tailoring suggestions were generated."),
         );
         setSnapshotRefreshToken((current) => current + 1);
-        setActivityMessage(buildPatchSetSummary(generated.items, "No valid tailoring suggestions were generated."));
-        focusPatchReview();
       }
     } catch (retryError) {
       setError(retryError instanceof Error ? retryError.message : "Failed to regenerate suggestions.");
@@ -481,14 +488,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         targetBlockId: block.id,
         instruction,
       });
-      setPatchSets(generated.items);
-      setDismissedPatchHunkIds([]);
-      setLastPatchSetRequest({ mode: "edit", targetBlockId: block.id, instruction });
-      setPatchSetEmptyMessage(
+      loadPatchSets(
+        generated.items,
         generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
+        buildPatchSetSummary(generated.items, "No valid edit suggestions were generated."),
       );
-      setActivityMessage(buildPatchSetSummary(generated.items, "No valid edit suggestions were generated."));
-      focusPatchReview();
+      setLastPatchSetRequest({ mode: "edit", targetBlockId: block.id, instruction });
     } catch (suggestError) {
       setError(suggestError instanceof Error ? suggestError.message : "Failed to generate edit suggestions.");
     }
@@ -503,14 +508,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     try {
       const instruction = "Review the current resume and suggest stronger wording for the weakest editable blocks.";
       const generated = await generateReviewSuggestions(resume.id, { instruction });
-      setPatchSets(generated.items);
-      setDismissedPatchHunkIds([]);
-      setLastPatchSetRequest({ mode: "review", instruction });
-      setPatchSetEmptyMessage(
+      loadPatchSets(
+        generated.items,
         generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
+        buildPatchSetSummary(generated.items, "No valid review suggestions were generated."),
       );
-      setActivityMessage(buildPatchSetSummary(generated.items, "No valid review suggestions were generated."));
-      focusPatchReview();
+      setLastPatchSetRequest({ mode: "review", instruction });
     } catch (reviewError) {
       setError(reviewError instanceof Error ? reviewError.message : "Failed to generate review suggestions.");
     } finally {
@@ -543,15 +546,13 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         jobDescription: trimmedDescription,
         instruction,
       });
-      setPatchSets(generated.items);
-      setDismissedPatchHunkIds([]);
-      setLastPatchSetRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
-      setPatchSetEmptyMessage(
+      loadPatchSets(
+        generated.items,
         generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
+        buildPatchSetSummary(generated.items, "No valid tailoring suggestions were generated."),
       );
+      setLastPatchSetRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
       setSnapshotRefreshToken((current) => current + 1);
-      setActivityMessage(buildPatchSetSummary(generated.items, "No valid tailoring suggestions were generated."));
-      focusPatchReview();
     } catch (tailorError) {
       setError(tailorError instanceof Error ? tailorError.message : "Failed to generate tailoring suggestions.");
     } finally {
@@ -633,6 +634,17 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           value={sourceTex}
         />
         <aside style={panelStyle}>
+          <ChatSidebar
+            initialMessages={initialChatMessages}
+            onPatchSetsGenerated={(items) =>
+              loadPatchSets(
+                items,
+                items.length === 0 ? "Chat did not produce any valid patch sets." : null,
+                buildPatchSetSummary(items, "Chat did not produce any valid patch sets."),
+              )
+            }
+            resumeId={resume.id}
+          />
           <div ref={patchReviewRef}>
             <PatchSetReviewPanel
               activeHunkId={activePatchHunkId}

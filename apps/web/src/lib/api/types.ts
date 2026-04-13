@@ -179,3 +179,28 @@ export type CreateSnapshotInput = {
 export type RestoreSnapshotInput = {
   snapshotId: string;
 };
+
+export type ChatMessageDto = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+};
+
+export type ChatThreadDto = {
+  id: string;
+  resumeId: string;
+  messages: ChatMessageDto[];
+};
+
+export type CreateChatMessageInput = {
+  content: string;
+};
+
+export type ChatResponseDto = {
+  thread: ChatThreadDto;
+  chatIntent: "question" | "edit" | "review" | "tailor";
+  generatedPatchSetSummary: string | null;
+  assistantMessageId: string;
+  patchSets: PatchSetDto[];
+};
