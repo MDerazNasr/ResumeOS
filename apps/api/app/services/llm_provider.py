@@ -116,17 +116,28 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
             else ""
         )
         follow_up_hint = " I treated this as a follow-up to the recent conversation." if prompt.intent_source == "history" else ""
-        if prompt.patch_set_summary:
+        if prompt.detected_intent == "question":
             return (
-                f"I read that as a {prompt.detected_intent} request. "
-                f"{prompt.patch_set_summary}{history_hint}{follow_up_hint} Review those changes inline in the editor before applying them."
+                f"I read that as a resume question. The current draft has {prompt.editable_block_count} editable blocks. "
+                f"Closest style memory example: \"{style_hint}\".{history_hint}{follow_up_hint} "
+                "Ask for a review, an edit, or a tailored pass when you want concrete patch sets."
+            )
+
+        if prompt.detected_intent == "review":
+            return (
+                f"I generated a review pass over the current draft. {prompt.patch_set_summary or 'No valid review patch sets were generated.'}"
+                f"{history_hint}{follow_up_hint} Review the suggested wording changes inline before applying them."
+            )
+
+        if prompt.detected_intent == "tailor":
+            return (
+                f"I treated this as a tailoring request against the target role. {prompt.patch_set_summary or 'No valid tailoring patch sets were generated.'}"
+                f"{history_hint}{follow_up_hint} Review the tailored changes inline and keep only the ones that match the role."
             )
 
         return (
-            f"I read that as a {prompt.detected_intent} request. "
-            f"The current resume has {prompt.editable_block_count} editable blocks. "
-            f"Closest style memory example: \"{style_hint}\".{history_hint}{follow_up_hint} "
-            "Ask for a review, an edit, or a tailored pass when you want concrete patch sets."
+            f"I generated targeted edit suggestions for the current draft. {prompt.patch_set_summary or 'No valid edit patch sets were generated.'}"
+            f"{history_hint}{follow_up_hint} Review the edits inline before applying them."
         )
 
 
@@ -301,9 +312,10 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                         "role": "system",
                         "content": (
                             "You are the chat layer for an AI-assisted resume editor. "
-                            "Respond concisely. "
-                            "If patch sets were generated, explain what they cover and remind the user to review them inline. "
-                            "If no patch sets were generated, answer conversationally using the provided resume context."
+                            "Respond concisely and format the reply to match the request type. "
+                            "For question intent, answer the question using the provided resume context. "
+                            "For review/edit/tailor intents, briefly explain what the generated patch sets cover and remind the user to review them inline. "
+                            "When intent_source is history, acknowledge that the message was treated as a follow-up."
                         ),
                     },
                     {

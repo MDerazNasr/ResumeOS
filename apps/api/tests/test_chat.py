@@ -101,6 +101,25 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(payload["intentSource"], "history")
         self.assertGreaterEqual(len(payload["patchSets"]), 1)
 
+    def test_follow_up_message_can_continue_last_tailor_request(self) -> None:
+        self.client.post(
+            f"/resumes/{self.resume_id}/chat/messages",
+            json={
+                "content": "Tailor this resume for a backend platform role focused on distributed systems, APIs, infrastructure reliability, and cross-functional ownership."
+            },
+        )
+
+        response = self.client.post(
+            f"/resumes/{self.resume_id}/chat/messages",
+            json={"content": "Also make it emphasize leadership and ownership more."},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["chatIntent"], "tailor")
+        self.assertEqual(payload["intentSource"], "history")
+        self.assertGreaterEqual(len(payload["patchSets"]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

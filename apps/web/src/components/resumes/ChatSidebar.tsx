@@ -87,6 +87,7 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
               <strong style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>{message.role}</strong>
               {message.role === "assistant" && assistantTurnMeta[message.id] ? (
                 <div style={messageMetaStyle}>
+                  <strong style={{ fontSize: 13 }}>{assistantHeading(assistantTurnMeta[message.id].intent, assistantTurnMeta[message.id].summary)}</strong>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={intentBadgeStyle(assistantTurnMeta[message.id].intent)}>{assistantTurnMeta[message.id].intent}</span>
                     {assistantTurnMeta[message.id].intentSource === "history" ? <span style={followUpBadgeStyle}>follow-up</span> : null}
@@ -179,6 +180,29 @@ function messageCardStyle(role: "user" | "assistant"): CSSProperties {
     border: `1px solid ${role === "assistant" ? "var(--border)" : "var(--border-strong)"}`,
     background: role === "assistant" ? "var(--surface-alt)" : "var(--surface-elevated)",
   };
+}
+
+function assistantHeading(
+  intent: "question" | "edit" | "review" | "tailor",
+  summary: string | null,
+): string {
+  if (!summary) {
+    return intent === "question" ? "Resume Context Answer" : "No Patch Sets Generated";
+  }
+
+  if (intent === "review") {
+    return "Review Patch Sets Ready";
+  }
+
+  if (intent === "tailor") {
+    return "Tailoring Patch Sets Ready";
+  }
+
+  if (intent === "edit") {
+    return "Edit Patch Sets Ready";
+  }
+
+  return "Resume Context Answer";
 }
 
 const messageMetaStyle: CSSProperties = {

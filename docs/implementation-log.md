@@ -87,6 +87,28 @@ Verified:
 - backend test suite passes after follow-up intent handling was added
 - frontend production build still passes after the chat metadata and badge updates
 
+### 2026-04-15: Section 11 Response Formatting
+
+Improved how chat responses read and render so different AI actions do not feel like the same generic assistant message.
+
+Added:
+
+- mode-specific provider phrasing for question, review, edit, and tailor replies
+- assistant-card headings that distinguish context answers from patch-generating replies
+- follow-up support for continuing a prior tailoring request with a short second prompt
+- backend regression coverage for follow-up tailoring behavior
+
+Why this shape:
+
+- conversational UX was still too uniform even after the chat layer became provider-backed
+- users need to understand quickly whether a reply answered a question or loaded edits to review
+- tailoring follow-ups are a common case and should not require re-pasting the whole job description every time
+
+Verified:
+
+- backend test suite passes after mode-specific response formatting and tailor follow-up handling
+- frontend production build still passes after the chat card presentation updates
+
 ### 2026-04-12: Section 10 Inline Editor Review
 
 Moved the patch-review workflow into Monaco so the AI editing loop behaves more like an IDE.

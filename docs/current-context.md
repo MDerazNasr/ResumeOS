@@ -55,6 +55,7 @@ That means:
 - improve conversational quality using recent message history and follow-up-aware intent handling
 - keep chat replies model/provider-backed
 - make chat-to-patch-set linkage clearer per assistant turn
+- format chat responses distinctly for question vs edit/review/tailor
 - preserve document mutation constraints through validated patch application
 
 ## Definition of Success for the Current Slice
@@ -66,6 +67,7 @@ That means:
 - short follow-up turns can continue the last actionable review/tailor intent without repeating the full request
 - chat can produce patch sets that appear in the existing review workflow
 - each assistant turn can report whether it produced patch sets
+- chat cards make it clearer whether a reply is a context answer or a patch-generating response
 
 ## Known Risks
 
