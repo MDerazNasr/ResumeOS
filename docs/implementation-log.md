@@ -64,6 +64,29 @@ Verified:
 - backend test suite passes after chat persistence, routing, and provider integration
 - frontend production build passes after the chat sidebar and editor integration
 
+### 2026-04-15: Section 11 Follow-Up Intent Handling
+
+Extended the chat layer so short follow-up prompts behave more like a conversation instead of resetting to question mode.
+
+Added:
+
+- follow-up-aware intent resolution that can inherit the last actionable user intent
+- first-pass reuse of the previous tailor request when a follow-up is clearly continuing that tailoring thread
+- chat response metadata indicating whether the resolved intent came from the current message or recent history
+- UI badges showing when a reply was treated as a follow-up
+- backend regression coverage for inherited review intent
+
+Why this shape:
+
+- users should not need to restate “review this resume” or re-paste the whole JD on every follow-up
+- inheriting only clear, short follow-up turns keeps the behavior useful without making intent routing opaque
+- exposing follow-up resolution in the UI makes the conversational state auditable instead of implicit
+
+Verified:
+
+- backend test suite passes after follow-up intent handling was added
+- frontend production build still passes after the chat metadata and badge updates
+
 ### 2026-04-12: Section 10 Inline Editor Review
 
 Moved the patch-review workflow into Monaco so the AI editing loop behaves more like an IDE.

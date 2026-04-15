@@ -31,6 +31,7 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(payload["thread"]["messages"][1]["role"], "assistant")
         self.assertEqual(payload["assistantMessageId"], payload["thread"]["messages"][1]["id"])
         self.assertEqual(payload["chatIntent"], "review")
+        self.assertEqual(payload["intentSource"], "message")
         self.assertIsNotNone(payload["generatedPatchSetSummary"])
         self.assertGreaterEqual(len(payload["patchSets"]), 1)
 
@@ -45,6 +46,7 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["chatIntent"], "tailor")
+        self.assertEqual(payload["intentSource"], "message")
         self.assertGreaterEqual(len(payload["patchSets"]), 1)
 
     def test_question_only_chat_returns_context_without_patch_sets(self) -> None:
@@ -56,6 +58,7 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["chatIntent"], "question")
+        self.assertEqual(payload["intentSource"], "message")
         self.assertEqual(payload["patchSets"], [])
 
     def test_chat_reply_receives_recent_message_history(self) -> None:
@@ -80,6 +83,23 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertGreaterEqual(len(captured_prompt["recent_messages"]), 2)
         self.assertEqual(captured_prompt["recent_messages"][-1][0], "assistant")
+
+    def test_follow_up_message_inherits_last_review_intent(self) -> None:
+        self.client.post(
+            f"/resumes/{self.resume_id}/chat/messages",
+            json={"content": "Review my resume and suggest stronger wording."},
+        )
+
+        response = self.client.post(
+            f"/resumes/{self.resume_id}/chat/messages",
+            json={"content": "Make them shorter and more direct."},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["chatIntent"], "review")
+        self.assertEqual(payload["intentSource"], "history")
+        self.assertGreaterEqual(len(payload["patchSets"]), 1)
 
 
 if __name__ == "__main__":

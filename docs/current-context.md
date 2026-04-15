@@ -52,7 +52,7 @@ Deepen the conversational AI layer without bypassing the safe patch workflow.
 
 That means:
 
-- improve conversational quality using recent message history
+- improve conversational quality using recent message history and follow-up-aware intent handling
 - keep chat replies model/provider-backed
 - make chat-to-patch-set linkage clearer per assistant turn
 - preserve document mutation constraints through validated patch application
@@ -63,6 +63,7 @@ That means:
 - frontend production build passes
 - a resume has a persistent chat thread
 - users can send a message and get an assistant reply grounded in the current resume and recent conversation
+- short follow-up turns can continue the last actionable review/tailor intent without repeating the full request
 - chat can produce patch sets that appear in the existing review workflow
 - each assistant turn can report whether it produced patch sets
 
@@ -82,6 +83,6 @@ After the chat foundation lands, deepen the chat workflow.
 
 That next slice should include:
 
-- stronger follow-up handling across recent turns
 - richer response formatting for question vs edit/review/tailor
+- better replay of prior patch-set outcomes inside the thread
 - optional streaming once the current synchronous chat path is stable

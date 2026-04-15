@@ -1,7 +1,6 @@
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
-
-from fastapi import HTTPException, status
 
 from app.db.database import get_connection
 from app.models.schemas import ChatMessageDto, ChatResponseDto, ChatThreadDto, CreateChatMessageInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchSetDto
@@ -12,6 +11,13 @@ from app.services.resumes import get_resume_for_user
 from app.services.style_memory import get_relevant_style_examples_for_user
 
 ChatIntent = str
+
+
+@dataclass
+class ResolvedChatIntent:
+    intent: ChatIntent
+    source: str
+    referencedUserMessage: str | None = None
 
 
 def ensure_chat_schema() -> None:
@@ -87,10 +93,10 @@ def create_chat_message_for_user(user_id: str, resume_id: str, input_data: Creat
     ensure_chat_schema()
     thread = get_chat_thread_for_user(user_id, resume_id)
     user_content = input_data.content.strip()
-    chat_intent = _classify_chat_intent(user_content)
-    patch_sets = _build_chat_patch_sets(user_id, resume_id, user_content, chat_intent)
+    resolved_intent = _resolve_chat_intent(user_content, thread.messages)
+    patch_sets = _build_chat_patch_sets(user_id, resume_id, user_content, resolved_intent)
     recent_messages = _recent_messages_for_thread(thread.messages)
-    assistant_content = _build_assistant_reply(user_id, resume_id, user_content, chat_intent, patch_sets, recent_messages)
+    assistant_content = _build_assistant_reply(user_id, resume_id, user_content, resolved_intent, patch_sets, recent_messages)
 
     with get_connection() as connection:
         now = _now_iso()
@@ -120,25 +126,33 @@ def create_chat_message_for_user(user_id: str, resume_id: str, input_data: Creat
 
     return ChatResponseDto(
         thread=ChatThreadDto(id=thread.id, resumeId=resume_id, messages=updated_messages),
-        chatIntent=chat_intent,
-        generatedPatchSetSummary=_build_patch_set_summary(chat_intent, patch_sets),
+        chatIntent=resolved_intent.intent,
+        intentSource=resolved_intent.source,
+        generatedPatchSetSummary=_build_patch_set_summary(resolved_intent.intent, patch_sets),
         assistantMessageId=assistant_message_id,
         patchSets=patch_sets,
     )
 
 
-def _build_chat_patch_sets(user_id: str, resume_id: str, content: str, chat_intent: ChatIntent) -> list[PatchSetDto]:
-    if chat_intent == "tailor" and len(content) >= 40:
-        return generate_tailor_suggestions_for_user(
-            user_id,
-            resume_id,
-            GenerateTailorSuggestionsInput(
-                jobDescription=content,
-                instruction="Tailor the resume toward the intent in this chat request.",
-            ),
-        ).items
+def _build_chat_patch_sets(user_id: str, resume_id: str, content: str, resolved_intent: ResolvedChatIntent) -> list[PatchSetDto]:
+    if resolved_intent.intent == "tailor":
+        job_description = content if resolved_intent.source == "message" else resolved_intent.referencedUserMessage
+        if job_description and len(job_description) >= 40:
+            instruction = (
+                "Tailor the resume toward the intent in this chat request."
+                if resolved_intent.source == "message"
+                else content[:300]
+            )
+            return generate_tailor_suggestions_for_user(
+                user_id,
+                resume_id,
+                GenerateTailorSuggestionsInput(
+                    jobDescription=job_description,
+                    instruction=instruction,
+                ),
+            ).items
 
-    if chat_intent in {"review", "edit"}:
+    if resolved_intent.intent in {"review", "edit"}:
         return generate_review_suggestions_for_user(
             user_id,
             resume_id,
@@ -154,7 +168,7 @@ def _build_assistant_reply(
     user_id: str,
     resume_id: str,
     content: str,
-    chat_intent: ChatIntent,
+    resolved_intent: ResolvedChatIntent,
     patch_sets: list[PatchSetDto],
     recent_messages: list[tuple[str, str]],
 ) -> str:
@@ -170,13 +184,31 @@ def _build_assistant_reply(
     return provider.generate_chat_reply(
         ChatConversationPrompt(
             user_message=content,
-            detected_intent=chat_intent,
+            detected_intent=resolved_intent.intent,
+            intent_source=resolved_intent.source,
             recent_messages=recent_messages,
             editable_block_count=len(document_model.editableBlocks),
             style_examples=style_examples,
-            patch_set_summary=_build_patch_set_summary(chat_intent, patch_sets),
+            patch_set_summary=_build_patch_set_summary(resolved_intent.intent, patch_sets),
         )
     )
+
+
+def _resolve_chat_intent(content: str, messages: list[ChatMessageDto]) -> ResolvedChatIntent:
+    direct_intent = _classify_chat_intent(content)
+    if direct_intent != "question":
+        return ResolvedChatIntent(intent=direct_intent, source="message")
+
+    if _looks_like_follow_up(content):
+        last_actionable_message = _find_last_actionable_user_message(messages)
+        if last_actionable_message is not None:
+            return ResolvedChatIntent(
+                intent=last_actionable_message[0],
+                source="history",
+                referencedUserMessage=last_actionable_message[1],
+            )
+
+    return ResolvedChatIntent(intent="question", source="message")
 
 
 def _classify_chat_intent(content: str) -> ChatIntent:
@@ -192,6 +224,45 @@ def _classify_chat_intent(content: str) -> ChatIntent:
         return "edit"
 
     return "question"
+
+
+def _looks_like_follow_up(content: str) -> bool:
+    lowered = content.lower().strip()
+    if not lowered or len(lowered) > 240:
+        return False
+
+    follow_up_markers = [
+        "and ",
+        "also",
+        "instead",
+        "more ",
+        "shorter",
+        "stronger",
+        "focus",
+        "emphasize",
+        "highlight",
+        "tighten",
+        "can you",
+        "what about",
+        "do the same",
+        "make it",
+        "make them",
+        "those",
+        "them",
+    ]
+    return any(marker in lowered for marker in follow_up_markers)
+
+
+def _find_last_actionable_user_message(messages: list[ChatMessageDto]) -> tuple[ChatIntent, str] | None:
+    for message in reversed(messages):
+        if message.role != "user":
+            continue
+
+        intent = _classify_chat_intent(message.content)
+        if intent != "question":
+            return intent, message.content
+
+    return None
 
 
 def _build_patch_set_summary(chat_intent: ChatIntent, patch_sets: list[PatchSetDto]) -> str | None:

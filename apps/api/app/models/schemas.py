@@ -212,6 +212,7 @@ class CreateChatMessageInput(BaseModel):
 class ChatResponseDto(BaseModel):
     thread: ChatThreadDto
     chatIntent: Literal["question", "edit", "review", "tailor"]
+    intentSource: Literal["message", "history"]
     generatedPatchSetSummary: str | None = None
     assistantMessageId: str
     patchSets: list[PatchSetDto] = []

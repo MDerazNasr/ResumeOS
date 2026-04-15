@@ -31,6 +31,7 @@ class TailorSuggestionPrompt:
 class ChatConversationPrompt:
     user_message: str
     detected_intent: str
+    intent_source: str
     recent_messages: list[tuple[str, str]]
     editable_block_count: int
     style_examples: list[str]
@@ -114,16 +115,17 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
             if prompt.recent_messages
             else ""
         )
+        follow_up_hint = " I treated this as a follow-up to the recent conversation." if prompt.intent_source == "history" else ""
         if prompt.patch_set_summary:
             return (
                 f"I read that as a {prompt.detected_intent} request. "
-                f"{prompt.patch_set_summary}{history_hint} Review those changes inline in the editor before applying them."
+                f"{prompt.patch_set_summary}{history_hint}{follow_up_hint} Review those changes inline in the editor before applying them."
             )
 
         return (
             f"I read that as a {prompt.detected_intent} request. "
             f"The current resume has {prompt.editable_block_count} editable blocks. "
-            f"Closest style memory example: \"{style_hint}\".{history_hint} "
+            f"Closest style memory example: \"{style_hint}\".{history_hint}{follow_up_hint} "
             "Ask for a review, an edit, or a tailored pass when you want concrete patch sets."
         )
 
@@ -310,6 +312,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                             {
                                 "user_message": prompt.user_message,
                                 "detected_intent": prompt.detected_intent,
+                                "intent_source": prompt.intent_source,
                                 "recent_messages": prompt.recent_messages,
                                 "editable_block_count": prompt.editable_block_count,
                                 "style_examples": prompt.style_examples,

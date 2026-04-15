@@ -17,8 +17,11 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastIntent, setLastIntent] = useState<"question" | "edit" | "review" | "tailor" | null>(null);
+  const [lastIntentSource, setLastIntentSource] = useState<"message" | "history" | null>(null);
   const [lastPatchSummary, setLastPatchSummary] = useState<string | null>(null);
-  const [assistantTurnMeta, setAssistantTurnMeta] = useState<Record<string, { intent: "question" | "edit" | "review" | "tailor"; summary: string | null }>>({});
+  const [assistantTurnMeta, setAssistantTurnMeta] = useState<
+    Record<string, { intent: "question" | "edit" | "review" | "tailor"; intentSource: "message" | "history"; summary: string | null }>
+  >({});
 
   async function handleSend() {
     const content = input.trim();
@@ -34,11 +37,13 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
       setMessages(response.thread.messages);
       setInput("");
       setLastIntent(response.chatIntent);
+      setLastIntentSource(response.intentSource);
       setLastPatchSummary(response.generatedPatchSetSummary);
       setAssistantTurnMeta((current) => ({
         ...current,
         [response.assistantMessageId]: {
           intent: response.chatIntent,
+          intentSource: response.intentSource,
           summary: response.generatedPatchSetSummary,
         },
       }));
@@ -63,7 +68,10 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
       <div style={messagesStyle}>
         {lastIntent ? (
           <div style={intentBannerStyle}>
-            <span style={intentBadgeStyle(lastIntent)}>{lastIntent}</span>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={intentBadgeStyle(lastIntent)}>{lastIntent}</span>
+              {lastIntentSource === "history" ? <span style={followUpBadgeStyle}>follow-up</span> : null}
+            </div>
             <span style={{ color: "var(--muted)", fontSize: 12 }}>
               {lastPatchSummary ?? "This reply was informational only and did not load patch sets."}
             </span>
@@ -79,7 +87,10 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
               <strong style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>{message.role}</strong>
               {message.role === "assistant" && assistantTurnMeta[message.id] ? (
                 <div style={messageMetaStyle}>
-                  <span style={intentBadgeStyle(assistantTurnMeta[message.id].intent)}>{assistantTurnMeta[message.id].intent}</span>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={intentBadgeStyle(assistantTurnMeta[message.id].intent)}>{assistantTurnMeta[message.id].intent}</span>
+                    {assistantTurnMeta[message.id].intentSource === "history" ? <span style={followUpBadgeStyle}>follow-up</span> : null}
+                  </div>
                   <span style={{ color: "var(--muted)", fontSize: 12 }}>
                     {assistantTurnMeta[message.id].summary ?? "Informational reply only."}
                   </span>
@@ -176,6 +187,18 @@ const messageMetaStyle: CSSProperties = {
   padding: "8px 10px",
   borderRadius: 10,
   background: "var(--surface-elevated)",
+};
+
+const followUpBadgeStyle: CSSProperties = {
+  width: "fit-content",
+  padding: "4px 8px",
+  borderRadius: 999,
+  background: "var(--surface-elevated)",
+  color: "var(--muted)",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
 };
 
 const inputStyle: CSSProperties = {

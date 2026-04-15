@@ -200,6 +200,7 @@ export type CreateChatMessageInput = {
 export type ChatResponseDto = {
   thread: ChatThreadDto;
   chatIntent: "question" | "edit" | "review" | "tailor";
+  intentSource: "message" | "history";
   generatedPatchSetSummary: string | null;
   assistantMessageId: string;
   patchSets: PatchSetDto[];
