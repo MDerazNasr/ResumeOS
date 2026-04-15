@@ -1,4 +1,5 @@
 import unittest
+import json
 from unittest.mock import patch
 
 from tests.helpers import create_authenticated_client
@@ -119,6 +120,22 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(payload["chatIntent"], "tailor")
         self.assertEqual(payload["intentSource"], "history")
         self.assertGreaterEqual(len(payload["patchSets"]), 1)
+
+    def test_chat_stream_endpoint_returns_start_delta_and_complete_events(self) -> None:
+        with self.client.stream(
+            "POST",
+            f"/resumes/{self.resume_id}/chat/messages/stream",
+            json={"content": "Review my resume and suggest stronger wording."},
+        ) as response:
+            self.assertEqual(response.status_code, 200)
+            lines = [line for line in response.iter_lines() if line]
+
+        events = [json.loads(line) for line in lines]
+        self.assertEqual(events[0]["type"], "start")
+        self.assertEqual(events[0]["chatIntent"], "review")
+        self.assertTrue(any(event["type"] == "delta" for event in events))
+        self.assertEqual(events[-1]["type"], "complete")
+        self.assertEqual(events[-1]["response"]["chatIntent"], "review")
 
 
 if __name__ == "__main__":

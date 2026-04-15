@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import { createChatMessage } from "@/lib/api/client";
+import { createChatMessageStream } from "@/lib/api/client";
 import type { ChatMessageDto, PatchSetDto } from "@/lib/api/types";
 
 type ChatSidebarProps = {
@@ -29,28 +29,74 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
       return;
     }
 
+    const optimisticUserMessage: ChatMessageDto = {
+      id: `optimistic-user-${Date.now()}`,
+      role: "user",
+      content,
+      createdAt: new Date().toISOString(),
+    };
+    const optimisticAssistantMessage: ChatMessageDto = {
+      id: `optimistic-assistant-${Date.now()}`,
+      role: "assistant",
+      content: "",
+      createdAt: new Date().toISOString(),
+    };
+
     setIsSending(true);
     setError(null);
+    setMessages((current) => [...current, optimisticUserMessage, optimisticAssistantMessage]);
+    setInput("");
 
     try {
-      const response = await createChatMessage(resumeId, { content });
-      setMessages(response.thread.messages);
-      setInput("");
-      setLastIntent(response.chatIntent);
-      setLastIntentSource(response.intentSource);
-      setLastPatchSummary(response.generatedPatchSetSummary);
-      setAssistantTurnMeta((current) => ({
-        ...current,
-        [response.assistantMessageId]: {
-          intent: response.chatIntent,
-          intentSource: response.intentSource,
-          summary: response.generatedPatchSetSummary,
+      await createChatMessageStream(resumeId, { content }, {
+        onStart: ({ chatIntent, intentSource }) => {
+          setLastIntent(chatIntent);
+          setLastIntentSource(intentSource);
+          setLastPatchSummary(null);
+          setAssistantTurnMeta((current) => ({
+            ...current,
+            [optimisticAssistantMessage.id]: {
+              intent: chatIntent,
+              intentSource,
+              summary: null,
+            },
+          }));
         },
-      }));
-      if (response.patchSets.length > 0) {
-        onPatchSetsGenerated(response.patchSets);
-      }
+        onDelta: (delta) => {
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === optimisticAssistantMessage.id
+                ? { ...message, content: `${message.content}${delta}` }
+                : message,
+            ),
+          );
+        },
+        onComplete: (response) => {
+          setMessages(response.thread.messages);
+          setLastIntent(response.chatIntent);
+          setLastIntentSource(response.intentSource);
+          setLastPatchSummary(response.generatedPatchSetSummary);
+          setAssistantTurnMeta((current) => {
+            const next = { ...current };
+            delete next[optimisticAssistantMessage.id];
+            next[response.assistantMessageId] = {
+              intent: response.chatIntent,
+              intentSource: response.intentSource,
+              summary: response.generatedPatchSetSummary,
+            };
+            return next;
+          });
+          if (response.patchSets.length > 0) {
+            onPatchSetsGenerated(response.patchSets);
+          }
+        },
+      });
     } catch (sendError) {
+      setMessages((current) =>
+        current.filter(
+          (message) => message.id !== optimisticUserMessage.id && message.id !== optimisticAssistantMessage.id,
+        ),
+      );
       setError(sendError instanceof Error ? sendError.message : "Failed to send chat message.");
     } finally {
       setIsSending(false);

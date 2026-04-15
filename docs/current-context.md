@@ -56,6 +56,7 @@ That means:
 - keep chat replies model/provider-backed
 - make chat-to-patch-set linkage clearer per assistant turn
 - format chat responses distinctly for question vs edit/review/tailor
+- render assistant replies incrementally instead of waiting for the full response
 - preserve document mutation constraints through validated patch application
 
 ## Definition of Success for the Current Slice
@@ -68,6 +69,7 @@ That means:
 - chat can produce patch sets that appear in the existing review workflow
 - each assistant turn can report whether it produced patch sets
 - chat cards make it clearer whether a reply is a context answer or a patch-generating response
+- chat replies appear incrementally in the sidebar while the request is in flight
 
 ## Known Risks
 
@@ -87,4 +89,5 @@ That next slice should include:
 
 - richer response formatting for question vs edit/review/tailor
 - better replay of prior patch-set outcomes inside the thread
-- optional streaming once the current synchronous chat path is stable
+- stronger replay of prior patch-set outcomes inside the thread
+- provider-level token streaming after the transport path is proven

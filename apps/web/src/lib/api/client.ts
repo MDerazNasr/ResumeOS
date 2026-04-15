@@ -222,3 +222,60 @@ export function createChatMessage(resumeId: string, input: CreateChatMessageInpu
     body: JSON.stringify(input)
   });
 }
+
+export async function createChatMessageStream(
+  resumeId: string,
+  input: CreateChatMessageInput,
+  handlers: {
+    onStart?: (meta: { chatIntent: "question" | "edit" | "review" | "tailor"; intentSource: "message" | "history" }) => void;
+    onDelta?: (delta: string) => void;
+    onComplete: (response: ChatResponseDto) => void;
+  }
+): Promise<void> {
+  const headers = await buildRequestHeaders();
+  const response = await fetch(`${API_BASE_URL}/resumes/${resumeId}/chat/messages/stream`, {
+    method: "POST",
+    credentials: "include",
+    headers,
+    body: JSON.stringify(input),
+    cache: "no-store"
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error(`API request failed: ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.trim()) {
+        continue;
+      }
+
+      const event = JSON.parse(line) as
+        | { type: "start"; chatIntent: "question" | "edit" | "review" | "tailor"; intentSource: "message" | "history" }
+        | { type: "delta"; delta: string }
+        | { type: "complete"; response: ChatResponseDto };
+
+      if (event.type === "start") {
+        handlers.onStart?.({ chatIntent: event.chatIntent, intentSource: event.intentSource });
+      } else if (event.type === "delta") {
+        handlers.onDelta?.(event.delta);
+      } else if (event.type === "complete") {
+        handlers.onComplete(event.response);
+      }
+    }
+  }
+}

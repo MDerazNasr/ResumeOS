@@ -1,6 +1,9 @@
+import asyncio
+import json
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from collections.abc import AsyncIterator
 
 from app.db.database import get_connection
 from app.models.schemas import ChatMessageDto, ChatResponseDto, ChatThreadDto, CreateChatMessageInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchSetDto
@@ -90,6 +93,34 @@ def get_chat_thread_for_user(user_id: str, resume_id: str) -> ChatThreadDto:
 
 
 def create_chat_message_for_user(user_id: str, resume_id: str, input_data: CreateChatMessageInput) -> ChatResponseDto:
+    return _create_chat_response_for_user(user_id, resume_id, input_data)
+
+
+async def stream_chat_message_for_user(user_id: str, resume_id: str, input_data: CreateChatMessageInput) -> AsyncIterator[str]:
+    response = _create_chat_response_for_user(user_id, resume_id, input_data)
+    assistant_message = response.thread.messages[-1].content if response.thread.messages else ""
+
+    yield _encode_stream_event(
+        "start",
+        {
+            "chatIntent": response.chatIntent,
+            "intentSource": response.intentSource,
+        },
+    )
+
+    for chunk in _chunk_assistant_reply(assistant_message):
+        yield _encode_stream_event("delta", {"delta": chunk})
+        await asyncio.sleep(0.01)
+
+    yield _encode_stream_event(
+        "complete",
+        {
+            "response": response.model_dump(),
+        },
+    )
+
+
+def _create_chat_response_for_user(user_id: str, resume_id: str, input_data: CreateChatMessageInput) -> ChatResponseDto:
     ensure_chat_schema()
     thread = get_chat_thread_for_user(user_id, resume_id)
     user_content = input_data.content.strip()
@@ -303,6 +334,31 @@ def _recent_messages_for_thread(messages: list[ChatMessageDto], limit: int = 6) 
 
     recent = messages[-limit:]
     return [(message.role, message.content) for message in recent]
+
+
+def _chunk_assistant_reply(content: str, chunk_size: int = 48) -> list[str]:
+    if not content:
+        return []
+
+    words = content.split()
+    chunks: list[str] = []
+    current = ""
+    for word in words:
+        candidate = word if not current else f"{current} {word}"
+        if len(candidate) > chunk_size and current:
+            chunks.append(f"{current} ")
+            current = word
+        else:
+            current = candidate
+
+    if current:
+        chunks.append(current)
+
+    return chunks
+
+
+def _encode_stream_event(event_type: str, payload: dict) -> str:
+    return json.dumps({"type": event_type, **payload}) + "\n"
 
 
 def _now_iso() -> str:

@@ -109,6 +109,29 @@ Verified:
 - backend test suite passes after mode-specific response formatting and tailor follow-up handling
 - frontend production build still passes after the chat card presentation updates
 
+### 2026-04-15: Section 11 Chat Streaming
+
+Added the first incremental chat rendering path so the assistant no longer appears only after the whole response is ready.
+
+Added:
+
+- a streaming chat endpoint that emits `start`, `delta`, and `complete` events
+- client-side NDJSON parsing for streamed chat events
+- optimistic user/assistant message insertion in the chat sidebar
+- incremental assistant text rendering while the request is in flight
+- backend regression coverage for the stream endpoint
+
+Why this shape:
+
+- the chat UI felt transactional because the assistant only appeared after the full response was computed
+- transport-level streaming improves the product feel immediately without forcing a risky provider-level rewrite
+- the final `complete` event still reuses the validated chat response shape, so the patch workflow remains consistent
+
+Verified:
+
+- backend test suite passes after adding the stream endpoint and event test
+- frontend production build still passes after the streaming client and optimistic sidebar updates
+
 ### 2026-04-12: Section 10 Inline Editor Review
 
 Moved the patch-review workflow into Monaco so the AI editing loop behaves more like an IDE.
