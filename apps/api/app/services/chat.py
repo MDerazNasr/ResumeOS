@@ -1,4 +1,3 @@
-import asyncio
 import json
 import uuid
 from dataclasses import dataclass
@@ -97,20 +96,35 @@ def create_chat_message_for_user(user_id: str, resume_id: str, input_data: Creat
 
 
 async def stream_chat_message_for_user(user_id: str, resume_id: str, input_data: CreateChatMessageInput) -> AsyncIterator[str]:
-    response = _create_chat_response_for_user(user_id, resume_id, input_data)
-    assistant_message = response.thread.messages[-1].content if response.thread.messages else ""
+    ensure_chat_schema()
+    thread = get_chat_thread_for_user(user_id, resume_id)
+    user_content = input_data.content.strip()
+    resolved_intent = _resolve_chat_intent(user_content, thread.messages)
+    patch_sets = _build_chat_patch_sets(user_id, resume_id, user_content, resolved_intent)
+    prompt = _build_chat_prompt(user_id, resume_id, user_content, resolved_intent, patch_sets, thread.messages)
+    provider = get_edit_suggestion_provider()
+    assistant_chunks: list[str] = []
 
     yield _encode_stream_event(
         "start",
         {
-            "chatIntent": response.chatIntent,
-            "intentSource": response.intentSource,
+            "chatIntent": resolved_intent.intent,
+            "intentSource": resolved_intent.source,
         },
     )
 
-    for chunk in _chunk_assistant_reply(assistant_message):
+    for chunk in provider.stream_chat_reply(prompt):
+        assistant_chunks.append(chunk)
         yield _encode_stream_event("delta", {"delta": chunk})
-        await asyncio.sleep(0.01)
+
+    response = _persist_chat_response(
+        resume_id=resume_id,
+        thread_id=thread.id,
+        user_content=user_content,
+        assistant_content="".join(assistant_chunks).strip(),
+        resolved_intent=resolved_intent,
+        patch_sets=patch_sets,
+    )
 
     yield _encode_stream_event(
         "complete",
@@ -126,9 +140,29 @@ def _create_chat_response_for_user(user_id: str, resume_id: str, input_data: Cre
     user_content = input_data.content.strip()
     resolved_intent = _resolve_chat_intent(user_content, thread.messages)
     patch_sets = _build_chat_patch_sets(user_id, resume_id, user_content, resolved_intent)
-    recent_messages = _recent_messages_for_thread(thread.messages)
-    assistant_content = _build_assistant_reply(user_id, resume_id, user_content, resolved_intent, patch_sets, recent_messages)
+    prompt = _build_chat_prompt(user_id, resume_id, user_content, resolved_intent, patch_sets, thread.messages)
+    assistant_content = get_edit_suggestion_provider().generate_chat_reply(prompt)
 
+    return _persist_chat_response(
+        resume_id=resume_id,
+        thread_id=thread.id,
+        user_content=user_content,
+        assistant_content=assistant_content,
+        resolved_intent=resolved_intent,
+        patch_sets=patch_sets,
+    )
+
+
+def _persist_chat_response(
+    *,
+    resume_id: str,
+    thread_id: str,
+    user_content: str,
+    assistant_content: str,
+    resolved_intent: ResolvedChatIntent,
+    patch_sets: list[PatchSetDto],
+) -> ChatResponseDto:
+    assistant_content = assistant_content.strip() or "I wasn't able to generate a response for that request."
     with get_connection() as connection:
         now = _now_iso()
         user_message_id = f"msg_{uuid.uuid4().hex[:12]}"
@@ -138,28 +172,29 @@ def _create_chat_response_for_user(user_id: str, resume_id: str, input_data: Cre
             INSERT INTO chat_messages (id, thread_id, role, content, created_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (user_message_id, thread.id, "user", user_content, now),
+            (user_message_id, thread_id, "user", user_content, now),
         )
         connection.execute(
             """
             INSERT INTO chat_messages (id, thread_id, role, content, created_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (assistant_message_id, thread.id, "assistant", assistant_content, now),
+            (assistant_message_id, thread_id, "assistant", assistant_content, now),
         )
         connection.execute(
             "UPDATE chat_threads SET updated_at = ? WHERE id = ?",
-            (now, thread.id),
+            (now, thread_id),
         )
         connection.commit()
 
-        updated_messages = _list_thread_messages(connection, thread.id)
+        updated_messages = _list_thread_messages(connection, thread_id)
 
     return ChatResponseDto(
-        thread=ChatThreadDto(id=thread.id, resumeId=resume_id, messages=updated_messages),
+        thread=ChatThreadDto(id=thread_id, resumeId=resume_id, messages=updated_messages),
         chatIntent=resolved_intent.intent,
         intentSource=resolved_intent.source,
         generatedPatchSetSummary=_build_patch_set_summary(resolved_intent.intent, patch_sets),
+        recentFeedbackSummary=_get_recent_feedback_summary_for_resume(resume_id),
         assistantMessageId=assistant_message_id,
         patchSets=patch_sets,
     )
@@ -195,14 +230,14 @@ def _build_chat_patch_sets(user_id: str, resume_id: str, content: str, resolved_
     return []
 
 
-def _build_assistant_reply(
+def _build_chat_prompt(
     user_id: str,
     resume_id: str,
     content: str,
     resolved_intent: ResolvedChatIntent,
     patch_sets: list[PatchSetDto],
-    recent_messages: list[tuple[str, str]],
-) -> str:
+    thread_messages: list[ChatMessageDto],
+) -> ChatConversationPrompt:
     document_model = get_document_model_for_user(user_id, resume_id)
     style_examples = get_relevant_style_examples_for_user(
         user_id,
@@ -211,17 +246,15 @@ def _build_assistant_reply(
         target_text=content,
         preferred_kind="bullet",
     )
-    provider = get_edit_suggestion_provider()
-    return provider.generate_chat_reply(
-        ChatConversationPrompt(
-            user_message=content,
-            detected_intent=resolved_intent.intent,
-            intent_source=resolved_intent.source,
-            recent_messages=recent_messages,
-            editable_block_count=len(document_model.editableBlocks),
-            style_examples=style_examples,
-            patch_set_summary=_build_patch_set_summary(resolved_intent.intent, patch_sets),
-        )
+    return ChatConversationPrompt(
+        user_message=content,
+        detected_intent=resolved_intent.intent,
+        intent_source=resolved_intent.source,
+        recent_messages=_recent_messages_for_thread(thread_messages),
+        editable_block_count=len(document_model.editableBlocks),
+        style_examples=style_examples,
+        patch_set_summary=_build_patch_set_summary(resolved_intent.intent, patch_sets),
+        recent_feedback_summary=_get_recent_feedback_summary_for_resume(resume_id),
     )
 
 
@@ -336,29 +369,29 @@ def _recent_messages_for_thread(messages: list[ChatMessageDto], limit: int = 6) 
     return [(message.role, message.content) for message in recent]
 
 
-def _chunk_assistant_reply(content: str, chunk_size: int = 48) -> list[str]:
-    if not content:
-        return []
-
-    words = content.split()
-    chunks: list[str] = []
-    current = ""
-    for word in words:
-        candidate = word if not current else f"{current} {word}"
-        if len(candidate) > chunk_size and current:
-            chunks.append(f"{current} ")
-            current = word
-        else:
-            current = candidate
-
-    if current:
-        chunks.append(current)
-
-    return chunks
-
-
 def _encode_stream_event(event_type: str, payload: dict) -> str:
     return json.dumps({"type": event_type, **payload}) + "\n"
+
+
+def _get_recent_feedback_summary_for_resume(resume_id: str) -> str | None:
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT action, suggestion_mode, COUNT(*) AS count
+            FROM feedback_events
+            WHERE resume_id = ?
+            GROUP BY action, suggestion_mode
+            ORDER BY MAX(created_at) DESC
+            LIMIT 4
+            """,
+            (resume_id,),
+        ).fetchall()
+
+    if not rows:
+        return None
+
+    parts = [f"{row['count']} {row['action']} {row['suggestion_mode']}" for row in rows]
+    return ", ".join(parts)
 
 
 def _now_iso() -> str:

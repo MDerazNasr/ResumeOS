@@ -202,6 +202,7 @@ export type ChatResponseDto = {
   chatIntent: "question" | "edit" | "review" | "tailor";
   intentSource: "message" | "history";
   generatedPatchSetSummary: string | null;
+  recentFeedbackSummary: string | null;
   assistantMessageId: string;
   patchSets: PatchSetDto[];
 };

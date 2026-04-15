@@ -214,5 +214,6 @@ class ChatResponseDto(BaseModel):
     chatIntent: Literal["question", "edit", "review", "tailor"]
     intentSource: Literal["message", "history"]
     generatedPatchSetSummary: str | None = None
+    recentFeedbackSummary: str | None = None
     assistantMessageId: str
     patchSets: list[PatchSetDto] = []

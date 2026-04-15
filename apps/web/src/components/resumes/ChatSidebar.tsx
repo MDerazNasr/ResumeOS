@@ -19,8 +19,9 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
   const [lastIntent, setLastIntent] = useState<"question" | "edit" | "review" | "tailor" | null>(null);
   const [lastIntentSource, setLastIntentSource] = useState<"message" | "history" | null>(null);
   const [lastPatchSummary, setLastPatchSummary] = useState<string | null>(null);
+  const [lastFeedbackSummary, setLastFeedbackSummary] = useState<string | null>(null);
   const [assistantTurnMeta, setAssistantTurnMeta] = useState<
-    Record<string, { intent: "question" | "edit" | "review" | "tailor"; intentSource: "message" | "history"; summary: string | null }>
+    Record<string, { intent: "question" | "edit" | "review" | "tailor"; intentSource: "message" | "history"; summary: string | null; feedbackSummary: string | null }>
   >({});
 
   async function handleSend() {
@@ -53,12 +54,14 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
           setLastIntent(chatIntent);
           setLastIntentSource(intentSource);
           setLastPatchSummary(null);
+          setLastFeedbackSummary(null);
           setAssistantTurnMeta((current) => ({
             ...current,
             [optimisticAssistantMessage.id]: {
               intent: chatIntent,
               intentSource,
               summary: null,
+              feedbackSummary: null,
             },
           }));
         },
@@ -76,6 +79,7 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
           setLastIntent(response.chatIntent);
           setLastIntentSource(response.intentSource);
           setLastPatchSummary(response.generatedPatchSetSummary);
+          setLastFeedbackSummary(response.recentFeedbackSummary);
           setAssistantTurnMeta((current) => {
             const next = { ...current };
             delete next[optimisticAssistantMessage.id];
@@ -83,6 +87,7 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
               intent: response.chatIntent,
               intentSource: response.intentSource,
               summary: response.generatedPatchSetSummary,
+              feedbackSummary: response.recentFeedbackSummary,
             };
             return next;
           });
@@ -121,6 +126,7 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
             <span style={{ color: "var(--muted)", fontSize: 12 }}>
               {lastPatchSummary ?? "This reply was informational only and did not load patch sets."}
             </span>
+            {lastFeedbackSummary ? <span style={{ color: "var(--muted)", fontSize: 12 }}>Recent outcomes: {lastFeedbackSummary}</span> : null}
           </div>
         ) : null}
         {messages.length === 0 ? (
@@ -141,6 +147,11 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
                   <span style={{ color: "var(--muted)", fontSize: 12 }}>
                     {assistantTurnMeta[message.id].summary ?? "Informational reply only."}
                   </span>
+                  {assistantTurnMeta[message.id].feedbackSummary ? (
+                    <span style={{ color: "var(--muted)", fontSize: 12 }}>
+                      Recent outcomes: {assistantTurnMeta[message.id].feedbackSummary}
+                    </span>
+                  ) : null}
                 </div>
               ) : null}
               <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{message.content}</p>

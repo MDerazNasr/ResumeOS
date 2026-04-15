@@ -34,6 +34,7 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(payload["chatIntent"], "review")
         self.assertEqual(payload["intentSource"], "message")
         self.assertIsNotNone(payload["generatedPatchSetSummary"])
+        self.assertIsNone(payload["recentFeedbackSummary"])
         self.assertGreaterEqual(len(payload["patchSets"]), 1)
 
     def test_chat_tailor_message_can_return_patch_sets(self) -> None:
@@ -121,6 +122,35 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(payload["intentSource"], "history")
         self.assertGreaterEqual(len(payload["patchSets"]), 1)
 
+    def test_chat_response_includes_recent_feedback_summary(self) -> None:
+        review_response = self.client.post(
+            f"/resumes/{self.resume_id}/chat/messages",
+            json={"content": "Review my resume and suggest stronger wording."},
+        ).json()
+
+        patch_set = review_response["patchSets"][0]
+        hunk = patch_set["items"][0]
+        feedback_response = self.client.post(
+            f"/resumes/{self.resume_id}/feedback",
+            json={
+                "suggestionMode": patch_set["mode"],
+                "action": "apply",
+                "suggestionSetId": patch_set["id"],
+                "proposalId": hunk["id"],
+                "targetBlockId": hunk["targetBlockId"],
+            },
+        )
+        self.assertEqual(feedback_response.status_code, 204)
+
+        response = self.client.post(
+            f"/resumes/{self.resume_id}/chat/messages",
+            json={"content": "What changed recently?"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("apply", payload["recentFeedbackSummary"])
+
     def test_chat_stream_endpoint_returns_start_delta_and_complete_events(self) -> None:
         with self.client.stream(
             "POST",
@@ -136,6 +166,28 @@ class ChatTests(unittest.TestCase):
         self.assertTrue(any(event["type"] == "delta" for event in events))
         self.assertEqual(events[-1]["type"], "complete")
         self.assertEqual(events[-1]["response"]["chatIntent"], "review")
+
+    def test_chat_stream_endpoint_uses_provider_stream(self) -> None:
+        class StubProvider:
+            def generate_chat_reply(self, prompt):
+                raise AssertionError("stream endpoint should not call generate_chat_reply")
+
+            def stream_chat_reply(self, prompt):
+                yield "Stub "
+                yield "stream."
+
+        with patch("app.services.chat.get_edit_suggestion_provider", return_value=StubProvider()):
+            with self.client.stream(
+                "POST",
+                f"/resumes/{self.resume_id}/chat/messages/stream",
+                json={"content": "What do you notice about this resume?"},
+            ) as response:
+                self.assertEqual(response.status_code, 200)
+                lines = [line for line in response.iter_lines() if line]
+
+        events = [json.loads(line) for line in lines]
+        self.assertEqual([event["type"] for event in events], ["start", "delta", "delta", "complete"])
+        self.assertEqual(events[-1]["response"]["thread"]["messages"][-1]["content"], "Stub stream.")
 
 
 if __name__ == "__main__":

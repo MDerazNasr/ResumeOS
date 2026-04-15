@@ -132,6 +132,30 @@ Verified:
 - backend test suite passes after adding the stream endpoint and event test
 - frontend production build still passes after the streaming client and optimistic sidebar updates
 
+### 2026-04-15: Section 11 Provider Streaming and Feedback Replay
+
+Replaced the fake post-hoc streaming path with provider-owned streaming and started feeding recent patch outcomes back into chat.
+
+Added:
+
+- provider-level `stream_chat_reply(...)` support with real OpenAI stream handling and mock fallback chunking
+- chat-prompt construction shared by both sync and streaming response paths
+- persistence after stream completion so stored chat messages still match the final assistant reply
+- recent feedback summary lookup from `feedback_events`
+- chat response metadata and UI display for recent apply/reject outcomes
+- regression coverage proving the stream endpoint uses the provider streaming path directly
+
+Why this shape:
+
+- transport-level streaming improved the feel, but it still streamed a fully generated reply
+- true provider-owned streaming is the correct boundary if the chat experience is going to feel genuinely live
+- feeding accepted/rejected outcomes back into the chat closes the loop between conversation and editing behavior
+
+Verified:
+
+- backend test suite passes after provider streaming and feedback replay were added
+- frontend production build still passes after the chat metadata/UI updates
+
 ### 2026-04-12: Section 10 Inline Editor Review
 
 Moved the patch-review workflow into Monaco so the AI editing loop behaves more like an IDE.

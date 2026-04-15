@@ -1,5 +1,6 @@
 import json
 import os
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 import httpx
@@ -36,6 +37,7 @@ class ChatConversationPrompt:
     editable_block_count: int
     style_examples: list[str]
     patch_set_summary: str | None
+    recent_feedback_summary: str | None
 
 
 class EditSuggestionProvider:
@@ -50,6 +52,10 @@ class EditSuggestionProvider:
 
     def generate_chat_reply(self, prompt: ChatConversationPrompt) -> str:
         raise NotImplementedError
+
+    def stream_chat_reply(self, prompt: ChatConversationPrompt) -> Iterator[str]:
+        for chunk in _chunk_text(self.generate_chat_reply(prompt)):
+            yield chunk
 
 
 class MockEditSuggestionProvider(EditSuggestionProvider):
@@ -116,28 +122,29 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
             else ""
         )
         follow_up_hint = " I treated this as a follow-up to the recent conversation." if prompt.intent_source == "history" else ""
+        feedback_hint = f" Recent patch decisions: {prompt.recent_feedback_summary}." if prompt.recent_feedback_summary else ""
         if prompt.detected_intent == "question":
             return (
                 f"I read that as a resume question. The current draft has {prompt.editable_block_count} editable blocks. "
-                f"Closest style memory example: \"{style_hint}\".{history_hint}{follow_up_hint} "
+                f"Closest style memory example: \"{style_hint}\".{history_hint}{follow_up_hint}{feedback_hint} "
                 "Ask for a review, an edit, or a tailored pass when you want concrete patch sets."
             )
 
         if prompt.detected_intent == "review":
             return (
                 f"I generated a review pass over the current draft. {prompt.patch_set_summary or 'No valid review patch sets were generated.'}"
-                f"{history_hint}{follow_up_hint} Review the suggested wording changes inline before applying them."
+                f"{history_hint}{follow_up_hint}{feedback_hint} Review the suggested wording changes inline before applying them."
             )
 
         if prompt.detected_intent == "tailor":
             return (
                 f"I treated this as a tailoring request against the target role. {prompt.patch_set_summary or 'No valid tailoring patch sets were generated.'}"
-                f"{history_hint}{follow_up_hint} Review the tailored changes inline and keep only the ones that match the role."
+                f"{history_hint}{follow_up_hint}{feedback_hint} Review the tailored changes inline and keep only the ones that match the role."
             )
 
         return (
             f"I generated targeted edit suggestions for the current draft. {prompt.patch_set_summary or 'No valid edit patch sets were generated.'}"
-            f"{history_hint}{follow_up_hint} Review the edits inline before applying them."
+            f"{history_hint}{follow_up_hint}{feedback_hint} Review the edits inline before applying them."
         )
 
 
@@ -329,6 +336,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                 "editable_block_count": prompt.editable_block_count,
                                 "style_examples": prompt.style_examples,
                                 "patch_set_summary": prompt.patch_set_summary,
+                                "recent_feedback_summary": prompt.recent_feedback_summary,
                             }
                         ),
                     },
@@ -339,6 +347,63 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
         response.raise_for_status()
         content = response.json()["choices"][0]["message"]["content"]
         return content.strip()
+
+    def stream_chat_reply(self, prompt: ChatConversationPrompt) -> Iterator[str]:
+        with httpx.stream(
+            "POST",
+            f"{self.base_url}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self.model,
+                "temperature": 0.4,
+                "stream": True,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are the chat layer for an AI-assisted resume editor. "
+                            "Respond concisely and format the reply to match the request type. "
+                            "For question intent, answer the question using the provided resume context. "
+                            "For review/edit/tailor intents, briefly explain what the generated patch sets cover and remind the user to review them inline. "
+                            "When intent_source is history, acknowledge that the message was treated as a follow-up."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": json.dumps(
+                            {
+                                "user_message": prompt.user_message,
+                                "detected_intent": prompt.detected_intent,
+                                "intent_source": prompt.intent_source,
+                                "recent_messages": prompt.recent_messages,
+                                "editable_block_count": prompt.editable_block_count,
+                                "style_examples": prompt.style_examples,
+                                "patch_set_summary": prompt.patch_set_summary,
+                                "recent_feedback_summary": prompt.recent_feedback_summary,
+                            }
+                        ),
+                    },
+                ],
+            },
+            timeout=20.0,
+        ) as response:
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if not line or not line.startswith("data: "):
+                    continue
+                payload = line[6:]
+                if payload == "[DONE]":
+                    break
+                try:
+                    data = json.loads(payload)
+                    delta = data["choices"][0]["delta"].get("content")
+                except (KeyError, IndexError, json.JSONDecodeError):
+                    continue
+                if isinstance(delta, str) and delta:
+                    yield delta
 
 
 def _extract_emphasized_terms(job_description: str) -> list[str]:
@@ -367,6 +432,27 @@ def _style_tone_suffix(style_examples: list[str]) -> str:
         return "tight bullet pacing"
 
     return "slightly fuller explanatory pacing"
+
+
+def _chunk_text(content: str, chunk_size: int = 48) -> list[str]:
+    if not content:
+        return []
+
+    words = content.split()
+    chunks: list[str] = []
+    current = ""
+    for word in words:
+        candidate = word if not current else f"{current} {word}"
+        if len(candidate) > chunk_size and current:
+            chunks.append(f"{current} ")
+            current = word
+        else:
+            current = candidate
+
+    if current:
+        chunks.append(current)
+
+    return chunks
 
 
 def get_edit_suggestion_provider() -> EditSuggestionProvider:
