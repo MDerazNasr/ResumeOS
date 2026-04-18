@@ -15,10 +15,11 @@ Add a persistent chat workflow that can discuss the resume and generate patch se
 - chat transport should support incremental assistant rendering
 - chat should replay recent patch outcomes back into the conversation
 - streaming should come from the provider layer, not synthetic post-processing
+- the provider layer should support a real hosted model path beyond the local mock flow
+- deterministic factual question answers should bypass model guessing when the answer can be derived exactly from the current draft
 
 ## Out of Scope
 
-- streaming chat transport
 - full long-term conversation memory
 - PDF-aware review
 - direct document mutation from chat
@@ -37,6 +38,8 @@ Add a persistent chat workflow that can discuss the resume and generate patch se
 - [x] add transport-level chat streaming for incremental assistant rendering
 - [x] replay recent patch outcomes into chat context and UI metadata
 - [x] switch chat streaming from synthetic chunking to provider-owned streaming
+- [x] add Gemini as a supported provider option through the shared chat/suggestion provider path
+- [x] answer deterministic factual count-style questions directly from the current draft
 - [x] verify backend tests pass
 - [x] verify frontend production build passes
 
@@ -53,3 +56,5 @@ Add a persistent chat workflow that can discuss the resume and generate patch se
 - [x] chat stream endpoint emits start, delta, and complete events
 - [x] chat responses include recent feedback summaries when available
 - [x] stream endpoint can use the provider streaming method directly
+- [x] Gemini can be selected through environment configuration without changing chat architecture
+- [x] count-style factual questions answer from the resume source instead of hallucinating

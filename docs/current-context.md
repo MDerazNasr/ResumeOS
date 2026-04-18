@@ -54,10 +54,12 @@ That means:
 
 - improve conversational quality using recent message history and follow-up-aware intent handling
 - keep chat replies model/provider-backed
+- support Gemini as a real provider option for local chat and suggestion generation
 - make chat-to-patch-set linkage clearer per assistant turn
 - format chat responses distinctly for question vs edit/review/tailor
 - render assistant replies incrementally instead of waiting for the full response
 - replay recent patch decisions back into the conversation
+- ground factual question-style chat turns directly in the current resume source when deterministic answers are possible
 - preserve document mutation constraints through validated patch application
 
 ## Definition of Success for the Current Slice
@@ -72,6 +74,8 @@ That means:
 - chat cards make it clearer whether a reply is a context answer or a patch-generating response
 - chat replies appear incrementally in the sidebar while the request is in flight
 - chat can reference recent apply/reject outcomes inside the thread
+- chat can use Gemini through the shared provider abstraction
+- factual count-style chat questions answer from the current LaTeX draft instead of guessing from model context
 
 ## Known Risks
 
@@ -89,8 +93,6 @@ After the chat foundation lands, deepen the chat workflow.
 
 That next slice should include:
 
-- richer response formatting for question vs edit/review/tailor
-- better replay of prior patch-set outcomes inside the thread
-- stronger replay of prior patch-set outcomes inside the thread
-- provider-level token streaming after the transport path is proven
-- evaluate whether to expose accepted/rejected patch history as explicit chat timeline items
+- explicit chat timeline items for accepted/rejected patch outcomes
+- deeper prompt/context tuning against real conversational failures
+- holistic PDF plus LaTeX review once the chat quality is stable enough

@@ -35,6 +35,7 @@ class ChatConversationPrompt:
     intent_source: str
     recent_messages: list[tuple[str, str]]
     editable_block_count: int
+    resume_context_snippets: list[str]
     style_examples: list[str]
     patch_set_summary: str | None
     recent_feedback_summary: str | None
@@ -114,37 +115,35 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
         return result
 
     def generate_chat_reply(self, prompt: ChatConversationPrompt) -> str:
-        style_hint = prompt.style_examples[0] if prompt.style_examples else "No strong prior style example was available."
-        history_hint = (
-            f" I also considered {len(prompt.recent_messages)} recent chat message"
-            f"{'' if len(prompt.recent_messages) == 1 else 's'}."
-            if prompt.recent_messages
-            else ""
-        )
-        follow_up_hint = " I treated this as a follow-up to the recent conversation." if prompt.intent_source == "history" else ""
-        feedback_hint = f" Recent patch decisions: {prompt.recent_feedback_summary}." if prompt.recent_feedback_summary else ""
+        style_hint = prompt.style_examples[0] if prompt.style_examples else None
+        context_hint = prompt.resume_context_snippets[0] if prompt.resume_context_snippets else "No specific resume excerpt was available."
+        follow_up_hint = " I'm treating this as a follow-up to the recent conversation." if prompt.intent_source == "history" else ""
+        feedback_hint = f" Recent accepted/rejected edits: {prompt.recent_feedback_summary}." if prompt.recent_feedback_summary else ""
         if prompt.detected_intent == "question":
             return (
-                f"I read that as a resume question. The current draft has {prompt.editable_block_count} editable blocks. "
-                f"Closest style memory example: \"{style_hint}\".{history_hint}{follow_up_hint}{feedback_hint} "
-                "Ask for a review, an edit, or a tailored pass when you want concrete patch sets."
+                f"Looking at the resume, one relevant part is: \"{context_hint}\".{follow_up_hint}"
+                f"{f' A related style pattern is: \"{style_hint}\".' if style_hint else ''}"
+                f"{feedback_hint} Ask me to review, tailor, or rewrite something if you want concrete edits."
             )
 
         if prompt.detected_intent == "review":
             return (
-                f"I generated a review pass over the current draft. {prompt.patch_set_summary or 'No valid review patch sets were generated.'}"
-                f"{history_hint}{follow_up_hint}{feedback_hint} Review the suggested wording changes inline before applying them."
+                f"I reviewed the resume and focused on places like \"{context_hint}\". "
+                f"{prompt.patch_set_summary or 'I could not produce valid review edits this time.'}"
+                f"{follow_up_hint}{feedback_hint} Read through the edits inline and keep only the ones that improve clarity."
             )
 
         if prompt.detected_intent == "tailor":
             return (
-                f"I treated this as a tailoring request against the target role. {prompt.patch_set_summary or 'No valid tailoring patch sets were generated.'}"
-                f"{history_hint}{follow_up_hint}{feedback_hint} Review the tailored changes inline and keep only the ones that match the role."
+                f"I tailored the resume toward the role and used blocks like \"{context_hint}\" as starting points. "
+                f"{prompt.patch_set_summary or 'I could not produce valid tailoring edits this time.'}"
+                f"{follow_up_hint}{feedback_hint} Review the changes inline and keep the ones that genuinely match the job."
             )
 
         return (
-            f"I generated targeted edit suggestions for the current draft. {prompt.patch_set_summary or 'No valid edit patch sets were generated.'}"
-            f"{history_hint}{follow_up_hint}{feedback_hint} Review the edits inline before applying them."
+            f"I drafted edits around text like \"{context_hint}\". "
+            f"{prompt.patch_set_summary or 'I could not produce valid edit suggestions this time.'}"
+            f"{follow_up_hint}{feedback_hint} Review the edits inline before applying them."
         )
 
 
@@ -318,11 +317,12 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                     {
                         "role": "system",
                         "content": (
-                            "You are the chat layer for an AI-assisted resume editor. "
-                            "Respond concisely and format the reply to match the request type. "
-                            "For question intent, answer the question using the provided resume context. "
-                            "For review/edit/tailor intents, briefly explain what the generated patch sets cover and remind the user to review them inline. "
-                            "When intent_source is history, acknowledge that the message was treated as a follow-up."
+                            "You are an AI resume collaborator inside an editor. "
+                            "Sound natural, direct, and conversational, not like a system status readout. "
+                            "Use the recent conversation and the provided resume snippets to answer like you are actively helping the user improve the resume. "
+                            "Do not say phrases like 'I read that as' or narrate internal routing. "
+                            "If edits were generated, mention them naturally and briefly tell the user what changed. "
+                            "Leave patch counts, badges, and workflow mechanics to the UI unless they are directly helpful."
                         ),
                     },
                     {
@@ -334,6 +334,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                 "intent_source": prompt.intent_source,
                                 "recent_messages": prompt.recent_messages,
                                 "editable_block_count": prompt.editable_block_count,
+                                "resume_context_snippets": prompt.resume_context_snippets,
                                 "style_examples": prompt.style_examples,
                                 "patch_set_summary": prompt.patch_set_summary,
                                 "recent_feedback_summary": prompt.recent_feedback_summary,
@@ -364,11 +365,12 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                     {
                         "role": "system",
                         "content": (
-                            "You are the chat layer for an AI-assisted resume editor. "
-                            "Respond concisely and format the reply to match the request type. "
-                            "For question intent, answer the question using the provided resume context. "
-                            "For review/edit/tailor intents, briefly explain what the generated patch sets cover and remind the user to review them inline. "
-                            "When intent_source is history, acknowledge that the message was treated as a follow-up."
+                            "You are an AI resume collaborator inside an editor. "
+                            "Sound natural, direct, and conversational, not like a system status readout. "
+                            "Use the recent conversation and the provided resume snippets to answer like you are actively helping the user improve the resume. "
+                            "Do not say phrases like 'I read that as' or narrate internal routing. "
+                            "If edits were generated, mention them naturally and briefly tell the user what changed. "
+                            "Leave patch counts, badges, and workflow mechanics to the UI unless they are directly helpful."
                         ),
                     },
                     {
@@ -380,6 +382,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                 "intent_source": prompt.intent_source,
                                 "recent_messages": prompt.recent_messages,
                                 "editable_block_count": prompt.editable_block_count,
+                                "resume_context_snippets": prompt.resume_context_snippets,
                                 "style_examples": prompt.style_examples,
                                 "patch_set_summary": prompt.patch_set_summary,
                                 "recent_feedback_summary": prompt.recent_feedback_summary,
@@ -465,6 +468,16 @@ def get_edit_suggestion_provider() -> EditSuggestionProvider:
 
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY is required when RESUMEOS_LLM_PROVIDER=openai.")
+
+        return OpenAIEditSuggestionProvider(api_key=api_key, model=model, base_url=base_url)
+
+    if provider_name == "gemini":
+        api_key = os.getenv("GEMINI_API_KEY")
+        model = os.getenv("RESUMEOS_GEMINI_MODEL", "gemini-2.5-flash")
+        base_url = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
+
+        if not api_key:
+            raise RuntimeError("GEMINI_API_KEY is required when RESUMEOS_LLM_PROVIDER=gemini.")
 
         return OpenAIEditSuggestionProvider(api_key=api_key, model=model, base_url=base_url)
 

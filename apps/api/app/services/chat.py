@@ -1,4 +1,5 @@
 import json
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -9,6 +10,7 @@ from app.models.schemas import ChatMessageDto, ChatResponseDto, ChatThreadDto, C
 from app.services.document_model import get_document_model_for_user
 from app.services.edit_suggestions import generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
 from app.services.llm_provider import ChatConversationPrompt, get_edit_suggestion_provider
+from app.services.resumes import get_draft_for_user
 from app.services.resumes import get_resume_for_user
 from app.services.style_memory import get_relevant_style_examples_for_user
 
@@ -101,6 +103,7 @@ async def stream_chat_message_for_user(user_id: str, resume_id: str, input_data:
     user_content = input_data.content.strip()
     resolved_intent = _resolve_chat_intent(user_content, thread.messages)
     patch_sets = _build_chat_patch_sets(user_id, resume_id, user_content, resolved_intent)
+    factual_answer = _build_factual_question_answer(user_id, resume_id, user_content, resolved_intent.intent)
     prompt = _build_chat_prompt(user_id, resume_id, user_content, resolved_intent, patch_sets, thread.messages)
     provider = get_edit_suggestion_provider()
     assistant_chunks: list[str] = []
@@ -113,7 +116,9 @@ async def stream_chat_message_for_user(user_id: str, resume_id: str, input_data:
         },
     )
 
-    for chunk in provider.stream_chat_reply(prompt):
+    stream_source = _chunk_text(factual_answer) if factual_answer is not None else provider.stream_chat_reply(prompt)
+
+    for chunk in stream_source:
         assistant_chunks.append(chunk)
         yield _encode_stream_event("delta", {"delta": chunk})
 
@@ -140,8 +145,12 @@ def _create_chat_response_for_user(user_id: str, resume_id: str, input_data: Cre
     user_content = input_data.content.strip()
     resolved_intent = _resolve_chat_intent(user_content, thread.messages)
     patch_sets = _build_chat_patch_sets(user_id, resume_id, user_content, resolved_intent)
-    prompt = _build_chat_prompt(user_id, resume_id, user_content, resolved_intent, patch_sets, thread.messages)
-    assistant_content = get_edit_suggestion_provider().generate_chat_reply(prompt)
+    factual_answer = _build_factual_question_answer(user_id, resume_id, user_content, resolved_intent.intent)
+    if factual_answer is not None:
+        assistant_content = factual_answer
+    else:
+        prompt = _build_chat_prompt(user_id, resume_id, user_content, resolved_intent, patch_sets, thread.messages)
+        assistant_content = get_edit_suggestion_provider().generate_chat_reply(prompt)
 
     return _persist_chat_response(
         resume_id=resume_id,
@@ -252,6 +261,7 @@ def _build_chat_prompt(
         intent_source=resolved_intent.source,
         recent_messages=_recent_messages_for_thread(thread_messages),
         editable_block_count=len(document_model.editableBlocks),
+        resume_context_snippets=_build_resume_context_snippets(document_model.editableBlocks),
         style_examples=style_examples,
         patch_set_summary=_build_patch_set_summary(resolved_intent.intent, patch_sets),
         recent_feedback_summary=_get_recent_feedback_summary_for_resume(resume_id),
@@ -392,6 +402,81 @@ def _get_recent_feedback_summary_for_resume(resume_id: str) -> str | None:
 
     parts = [f"{row['count']} {row['action']} {row['suggestion_mode']}" for row in rows]
     return ", ".join(parts)
+
+
+def _build_factual_question_answer(user_id: str, resume_id: str, content: str, chat_intent: ChatIntent) -> str | None:
+    if chat_intent != "question":
+        return None
+
+    extracted_term = _extract_count_query_term(content)
+    if extracted_term is None:
+        return None
+
+    draft = get_draft_for_user(user_id, resume_id)
+    count = _count_occurrences(draft.sourceTex, extracted_term)
+    normalized_term = extracted_term.strip()
+    quoted_term = normalized_term if normalized_term.startswith("\"") else normalized_term
+    match_word = "time" if count == 1 else "times"
+    return f'"{quoted_term}" appears {count} {match_word} in the current LaTeX resume source.'
+
+
+def _extract_count_query_term(content: str) -> str | None:
+    lowered = content.lower()
+    if not any(marker in lowered for marker in ["how many times", "how often", "count", "mentions"]):
+        return None
+
+    quoted_match = re.search(r'"([^"]+)"|\'([^\']+)\'', content)
+    if quoted_match:
+        return quoted_match.group(1) or quoted_match.group(2)
+
+    patterns = [
+        r"how many times does\s+(.+?)\s+(?:show up|appear|occur|exist|appear in|show up in)",
+        r"how many times is\s+(.+?)\s+(?:used|mentioned|listed)",
+        r"count\s+(.+?)\s+(?:in|on)\s+(?:my|the)\s+resume",
+        r"how many\s+(.+?)\s+mentions",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, lowered)
+        if match:
+            return content[match.start(1):match.end(1)].strip(" ?.")
+
+    return None
+
+
+def _count_occurrences(source_text: str, term: str) -> int:
+    normalized_source = source_text.lower()
+    normalized_term = term.lower().strip()
+    if not normalized_term:
+        return 0
+    return normalized_source.count(normalized_term)
+
+
+def _chunk_text(content: str, chunk_size: int = 48) -> list[str]:
+    if not content:
+        return []
+
+    words = content.split()
+    chunks: list[str] = []
+    current = ""
+    for word in words:
+        candidate = word if not current else f"{current} {word}"
+        if len(candidate) > chunk_size and current:
+            chunks.append(f"{current} ")
+            current = word
+        else:
+            current = candidate
+
+    if current:
+        chunks.append(current)
+
+    return chunks
+
+
+def _build_resume_context_snippets(editable_blocks, limit: int = 4) -> list[str]:
+    snippets: list[str] = []
+    for block in editable_blocks[:limit]:
+        snippets.append(f"{block.label}: {block.text}")
+    return snippets
 
 
 def _now_iso() -> str:

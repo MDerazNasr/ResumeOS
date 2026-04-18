@@ -63,6 +63,20 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(payload["intentSource"], "message")
         self.assertEqual(payload["patchSets"], [])
 
+    def test_count_question_is_answered_from_resume_text(self) -> None:
+        response = self.client.post(
+            f"/resumes/{self.resume_id}/chat/messages",
+            json={"content": "How many times does C++ show up in my resume?"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        assistant_message = payload["thread"]["messages"][-1]["content"]
+        self.assertEqual(payload["chatIntent"], "question")
+        self.assertIn("C++", assistant_message)
+        self.assertIn("appears", assistant_message)
+        self.assertEqual(payload["patchSets"], [])
+
     def test_chat_reply_receives_recent_message_history(self) -> None:
         self.client.post(
             f"/resumes/{self.resume_id}/chat/messages",
@@ -74,6 +88,7 @@ class ChatTests(unittest.TestCase):
         class StubProvider:
             def generate_chat_reply(self, prompt):
                 captured_prompt["recent_messages"] = prompt.recent_messages
+                captured_prompt["resume_context_snippets"] = prompt.resume_context_snippets
                 return "Stubbed follow-up reply."
 
         with patch("app.services.chat.get_edit_suggestion_provider", return_value=StubProvider()):
@@ -85,6 +100,7 @@ class ChatTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertGreaterEqual(len(captured_prompt["recent_messages"]), 2)
         self.assertEqual(captured_prompt["recent_messages"][-1][0], "assistant")
+        self.assertGreaterEqual(len(captured_prompt["resume_context_snippets"]), 1)
 
     def test_follow_up_message_inherits_last_review_intent(self) -> None:
         self.client.post(
@@ -188,6 +204,20 @@ class ChatTests(unittest.TestCase):
         events = [json.loads(line) for line in lines]
         self.assertEqual([event["type"] for event in events], ["start", "delta", "delta", "complete"])
         self.assertEqual(events[-1]["response"]["thread"]["messages"][-1]["content"], "Stub stream.")
+
+    def test_chat_stream_count_question_uses_grounded_answer(self) -> None:
+        with self.client.stream(
+            "POST",
+            f"/resumes/{self.resume_id}/chat/messages/stream",
+            json={"content": "How many times does C++ show up in my resume?"},
+        ) as response:
+            self.assertEqual(response.status_code, 200)
+            lines = [line for line in response.iter_lines() if line]
+
+        events = [json.loads(line) for line in lines]
+        self.assertEqual(events[0]["type"], "start")
+        self.assertTrue(any(event["type"] == "delta" for event in events))
+        self.assertIn("C++", events[-1]["response"]["thread"]["messages"][-1]["content"])
 
 
 if __name__ == "__main__":

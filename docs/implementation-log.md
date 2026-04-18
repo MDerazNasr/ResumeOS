@@ -156,6 +156,30 @@ Verified:
 - backend test suite passes after provider streaming and feedback replay were added
 - frontend production build still passes after the chat metadata/UI updates
 
+### 2026-04-18: Section 11 Gemini Provider and Grounded Factual Chat
+
+Extended the chat layer so local testing can use Gemini and factual question-style chat turns stop guessing when the answer is directly available in the resume source.
+
+Added:
+
+- Gemini provider selection through the existing provider abstraction using the OpenAI-compatible Gemini endpoint
+- README guidance for configuring Gemini locally
+- more conversational chat prompts grounded in real resume snippets instead of only metadata
+- deterministic handling for count-style factual questions such as how many times a term appears in the resume
+- shared factual-answer behavior across both synchronous and streaming chat paths
+- regression coverage for Gemini provider selection and grounded factual question answers
+
+Why this shape:
+
+- the chat layer needed to feel like a real model-backed assistant locally, not only a mock-backed orchestration layer
+- factual questions about the current resume should not depend on model recall when the answer can be computed exactly from the draft
+- grounding the assistant in real resume snippets makes conversational answers less robotic without weakening the safe patch workflow
+
+Verified:
+
+- backend test suite passes after Gemini support and grounded factual question handling were added
+- frontend production build still passes after the chat prompt and provider updates
+
 ### 2026-04-12: Section 10 Inline Editor Review
 
 Moved the patch-review workflow into Monaco so the AI editing loop behaves more like an IDE.
