@@ -14,6 +14,7 @@ from app.models.schemas import (
     GenerateEditSuggestionsInput,
     GenerateReviewSuggestionsInput,
     GenerateTailorSuggestionsInput,
+    HolisticReviewContextDto,
     LogFeedbackInput,
     PatchValidationResultDto,
     PatchSetListDto,
@@ -35,6 +36,7 @@ from app.services.chat import create_chat_message_for_user, get_chat_thread_for_
 from app.services.document_model import get_document_model_for_user
 from app.services.edit_suggestions import generate_edit_suggestions_for_user, generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
 from app.services.feedback import log_feedback_for_user
+from app.services.holistic_review import get_holistic_review_context_for_user
 from app.services.mock_patches import list_seeded_patch_sets_for_user
 from app.services.patch_apply import apply_patch_for_user
 from app.services.patch_validation import validate_patch_for_user
@@ -82,6 +84,14 @@ def get_draft(resume_id: str, current_user: UserDto = Depends(get_current_user))
 @router.get("/{resume_id}/document-model", response_model=DocumentModelDto)
 def get_document_model(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> DocumentModelDto:
     return get_document_model_for_user(current_user.id, resume_id)
+
+
+@router.get("/{resume_id}/holistic-review/context", response_model=HolisticReviewContextDto)
+def get_holistic_review_context(
+    resume_id: str,
+    current_user: UserDto = Depends(get_current_user),
+) -> HolisticReviewContextDto:
+    return get_holistic_review_context_for_user(current_user.id, resume_id)
 
 
 @router.post("/{resume_id}/patches/validate", response_model=PatchValidationResultDto)

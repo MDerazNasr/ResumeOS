@@ -168,6 +168,17 @@ class CompileResultDto(BaseModel):
     compiledAt: str
 
 
+class HolisticReviewContextDto(BaseModel):
+    resumeId: str
+    latestCompileStatus: Literal["success", "error"] | None = None
+    latestCompileDraftVersion: int | None = None
+    latestCompiledAt: str | None = None
+    pdfUrl: str | None = None
+    sourceLineCount: int
+    editableBlockCount: int
+    editableBlockLabels: list[str]
+
+
 class SnapshotDto(BaseModel):
     id: str
     resumeId: str

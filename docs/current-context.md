@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 11: chat layer
+- Section 12: holistic PDF + LaTeX review
 
 ## Completed Milestones
 
@@ -21,6 +21,7 @@ Active milestone:
 - Section 8: UI preferences completed and merged into `main`
 - Section 9: hardening completed and merged into `main`
 - Section 10: inline patch review UX completed on a feature branch
+- Section 11: chat layer completed on a feature branch
 
 ## Current Constraints
 
@@ -48,34 +49,24 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Deepen the conversational AI layer without bypassing the safe patch workflow.
+Build the first real holistic review boundary so future AI review can reason over both source and rendered resume state.
 
 That means:
 
-- improve conversational quality using recent message history and follow-up-aware intent handling
-- keep chat replies model/provider-backed
-- support Gemini as a real provider option for local chat and suggestion generation
-- make chat-to-patch-set linkage clearer per assistant turn
-- format chat responses distinctly for question vs edit/review/tailor
-- render assistant replies incrementally instead of waiting for the full response
-- replay recent patch decisions back into the conversation
-- ground factual question-style chat turns directly in the current resume source when deterministic answers are possible
-- preserve document mutation constraints through validated patch application
+- expose the latest compile artifact as first-class review context
+- connect that context to the current draft and editable-block structure
+- surface holistic review context visibly in the workspace
+- preserve the existing patch-review safety model while expanding AI context
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- a resume has a persistent chat thread
-- users can send a message and get an assistant reply grounded in the current resume and recent conversation
-- short follow-up turns can continue the last actionable review/tailor intent without repeating the full request
-- chat can produce patch sets that appear in the existing review workflow
-- each assistant turn can report whether it produced patch sets
-- chat cards make it clearer whether a reply is a context answer or a patch-generating response
-- chat replies appear incrementally in the sidebar while the request is in flight
-- chat can reference recent apply/reject outcomes inside the thread
-- chat can use Gemini through the shared provider abstraction
-- factual count-style chat questions answer from the current LaTeX draft instead of guessing from model context
+- the backend exposes holistic-review context for a resume
+- the context reports latest compile status and PDF availability
+- the context reports current source-level structure such as editable block count
+- the workspace renders that context clearly
+- the holistic-review context refreshes after compile
 
 ## Known Risks
 
@@ -89,10 +80,10 @@ That means:
 
 ## Next Planned Branch
 
-After the chat foundation lands, deepen the chat workflow.
+After the holistic review boundary lands, use it inside model-backed review generation.
 
 That next slice should include:
 
-- explicit chat timeline items for accepted/rejected patch outcomes
-- deeper prompt/context tuning against real conversational failures
-- holistic PDF plus LaTeX review once the chat quality is stable enough
+- provider prompts that explicitly consume holistic-review context
+- first PDF-aware review behavior behind the same patch-set workflow
+- user-visible handling for layout and density constraints

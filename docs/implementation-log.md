@@ -23,6 +23,23 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-18: Section 12 Holistic Review Planning
+
+Opened the next branch to start the PDF plus LaTeX review foundation after the chat layer became functional.
+
+Planned scope:
+
+- add a holistic-review context endpoint
+- expose the latest compile artifact state alongside current source structure
+- surface that context directly in the editor workspace
+- keep the patch-review workflow as the only mutation path
+
+Why this shape:
+
+- the product vision needs AI that understands both the source and the rendered resume
+- the first correct move is to make compile artifacts and source structure available as one explicit boundary
+- this avoids pretending the model is PDF-aware before the context pipeline exists
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.

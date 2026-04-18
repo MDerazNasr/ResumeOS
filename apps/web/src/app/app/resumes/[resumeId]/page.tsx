@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { ResumeEditor } from "@/components/resumes/ResumeEditor";
-import { getChatThread, getCurrentUser, getDocumentModel, getDraft, getResume, listSnapshots } from "@/lib/api/client";
+import { getChatThread, getCurrentUser, getDocumentModel, getDraft, getHolisticReviewContext, getResume, listSnapshots } from "@/lib/api/client";
 
 type ResumeEditorPageProps = {
   params: {
@@ -16,10 +16,11 @@ export default async function ResumeEditorPage({ params }: ResumeEditorPageProps
   }
 
   try {
-    const [resume, draft, documentModel, snapshots, chatThread] = await Promise.all([
+    const [resume, draft, documentModel, holisticReviewContext, snapshots, chatThread] = await Promise.all([
       getResume(params.resumeId),
       getDraft(params.resumeId),
       getDocumentModel(params.resumeId),
+      getHolisticReviewContext(params.resumeId),
       listSnapshots(params.resumeId),
       getChatThread(params.resumeId),
     ]);
@@ -29,6 +30,7 @@ export default async function ResumeEditorPage({ params }: ResumeEditorPageProps
         <ResumeEditor
           documentModel={documentModel}
           draft={draft}
+          holisticReviewContext={holisticReviewContext}
           initialChatMessages={chatThread.messages}
           initialSnapshots={snapshots.items}
           resume={resume}

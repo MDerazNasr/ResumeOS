@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getHolisticReviewContext, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
 import { ChatSidebar } from "@/components/resumes/ChatSidebar";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
+import { HolisticReviewPanel } from "@/components/resumes/HolisticReviewPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { PatchSetReviewPanel } from "@/components/resumes/PatchSetReviewPanel";
 import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
@@ -13,6 +14,7 @@ import type {
   CompileResultDto,
   DocumentModelDto,
   EditableBlockDto,
+  HolisticReviewContextDto,
   PatchHunkDto,
   PatchSetDto,
   ResumeDto,
@@ -23,6 +25,7 @@ import type {
 type ResumeEditorProps = {
   documentModel: DocumentModelDto;
   draft: WorkingDraftDto;
+  holisticReviewContext: HolisticReviewContextDto;
   initialChatMessages: ChatMessageDto[];
   initialSnapshots: SnapshotDto[];
   resume: ResumeDto;
@@ -36,9 +39,10 @@ type PatchSetRequestContext =
 
 const EDITOR_MODE_STORAGE_KEY = "resumeos.editorMode";
 
-export function ResumeEditor({ documentModel, draft, initialChatMessages, initialSnapshots, resume }: ResumeEditorProps) {
+export function ResumeEditor({ documentModel, draft, holisticReviewContext, initialChatMessages, initialSnapshots, resume }: ResumeEditorProps) {
   const patchReviewRef = useRef<HTMLDivElement | null>(null);
   const [documentModelState, setDocumentModelState] = useState(documentModel);
+  const [holisticReviewContextState, setHolisticReviewContextState] = useState(holisticReviewContext);
   const [editorMode, setEditorMode] = useState<"standard" | "vim">("standard");
   const [patchSets, setPatchSets] = useState<PatchSetDto[]>([]);
   const [dismissedPatchHunkIds, setDismissedPatchHunkIds] = useState<string[]>([]);
@@ -258,6 +262,8 @@ export function ResumeEditor({ documentModel, draft, initialChatMessages, initia
         draftVersion: versionRef.current,
       });
       setCompileResult(result);
+      const nextHolisticReviewContext = await getHolisticReviewContext(resume.id);
+      setHolisticReviewContextState(nextHolisticReviewContext);
       setPreviewNonce(Date.now());
       setActivityMessage(result.status === "success" ? "Compile succeeded. Preview updated." : "Compile returned errors.");
     } catch (compileError) {
@@ -645,6 +651,7 @@ export function ResumeEditor({ documentModel, draft, initialChatMessages, initia
             }
             resumeId={resume.id}
           />
+          <HolisticReviewPanel context={holisticReviewContextState} />
           <div ref={patchReviewRef}>
             <PatchSetReviewPanel
               activeHunkId={activePatchHunkId}

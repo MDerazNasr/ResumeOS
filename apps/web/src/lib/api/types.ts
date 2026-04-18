@@ -156,6 +156,17 @@ export type CompileResultDto = {
   compiledAt: string;
 };
 
+export type HolisticReviewContextDto = {
+  resumeId: string;
+  latestCompileStatus: "success" | "error" | null;
+  latestCompileDraftVersion: number | null;
+  latestCompiledAt: string | null;
+  pdfUrl: string | null;
+  sourceLineCount: number;
+  editableBlockCount: number;
+  editableBlockLabels: string[];
+};
+
 export type SnapshotDto = {
   id: string;
   resumeId: string;

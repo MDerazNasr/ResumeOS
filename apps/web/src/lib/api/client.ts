@@ -12,6 +12,7 @@ import type {
   GenerateReviewSuggestionsInput,
   GenerateTailorSuggestionsInput,
   GoogleAuthStatusDto,
+  HolisticReviewContextDto,
   LogFeedbackInput,
   PatchSetListDto,
   RestoreSnapshotInput,
@@ -126,6 +127,10 @@ export function getDraft(resumeId: string): Promise<WorkingDraftDto> {
 
 export function getDocumentModel(resumeId: string): Promise<DocumentModelDto> {
   return apiFetch<DocumentModelDto>(`/resumes/${resumeId}/document-model`);
+}
+
+export function getHolisticReviewContext(resumeId: string): Promise<HolisticReviewContextDto> {
+  return apiFetch<HolisticReviewContextDto>(`/resumes/${resumeId}/holistic-review/context`);
 }
 
 export function getSeededPatchSets(resumeId: string, seed = 0): Promise<PatchSetListDto> {
