@@ -1,7 +1,8 @@
 from fastapi import HTTPException, status
 
-from app.models.schemas import GenerateEditSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
+from app.models.schemas import GenerateEditSuggestionsInput, GenerateHolisticReviewSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
 from app.services.document_model import get_document_model_for_user
+from app.services.holistic_review import get_holistic_review_context_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
 from app.services.patch_validation import validate_patch_for_user
 from app.services.snapshots import create_automatic_snapshot_for_user
@@ -90,6 +91,37 @@ def generate_review_suggestions_for_user(
     resume_id: str,
     input_data: GenerateReviewSuggestionsInput,
 ) -> PatchSetListDto:
+    return _generate_review_suggestions_for_user(user_id, resume_id, input_data.instruction, holistic_context=None)
+
+
+def generate_holistic_review_suggestions_for_user(
+    user_id: str,
+    resume_id: str,
+    input_data: GenerateHolisticReviewSuggestionsInput,
+) -> PatchSetListDto:
+    holistic_context = get_holistic_review_context_for_user(user_id, resume_id)
+    context_parts = [
+        f"latest compile status: {holistic_context.latestCompileStatus or 'missing'}",
+        f"pdf available: {'yes' if holistic_context.pdfUrl else 'no'}",
+        f"source lines: {holistic_context.sourceLineCount}",
+        f"editable blocks: {holistic_context.editableBlockCount}",
+    ]
+    if holistic_context.editableBlockLabels:
+        context_parts.append(f"focus areas: {', '.join(holistic_context.editableBlockLabels)}")
+    return _generate_review_suggestions_for_user(
+        user_id,
+        resume_id,
+        input_data.instruction,
+        holistic_context="; ".join(context_parts),
+    )
+
+
+def _generate_review_suggestions_for_user(
+    user_id: str,
+    resume_id: str,
+    instruction: str,
+    holistic_context: str | None,
+) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     provider = get_edit_suggestion_provider()
     selected_blocks = document_model.editableBlocks[:3]
@@ -98,7 +130,7 @@ def generate_review_suggestions_for_user(
         block.id: get_relevant_style_examples_for_user(
             user_id,
             resume_id,
-            instruction=input_data.instruction,
+            instruction=instruction,
             target_text=block.text,
             preferred_kind=block.kind,
             exclude_texts={block.text},
@@ -108,12 +140,13 @@ def generate_review_suggestions_for_user(
 
     generated = provider.generate_review_rewrites(
         ReviewSuggestionPrompt(
-            instruction=input_data.instruction,
+            instruction=instruction,
+            holistic_context=holistic_context,
             blocks=[
                 EditSuggestionPrompt(
                     block_kind=block.kind,
                     block_label=block.label,
-                    instruction=input_data.instruction,
+                    instruction=instruction,
                     text=block.text,
                     style_examples=block_style_examples[block.id],
                 )
@@ -153,7 +186,7 @@ def generate_review_suggestions_for_user(
                     endLine=block.endLine,
                     beforeText=block.text,
                     afterText=after_text,
-                    rationale=f'Review suggestion from instruction: "{input_data.instruction}"',
+                    rationale=f'Review suggestion from instruction: "{instruction}"',
                     validation=validation,
                 )
             )
@@ -163,8 +196,8 @@ def generate_review_suggestions_for_user(
                 PatchSetDto(
                     id=f"review-set-{block.id}",
                     mode="review",
-                    title=f"Review suggestions for {block.label}",
-                    summary=input_data.instruction,
+                    title=f"{'Holistic ' if holistic_context else ''}Review suggestions for {block.label}",
+                    summary=instruction,
                     styleExamples=block_style_examples[block.id],
                     retrySeed=0,
                     items=proposals,

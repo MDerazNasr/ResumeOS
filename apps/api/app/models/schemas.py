@@ -139,6 +139,10 @@ class GenerateReviewSuggestionsInput(BaseModel):
     instruction: str = Field(min_length=1, max_length=300)
 
 
+class GenerateHolisticReviewSuggestionsInput(BaseModel):
+    instruction: str = Field(min_length=1, max_length=300)
+
+
 class GenerateTailorSuggestionsInput(BaseModel):
     jobDescription: str = Field(min_length=20, max_length=6000)
     instruction: str = Field(min_length=1, max_length=300)

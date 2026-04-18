@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getHolisticReviewContext, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateHolisticReviewSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getHolisticReviewContext, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
 import { ChatSidebar } from "@/components/resumes/ChatSidebar";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { HolisticReviewPanel } from "@/components/resumes/HolisticReviewPanel";
@@ -55,6 +55,7 @@ export function ResumeEditor({ documentModel, draft, holisticReviewContext, init
   const [isSaving, setIsSaving] = useState(false);
   const [isCompiling, setIsCompiling] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isHolisticReviewing, setIsHolisticReviewing] = useState(false);
   const [isTailoring, setIsTailoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activityMessage, setActivityMessage] = useState<string | null>(null);
@@ -527,6 +528,33 @@ export function ResumeEditor({ documentModel, draft, holisticReviewContext, init
     }
   }
 
+  async function handleHolisticReviewResume() {
+    setError(null);
+    setIsHolisticReviewing(true);
+    setActivityMessage(null);
+    setPatchSetEmptyMessage(null);
+
+    try {
+      const draftReady = await ensureLatestDraftSaved();
+      if (!draftReady) {
+        return;
+      }
+
+      const instruction = "Review the resume holistically for flow, density, structure, and wording weaknesses while keeping edits concise.";
+      const generated = await generateHolisticReviewSuggestions(resume.id, { instruction });
+      loadPatchSets(
+        generated.items,
+        generated.items.length === 0 ? "No valid holistic review suggestions were generated for the current draft." : null,
+        buildPatchSetSummary(generated.items, "No valid holistic review suggestions were generated."),
+      );
+      setLastPatchSetRequest({ mode: "review", instruction });
+    } catch (reviewError) {
+      setError(reviewError instanceof Error ? reviewError.message : "Failed to generate holistic review suggestions.");
+    } finally {
+      setIsHolisticReviewing(false);
+    }
+  }
+
   async function handleTailorResume() {
     const trimmedDescription = jobDescription.trim();
 
@@ -576,7 +604,7 @@ export function ResumeEditor({ documentModel, draft, holisticReviewContext, init
         <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
           <div style={{ display: "flex", gap: 10 }}>
             <button
-              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              disabled={isSaving || isCompiling || isReviewing || isHolisticReviewing || isTailoring}
               onClick={handleReviewResume}
               style={secondaryButtonStyle}
               type="button"
@@ -584,7 +612,15 @@ export function ResumeEditor({ documentModel, draft, holisticReviewContext, init
               {isReviewing ? "Reviewing..." : "Review Resume"}
             </button>
             <button
-              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              disabled={isSaving || isCompiling || isReviewing || isHolisticReviewing || isTailoring}
+              onClick={handleHolisticReviewResume}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              {isHolisticReviewing ? "Reviewing..." : "Holistic Review"}
+            </button>
+            <button
+              disabled={isSaving || isCompiling || isReviewing || isHolisticReviewing || isTailoring}
               onClick={handleCompile}
               style={secondaryButtonStyle}
               type="button"

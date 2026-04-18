@@ -40,6 +40,28 @@ Why this shape:
 - the first correct move is to make compile artifacts and source structure available as one explicit boundary
 - this avoids pretending the model is PDF-aware before the context pipeline exists
 
+### 2026-04-18: Section 12 Holistic Review Generation
+
+Added the first dedicated holistic-review generation path on top of the new context boundary.
+
+Added:
+
+- a dedicated `holistic-review` suggestion endpoint
+- prompt wiring that passes compile/PDF availability and source-structure context into review generation
+- a workspace `Holistic Review` action separate from the baseline wording-only review button
+- regression coverage for validated patch-set generation through the new path
+
+Why this shape:
+
+- the product needs a distinct review mode for flow, density, and structure, not just generic wording feedback
+- a separate action keeps the baseline review path simple while making the broader review intent explicit
+- the output still flows through the same validated patch-set system, so safety and review ergonomics stay consistent
+
+Verified:
+
+- backend test suite passes after the holistic-review route and prompt wiring were added
+- frontend production build still passes after the new workspace action was added
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.

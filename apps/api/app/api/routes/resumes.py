@@ -12,6 +12,7 @@ from app.models.schemas import (
     CreateResumeInput,
     DocumentModelDto,
     GenerateEditSuggestionsInput,
+    GenerateHolisticReviewSuggestionsInput,
     GenerateReviewSuggestionsInput,
     GenerateTailorSuggestionsInput,
     HolisticReviewContextDto,
@@ -34,7 +35,12 @@ from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
 from app.services.chat import create_chat_message_for_user, get_chat_thread_for_user, stream_chat_message_for_user
 from app.services.document_model import get_document_model_for_user
-from app.services.edit_suggestions import generate_edit_suggestions_for_user, generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
+from app.services.edit_suggestions import (
+    generate_edit_suggestions_for_user,
+    generate_holistic_review_suggestions_for_user,
+    generate_review_suggestions_for_user,
+    generate_tailor_suggestions_for_user,
+)
 from app.services.feedback import log_feedback_for_user
 from app.services.holistic_review import get_holistic_review_context_for_user
 from app.services.mock_patches import list_seeded_patch_sets_for_user
@@ -128,6 +134,15 @@ def generate_review_suggestions(
     current_user: UserDto = Depends(get_current_user),
 ) -> PatchSetListDto:
     return generate_review_suggestions_for_user(current_user.id, resume_id, input_data)
+
+
+@router.post("/{resume_id}/suggestions/holistic-review", response_model=PatchSetListDto)
+def generate_holistic_review_suggestions(
+    resume_id: str,
+    input_data: GenerateHolisticReviewSuggestionsInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> PatchSetListDto:
+    return generate_holistic_review_suggestions_for_user(current_user.id, resume_id, input_data)
 
 
 @router.post("/{resume_id}/suggestions/tailor", response_model=PatchSetListDto)

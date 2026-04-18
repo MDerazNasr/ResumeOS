@@ -123,6 +123,10 @@ export type GenerateReviewSuggestionsInput = {
   instruction: string;
 };
 
+export type GenerateHolisticReviewSuggestionsInput = {
+  instruction: string;
+};
+
 export type GenerateTailorSuggestionsInput = {
   jobDescription: string;
   instruction: string;

@@ -9,6 +9,7 @@ import type {
   CreateResumeInput,
   DocumentModelDto,
   GenerateEditSuggestionsInput,
+  GenerateHolisticReviewSuggestionsInput,
   GenerateReviewSuggestionsInput,
   GenerateTailorSuggestionsInput,
   GoogleAuthStatusDto,
@@ -152,6 +153,16 @@ export function generateReviewSuggestions(
   input: GenerateReviewSuggestionsInput,
 ): Promise<PatchSetListDto> {
   return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/suggestions/review`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export function generateHolisticReviewSuggestions(
+  resumeId: string,
+  input: GenerateHolisticReviewSuggestionsInput,
+): Promise<PatchSetListDto> {
+  return apiFetch<PatchSetListDto>(`/resumes/${resumeId}/suggestions/holistic-review`, {
     method: "POST",
     body: JSON.stringify(input)
   });

@@ -49,13 +49,14 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Build the first real holistic review boundary so future AI review can reason over both source and rendered resume state.
+Build the first real holistic review loop so future AI review can reason over both source and rendered resume state.
 
 That means:
 
 - expose the latest compile artifact as first-class review context
 - connect that context to the current draft and editable-block structure
 - surface holistic review context visibly in the workspace
+- route a dedicated holistic-review action through the existing validated patch-set flow
 - preserve the existing patch-review safety model while expanding AI context
 
 ## Definition of Success for the Current Slice
@@ -67,6 +68,7 @@ That means:
 - the context reports current source-level structure such as editable block count
 - the workspace renders that context clearly
 - the holistic-review context refreshes after compile
+- the workspace exposes a dedicated holistic-review action that returns validated patch sets
 
 ## Known Risks
 
@@ -80,10 +82,10 @@ That means:
 
 ## Next Planned Branch
 
-After the holistic review boundary lands, use it inside model-backed review generation.
+After the holistic review context is wired into review generation, add actual rendered-PDF review signals.
 
 That next slice should include:
 
-- provider prompts that explicitly consume holistic-review context
+- rendered-PDF review signals beyond metadata and compile availability
 - first PDF-aware review behavior behind the same patch-set workflow
 - user-visible handling for layout and density constraints

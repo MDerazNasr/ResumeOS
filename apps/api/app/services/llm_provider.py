@@ -19,6 +19,7 @@ class EditSuggestionPrompt:
 class ReviewSuggestionPrompt:
     instruction: str
     blocks: list[EditSuggestionPrompt]
+    holistic_context: str | None = None
 
 
 @dataclass
@@ -81,11 +82,15 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
         result: dict[str, list[str]] = {}
 
         for block in prompt.blocks:
+            review_instruction = prompt.instruction
+            if prompt.holistic_context:
+                review_instruction = f"{prompt.instruction} Holistic context: {prompt.holistic_context}"
+
             result[block.text] = self.generate_rewrites(
                 EditSuggestionPrompt(
                     block_kind=block.block_kind,
                     block_label=block.block_label,
-                    instruction=prompt.instruction,
+                    instruction=review_instruction,
                     text=block.text,
                     style_examples=block.style_examples,
                 )
@@ -217,6 +222,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                         "content": json.dumps(
                             {
                                 "instruction": prompt.instruction,
+                                "holistic_context": prompt.holistic_context,
                                 "blocks": [
                                     {
                                         "label": block.block_label,
