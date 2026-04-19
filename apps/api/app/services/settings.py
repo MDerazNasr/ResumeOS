@@ -23,12 +23,12 @@ def get_user_settings(user_id: str) -> UserSettingsDto:
             connection.execute(
                 """
                 INSERT INTO user_settings (user_id, editor_mode, theme_mode, updated_at)
-                VALUES (?, 'standard', 'dark', ?)
+                VALUES (?, 'standard', 'light', ?)
                 """,
                 (user_id, timestamp),
             )
             connection.commit()
-            return UserSettingsDto(editorMode="standard", themeMode="dark")
+            return UserSettingsDto(editorMode="standard", themeMode="light")
 
     return UserSettingsDto(editorMode=row["editor_mode"], themeMode=row["theme_mode"])
 

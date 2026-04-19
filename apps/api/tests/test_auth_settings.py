@@ -63,7 +63,7 @@ class AuthSettingsTests(unittest.TestCase):
         settings_before = client.get("/settings")
         self.assertEqual(settings_before.status_code, 200)
         self.assertEqual(settings_before.json()["editorMode"], "standard")
-        self.assertEqual(settings_before.json()["themeMode"], "dark")
+        self.assertEqual(settings_before.json()["themeMode"], "light")
 
         settings_after = client.patch("/settings", json={"editorMode": "vim", "themeMode": "light"})
         self.assertEqual(settings_after.status_code, 200)

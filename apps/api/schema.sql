@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS user_settings (
   user_id TEXT PRIMARY KEY,
   editor_mode TEXT NOT NULL DEFAULT 'standard',
-  theme_mode TEXT NOT NULL DEFAULT 'dark',
+  theme_mode TEXT NOT NULL DEFAULT 'light',
   updated_at TEXT NOT NULL,
   FOREIGN KEY(user_id) REFERENCES users(id)
 );

@@ -21,6 +21,13 @@ Current baseline includes:
 
 ### API
 
+Use the checked-in env template as the source of truth for local variables:
+
+```bash
+cd /Users/mderaznasr/Documents/GitHub/ResumeOS
+cat .env.example
+```
+
 ```bash
 cd /Users/mderaznasr/Documents/GitHub/ResumeOS/apps/api
 python3 -m venv .venv
@@ -41,7 +48,7 @@ source .venv/bin/activate
 python -m unittest discover -s tests
 ```
 
-For Google sign-in locally, set:
+For Google sign-in locally, export:
 
 ```bash
 export RESUMEOS_GOOGLE_CLIENT_ID=your_google_client_id
@@ -68,6 +75,14 @@ npm run dev:web:local
 ```
 
 Set `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000` if needed. By default the web app expects the API on `http://127.0.0.1:8000`.
+
+The checked-in [.env.example](/Users/mderaznasr/Documents/GitHub/ResumeOS/.env.example) includes the expected local variables for:
+
+- web/API base URLs
+- Google OAuth
+- session secret
+- OpenAI provider settings
+- Gemini provider settings
 
 ### Stable Local Verification
 
@@ -113,7 +128,7 @@ npm --workspace @resumeos/web run build
 
 Block-level edit suggestions default to a deterministic mock provider so local development and tests stay stable.
 
-To switch the API to the OpenAI-backed provider, set these environment variables before starting the backend:
+To switch the API to the OpenAI-backed provider, export these variables before starting the backend:
 
 ```bash
 export RESUMEOS_LLM_PROVIDER=openai
@@ -129,7 +144,7 @@ export OPENAI_BASE_URL=https://api.openai.com/v1
 
 If `RESUMEOS_LLM_PROVIDER` is not set, ResumeOS uses the mock provider by default.
 
-To use Gemini instead, set:
+To use Gemini instead, export:
 
 ```bash
 export RESUMEOS_LLM_PROVIDER=gemini

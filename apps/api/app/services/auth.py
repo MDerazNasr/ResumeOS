@@ -60,7 +60,7 @@ def ensure_auth_schema() -> None:
             CREATE TABLE IF NOT EXISTS user_settings (
               user_id TEXT PRIMARY KEY,
               editor_mode TEXT NOT NULL DEFAULT 'standard',
-              theme_mode TEXT NOT NULL DEFAULT 'dark',
+              theme_mode TEXT NOT NULL DEFAULT 'light',
               updated_at TEXT NOT NULL,
               FOREIGN KEY(user_id) REFERENCES users(id)
             )
@@ -71,7 +71,7 @@ def ensure_auth_schema() -> None:
             for row in connection.execute("PRAGMA table_info(user_settings)").fetchall()
         }
         if "theme_mode" not in settings_columns:
-            connection.execute("ALTER TABLE user_settings ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'dark'")
+            connection.execute("ALTER TABLE user_settings ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'light'")
         connection.commit()
 
 
@@ -324,7 +324,7 @@ def _ensure_user_settings(connection, user_id: str, timestamp: str) -> None:
     connection.execute(
         """
         INSERT INTO user_settings (user_id, editor_mode, theme_mode, updated_at)
-        VALUES (?, 'standard', 'dark', ?)
+        VALUES (?, 'standard', 'light', ?)
         ON CONFLICT(user_id) DO NOTHING
         """,
         (user_id, timestamp),

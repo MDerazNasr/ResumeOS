@@ -196,6 +196,27 @@ Verified:
 - backend test suite passes after candidate enforcement was added
 - frontend production build still passes after the provider and generation changes
 
+### 2026-04-19: Section 16 Release Readiness
+
+Started the final readiness pass by fixing product defaults and local setup clarity.
+
+Added:
+
+- light mode as the backend and app-shell default
+- Monaco theme synchronization with the active app theme
+- checked-in `.env.example` for local configuration
+
+Why this shape:
+
+- light mode default was an explicit product decision and should not remain half-implemented
+- the editor is the core workspace, so theme mismatch there is a product-quality bug
+- local setup should be reproducible without relying on conversation history
+
+Verified:
+
+- backend test suite passes after the theme-default and setup changes
+- frontend production build still passes after the Monaco theme synchronization and env template additions
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.

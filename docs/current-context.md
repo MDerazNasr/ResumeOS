@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 15: constraint-aware candidate enforcement
+- Section 16: release readiness
 
 ## Completed Milestones
 
@@ -25,6 +25,7 @@ Active milestone:
 - Section 12: holistic PDF + LaTeX review completed on a feature branch
 - Section 13: constraint and rule system completed on a feature branch
 - Section 14: constraint-aware layout heuristics completed on a feature branch
+- Section 15: constraint-aware candidate enforcement completed on a feature branch
 
 ## Current Constraints
 
@@ -52,22 +53,21 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Turn stored rules into actual candidate filtering behavior.
+Tighten defaults and setup on top of the current feature-complete baseline.
 
 That means:
 
-- evaluate generated candidates against active rules
-- filter obvious rule violations before they reach review
-- stop leaking rule text into candidate outputs
-- preserve the existing patch-review safety model while making rules materially enforce generation quality
+- make light mode the default
+- keep Monaco aligned with the active app theme
+- add an explicit local env template
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- generated candidates are filtered against active constraints
-- one-line bullet rules keep mock bullet candidates under the current heuristic threshold
-- constraint text does not appear literally in candidate output
+- new users default to light mode
+- Monaco follows the app theme
+- local setup variables are explicit in the repo
 
 ## Known Risks
 
@@ -81,7 +81,7 @@ That means:
 
 ## Next Planned Branch
 
-After candidate enforcement is in place, the next real gap is stronger rendered-layout extraction or deployment hardening.
+After this release-readiness slice, the remaining work is mostly optional depth or deployment hardening.
 
 That next slice should include:
 
