@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { applyPatch, compileDraft, generateEditSuggestions, generateHolisticReviewSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getHolisticReviewContext, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
 import { ChatSidebar } from "@/components/resumes/ChatSidebar";
+import { ConstraintPanel } from "@/components/resumes/ConstraintPanel";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
 import { HolisticReviewPanel } from "@/components/resumes/HolisticReviewPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
@@ -17,12 +18,14 @@ import type {
   HolisticReviewContextDto,
   PatchHunkDto,
   PatchSetDto,
+  ResumeConstraintsDto,
   ResumeDto,
   SnapshotDto,
   WorkingDraftDto,
 } from "@/lib/api/types";
 
 type ResumeEditorProps = {
+  constraints: ResumeConstraintsDto;
   documentModel: DocumentModelDto;
   draft: WorkingDraftDto;
   holisticReviewContext: HolisticReviewContextDto;
@@ -39,7 +42,7 @@ type PatchSetRequestContext =
 
 const EDITOR_MODE_STORAGE_KEY = "resumeos.editorMode";
 
-export function ResumeEditor({ documentModel, draft, holisticReviewContext, initialChatMessages, initialSnapshots, resume }: ResumeEditorProps) {
+export function ResumeEditor({ constraints, documentModel, draft, holisticReviewContext, initialChatMessages, initialSnapshots, resume }: ResumeEditorProps) {
   const patchReviewRef = useRef<HTMLDivElement | null>(null);
   const [documentModelState, setDocumentModelState] = useState(documentModel);
   const [holisticReviewContextState, setHolisticReviewContextState] = useState(holisticReviewContext);
@@ -687,6 +690,7 @@ export function ResumeEditor({ documentModel, draft, holisticReviewContext, init
             }
             resumeId={resume.id}
           />
+          <ConstraintPanel initialConstraints={constraints} resumeId={resume.id} />
           <HolisticReviewPanel context={holisticReviewContextState} />
           <div ref={patchReviewRef}>
             <PatchSetReviewPanel

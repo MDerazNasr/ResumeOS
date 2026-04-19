@@ -13,6 +13,7 @@ class EditSuggestionPrompt:
     instruction: str
     text: str
     style_examples: list[str]
+    constraints: list[str]
 
 
 @dataclass
@@ -64,18 +65,19 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
     def generate_rewrites(self, prompt: EditSuggestionPrompt) -> list[str]:
         cleaned = prompt.text.rstrip(".")
         style_tone = _style_tone_suffix(prompt.style_examples)
+        constraint_suffix = _constraint_suffix(prompt.constraints)
         base_suffix = f"clearer scope, stronger technical specificity, and {style_tone}"
         alternate_suffix = f"more direct impact framing while preserving the user's {style_tone}"
 
         if prompt.block_kind == "bullet":
             return [
-                f"{cleaned}, with {base_suffix}.",
-                f"{cleaned}, with {alternate_suffix}.",
+                f"{cleaned}, with {base_suffix}{constraint_suffix}.",
+                f"{cleaned}, with {alternate_suffix}{constraint_suffix}.",
             ]
 
         return [
-            f"{cleaned} with {base_suffix}.",
-            f"{cleaned} with {alternate_suffix}.",
+            f"{cleaned} with {base_suffix}{constraint_suffix}.",
+            f"{cleaned} with {alternate_suffix}{constraint_suffix}.",
         ]
 
     def generate_review_rewrites(self, prompt: ReviewSuggestionPrompt) -> dict[str, list[str]]:
@@ -93,6 +95,7 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
                     instruction=review_instruction,
                     text=block.text,
                     style_examples=block.style_examples,
+                    constraints=block.constraints,
                 )
             )
 
@@ -184,6 +187,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                             f"Block kind: {prompt.block_kind}\n"
                             f"Instruction: {prompt.instruction}\n"
                             f"Style examples: {json.dumps(prompt.style_examples)}\n"
+                            f"Constraints: {json.dumps(prompt.constraints)}\n"
                             f"Original text: {prompt.text}"
                         ),
                     },
@@ -229,6 +233,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                         "kind": block.block_kind,
                                         "text": block.text,
                                         "style_examples": block.style_examples,
+                                        "constraints": block.constraints,
                                     }
                                     for block in prompt.blocks
                                 ],
@@ -285,6 +290,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                         "kind": block.block_kind,
                                         "text": block.text,
                                         "style_examples": block.style_examples,
+                                        "constraints": block.constraints,
                                     }
                                     for block in prompt.blocks
                                 ],
@@ -430,6 +436,12 @@ def _extract_emphasized_terms(job_description: str) -> list[str]:
     ]
     lowered = job_description.lower()
     return [term for term in preferred_terms if term in lowered]
+
+
+def _constraint_suffix(constraints: list[str]) -> str:
+    if not constraints:
+        return ""
+    return f", while following constraints such as {constraints[0].rstrip('.')}"
 
 
 def _style_tone_suffix(style_examples: list[str]) -> str:

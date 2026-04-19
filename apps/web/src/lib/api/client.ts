@@ -16,6 +16,7 @@ import type {
   HolisticReviewContextDto,
   LogFeedbackInput,
   PatchSetListDto,
+  ResumeConstraintsDto,
   RestoreSnapshotInput,
   ResumeDto,
   ResumeListResponseDto,
@@ -23,6 +24,7 @@ import type {
   SnapshotDto,
   SnapshotListResponseDto,
   UpdateDraftInput,
+  UpdateResumeConstraintsInput,
   UpdateUserSettingsInput,
   UserDto,
   UserSettingsDto,
@@ -128,6 +130,20 @@ export function getDraft(resumeId: string): Promise<WorkingDraftDto> {
 
 export function getDocumentModel(resumeId: string): Promise<DocumentModelDto> {
   return apiFetch<DocumentModelDto>(`/resumes/${resumeId}/document-model`);
+}
+
+export function getResumeConstraints(resumeId: string): Promise<ResumeConstraintsDto> {
+  return apiFetch<ResumeConstraintsDto>(`/resumes/${resumeId}/constraints`);
+}
+
+export function updateResumeConstraints(
+  resumeId: string,
+  input: UpdateResumeConstraintsInput,
+): Promise<ResumeConstraintsDto> {
+  return apiFetch<ResumeConstraintsDto>(`/resumes/${resumeId}/constraints`, {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
 }
 
 export function getHolisticReviewContext(resumeId: string): Promise<HolisticReviewContextDto> {

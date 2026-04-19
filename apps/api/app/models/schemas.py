@@ -23,6 +23,16 @@ class UpdateUserSettingsInput(BaseModel):
     themeMode: Literal["dark", "light"] | None = None
 
 
+class ResumeConstraintsDto(BaseModel):
+    resumeId: str
+    rules: list[str]
+    updatedAt: str
+
+
+class UpdateResumeConstraintsInput(BaseModel):
+    rules: list[str] = Field(default_factory=list, max_length=12)
+
+
 class ResumeDto(BaseModel):
     id: str
     title: str

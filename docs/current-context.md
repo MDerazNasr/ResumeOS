@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 12: holistic PDF + LaTeX review
+- Section 13: constraint and rule system
 
 ## Completed Milestones
 
@@ -22,6 +22,7 @@ Active milestone:
 - Section 9: hardening completed and merged into `main`
 - Section 10: inline patch review UX completed on a feature branch
 - Section 11: chat layer completed on a feature branch
+- Section 12: holistic PDF + LaTeX review completed on a feature branch
 
 ## Current Constraints
 
@@ -49,28 +50,23 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Build the first real holistic review loop so future AI review can reason over both source and rendered resume state.
+Add durable resume rules that the AI must follow across generation modes.
 
 That means:
 
-- expose the latest compile artifact as first-class review context
-- connect that context to the current draft and editable-block structure
-- surface holistic review context visibly in the workspace
-- route a dedicated holistic-review action through the existing validated patch-set flow
-- derive first rendered-review signals from the compiled PDF artifact
-- preserve the existing patch-review safety model while expanding AI context
+- persist per-resume rules
+- make those rules editable in the workspace
+- thread them into edit, review, holistic review, and tailor generation
+- preserve the existing patch-review safety model while expanding user control
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- the backend exposes holistic-review context for a resume
-- the context reports latest compile status and PDF availability
-- the context reports first rendered-review signals from the compiled artifact
-- the context reports current source-level structure such as editable block count
-- the workspace renders that context clearly
-- the holistic-review context refreshes after compile
-- the workspace exposes a dedicated holistic-review action that returns validated patch sets
+- the backend exposes persistent resume constraints
+- the workspace lets the user edit those constraints
+- constraints are threaded into AI generation prompts
+- edit generation reflects stored constraints
 
 ## Known Risks
 
@@ -84,10 +80,10 @@ That means:
 
 ## Next Planned Branch
 
-After the first rendered-review signals are in place, deepen PDF-aware review quality.
+After persistent rules are in place, deepen rule-aware review quality.
 
 That next slice should include:
 
-- better rendered-PDF review signals beyond artifact-size and compile-derived heuristics
-- first PDF-aware review behavior behind the same patch-set workflow
-- user-visible handling for layout and density constraints
+- stronger PDF-aware enforcement for layout-sensitive constraints
+- clearer display of which patch sets were influenced by which rules
+- continued improvement of rendered-review quality

@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 
 from app.models.schemas import GenerateEditSuggestionsInput, GenerateHolisticReviewSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
+from app.services.constraints import get_constraint_rules_for_user
 from app.services.document_model import get_document_model_for_user
 from app.services.holistic_review import get_holistic_review_context_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
@@ -16,6 +17,7 @@ def generate_edit_suggestions_for_user(
 ) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     target_block = next((block for block in document_model.editableBlocks if block.id == input_data.targetBlockId), None)
+    constraint_rules = get_constraint_rules_for_user(user_id, resume_id)
 
     if target_block is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target editable block not found.")
@@ -36,6 +38,7 @@ def generate_edit_suggestions_for_user(
             instruction=input_data.instruction,
             text=target_block.text,
             style_examples=style_examples,
+            constraints=constraint_rules,
         )
     )
 
@@ -129,6 +132,7 @@ def _generate_review_suggestions_for_user(
     document_model = get_document_model_for_user(user_id, resume_id)
     provider = get_edit_suggestion_provider()
     selected_blocks = document_model.editableBlocks[:3]
+    constraint_rules = get_constraint_rules_for_user(user_id, resume_id)
 
     block_style_examples = {
         block.id: get_relevant_style_examples_for_user(
@@ -153,6 +157,7 @@ def _generate_review_suggestions_for_user(
                     instruction=instruction,
                     text=block.text,
                     style_examples=block_style_examples[block.id],
+                    constraints=constraint_rules,
                 )
                 for block in selected_blocks
             ],
@@ -225,6 +230,7 @@ def generate_tailor_suggestions_for_user(
     provider = get_edit_suggestion_provider()
     selected_blocks = document_model.editableBlocks[:3]
     theme_groups = _extract_tailor_theme_groups(input_data.jobDescription)
+    constraint_rules = get_constraint_rules_for_user(user_id, resume_id)
 
     block_style_examples = {
         block.id: get_relevant_style_examples_for_user(
@@ -249,6 +255,7 @@ def generate_tailor_suggestions_for_user(
                     instruction=input_data.instruction,
                     text=block.text,
                     style_examples=block_style_examples[block.id],
+                    constraints=constraint_rules,
                 )
                 for block in selected_blocks
             ],

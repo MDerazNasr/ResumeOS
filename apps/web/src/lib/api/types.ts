@@ -18,6 +18,16 @@ export type UpdateUserSettingsInput = {
   themeMode?: "dark" | "light";
 };
 
+export type ResumeConstraintsDto = {
+  resumeId: string;
+  rules: string[];
+  updatedAt: string;
+};
+
+export type UpdateResumeConstraintsInput = {
+  rules: string[];
+};
+
 export type ResumeDto = {
   id: string;
   title: string;

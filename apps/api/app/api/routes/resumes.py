@@ -19,6 +19,7 @@ from app.models.schemas import (
     LogFeedbackInput,
     PatchValidationResultDto,
     PatchSetListDto,
+    ResumeConstraintsDto,
     RestoreSnapshotInput,
     ResumeDto,
     ResumeListResponseDto,
@@ -26,6 +27,7 @@ from app.models.schemas import (
     SnapshotDetailDto,
     SnapshotListResponseDto,
     UpdateDraftInput,
+    UpdateResumeConstraintsInput,
     UserDto,
     ValidatePatchInput,
     WorkingDraftDto,
@@ -34,6 +36,7 @@ from app.services.compile import compile_resume_source_for_user
 from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
 from app.services.chat import create_chat_message_for_user, get_chat_thread_for_user, stream_chat_message_for_user
+from app.services.constraints import get_resume_constraints_for_user, update_resume_constraints_for_user
 from app.services.document_model import get_document_model_for_user
 from app.services.edit_suggestions import (
     generate_edit_suggestions_for_user,
@@ -90,6 +93,23 @@ def get_draft(resume_id: str, current_user: UserDto = Depends(get_current_user))
 @router.get("/{resume_id}/document-model", response_model=DocumentModelDto)
 def get_document_model(resume_id: str, current_user: UserDto = Depends(get_current_user)) -> DocumentModelDto:
     return get_document_model_for_user(current_user.id, resume_id)
+
+
+@router.get("/{resume_id}/constraints", response_model=ResumeConstraintsDto)
+def get_resume_constraints(
+    resume_id: str,
+    current_user: UserDto = Depends(get_current_user),
+) -> ResumeConstraintsDto:
+    return get_resume_constraints_for_user(current_user.id, resume_id)
+
+
+@router.patch("/{resume_id}/constraints", response_model=ResumeConstraintsDto)
+def update_resume_constraints(
+    resume_id: str,
+    input_data: UpdateResumeConstraintsInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> ResumeConstraintsDto:
+    return update_resume_constraints_for_user(current_user.id, resume_id, input_data)
 
 
 @router.get("/{resume_id}/holistic-review/context", response_model=HolisticReviewContextDto)

@@ -85,6 +85,28 @@ Verified:
 - backend test suite passes after the rendered-review signal additions
 - frontend production build still passes after the holistic-review panel update
 
+### 2026-04-19: Section 13 Constraint System
+
+Added the first durable rule system so ResumeOS can carry user instructions across AI generation modes instead of only through one-off prompts.
+
+Added:
+
+- per-resume constraint persistence and routes
+- prompt wiring for edit, review, holistic review, and tailor generation
+- a workspace `Constraints` panel for editing one rule per line
+- regression coverage for constraint round-trip behavior and rule-aware edit generation
+
+Why this shape:
+
+- instructions like “keep each bullet to one line” should be durable product state, not transient chat text
+- resume-level rules are the smallest practical boundary because they map cleanly to how users think about a base resume
+- threading the rules into existing generation paths keeps the architecture consistent and avoids a second rule engine
+
+Verified:
+
+- backend test suite passes after the constraints system was added
+- frontend production build still passes after the new workspace panel and loader changes
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.
