@@ -1,4 +1,5 @@
 import json
+import re
 
 from fastapi import HTTPException, status
 
@@ -83,6 +84,33 @@ def get_constraint_rules_for_user(user_id: str, resume_id: str) -> list[str]:
 
 def has_one_line_bullet_rule(rules: list[str]) -> bool:
     return any("one line" in rule.casefold() and "bullet" in rule.casefold() for rule in rules)
+
+
+def evaluate_constraint_violations(before_text: str, after_text: str, block_kind: str, rules: list[str]) -> list[str]:
+    violations: list[str] = []
+    normalized_after = " ".join(after_text.split())
+    normalized_before = " ".join(before_text.split())
+
+    lowered_rules = [rule.casefold() for rule in rules]
+
+    if block_kind == "bullet" and any("one line" in rule and "bullet" in rule for rule in lowered_rules):
+        if len(normalized_after) > 95:
+            violations.append("Likely exceeds a one-line bullet.")
+
+    if any("first-person" in rule or "first person" in rule for rule in lowered_rules):
+        if re.search(r"\b(i|me|my|mine|we|our|ours|us)\b", after_text, flags=re.IGNORECASE):
+            violations.append("Uses first-person language.")
+
+    if any("concise" in rule for rule in lowered_rules):
+        if len(normalized_after.split()) > len(normalized_before.split()) + 4:
+            violations.append("Less concise than the original.")
+
+    if any("one sentence" in rule for rule in lowered_rules):
+        sentence_count = len([part for part in re.split(r"[.!?]+", normalized_after) if part.strip()])
+        if sentence_count > 1:
+            violations.append("Contains more than one sentence.")
+
+    return violations
 
 
 def _normalize_rules(rules: list[str]) -> list[str]:

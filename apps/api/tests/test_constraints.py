@@ -45,7 +45,8 @@ class ResumeConstraintTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertGreater(len(payload["items"]), 0)
-        self.assertIn("Keep each bullet to one line", payload["items"][0]["items"][0]["afterText"])
+        self.assertEqual(payload["items"][0]["appliedConstraints"], ["Keep each bullet to one line."])
+        self.assertNotIn("Keep each bullet to one line", payload["items"][0]["items"][0]["afterText"])
 
 
 if __name__ == "__main__":

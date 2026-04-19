@@ -174,6 +174,28 @@ Verified:
 - backend test suite passes after the layout-heuristic additions
 - frontend production build still passes after the holistic-review panel update
 
+### 2026-04-19: Section 15 Candidate Enforcement
+
+Turned stored rules into actual generation gates instead of only prompt guidance.
+
+Added:
+
+- candidate-violation evaluation for a small set of active rules
+- one-line bullet shaping for mock generation
+- filtering of candidates that obviously violate active constraints before they reach patch review
+- regression coverage proving candidate text no longer includes rule text verbatim
+
+Why this shape:
+
+- rules are only credible if they change which candidates are allowed through
+- prompt-only guidance is not strong enough for layout-sensitive constraints
+- this creates a clean enforcement boundary without making apply-time validation too rigid too early
+
+Verified:
+
+- backend test suite passes after candidate enforcement was added
+- frontend production build still passes after the provider and generation changes
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.

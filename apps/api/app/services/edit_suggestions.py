@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 from app.models.schemas import GenerateEditSuggestionsInput, GenerateHolisticReviewSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
-from app.services.constraints import get_constraint_rules_for_user, has_one_line_bullet_rule
+from app.services.constraints import evaluate_constraint_violations, get_constraint_rules_for_user, has_one_line_bullet_rule
 from app.services.document_model import get_document_model_for_user
 from app.services.holistic_review import get_holistic_review_context_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
@@ -44,6 +44,9 @@ def generate_edit_suggestions_for_user(
 
     proposals: list[PatchHunkDto] = []
     for index, after_text in enumerate(candidates, start=1):
+        if evaluate_constraint_violations(target_block.text, after_text, target_block.kind, constraint_rules):
+            continue
+
         validation = validate_patch_for_user(
             user_id,
             resume_id,
@@ -171,6 +174,9 @@ def _generate_review_suggestions_for_user(
         proposals: list[PatchHunkDto] = []
 
         for candidate_index, after_text in enumerate(candidates[:2], start=1):
+            if evaluate_constraint_violations(block.text, after_text, block.kind, constraint_rules):
+                continue
+
             validation = validate_patch_for_user(
                 user_id,
                 resume_id,
@@ -285,6 +291,9 @@ def generate_tailor_suggestions_for_user(
         assigned_theme_ids.add(theme_id)
 
         for candidate_index, after_text in enumerate(candidates[:2], start=1):
+            if evaluate_constraint_violations(block.text, after_text, block.kind, constraint_rules):
+                continue
+
             validation = validate_patch_for_user(
                 user_id,
                 resume_id,
