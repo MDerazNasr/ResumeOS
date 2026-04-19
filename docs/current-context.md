@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 14: constraint-aware layout heuristics
+- Section 15: constraint-aware candidate enforcement
 
 ## Completed Milestones
 
@@ -24,6 +24,7 @@ Active milestone:
 - Section 11: chat layer completed on a feature branch
 - Section 12: holistic PDF + LaTeX review completed on a feature branch
 - Section 13: constraint and rule system completed on a feature branch
+- Section 14: constraint-aware layout heuristics completed on a feature branch
 
 ## Current Constraints
 
@@ -51,23 +52,22 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Turn layout-sensitive rules into visible product logic.
+Turn stored rules into actual candidate filtering behavior.
 
 That means:
 
-- derive rule-driven holistic-review signals
-- detect likely one-line bullet violations conservatively
-- surface likely violating blocks in the workspace
-- bias holistic review generation toward likely violating bullets
-- preserve the existing patch-review safety model while adding constraint-aware review logic
+- evaluate generated candidates against active rules
+- filter obvious rule violations before they reach review
+- stop leaking rule text into candidate outputs
+- preserve the existing patch-review safety model while making rules materially enforce generation quality
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- holistic-review context exposes rule-driven signals
-- the workspace shows likely constraint-related layout issues
-- holistic review generation reflects an active one-line bullet rule
+- generated candidates are filtered against active constraints
+- one-line bullet rules keep mock bullet candidates under the current heuristic threshold
+- constraint text does not appear literally in candidate output
 
 ## Known Risks
 
@@ -81,10 +81,10 @@ That means:
 
 ## Next Planned Branch
 
-After the first rule-aware layout heuristics are in place, choose between merging the accumulated AI branches or deepening PDF-aware enforcement.
+After candidate enforcement is in place, the next real gap is stronger rendered-layout extraction or deployment hardening.
 
 That next slice should include:
 
 - stronger PDF-aware enforcement for layout-sensitive constraints
 - better rendered-layout extraction than the current heuristics
-- merge and stabilize the accumulated Section 11-14 work on top of `main`
+- deployment and operational hardening if we decide the feature set is sufficient

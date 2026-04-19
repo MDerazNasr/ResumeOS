@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 import httpx
 
+from app.services.constraints import has_one_line_bullet_rule
+
 
 @dataclass
 class EditSuggestionPrompt:
@@ -66,19 +68,24 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
     def generate_rewrites(self, prompt: EditSuggestionPrompt) -> list[str]:
         cleaned = prompt.text.rstrip(".")
         style_tone = _style_tone_suffix(prompt.style_examples)
-        constraint_suffix = _constraint_suffix(prompt.constraints)
         base_suffix = f"clearer scope, stronger technical specificity, and {style_tone}"
         alternate_suffix = f"more direct impact framing while preserving the user's {style_tone}"
 
+        if prompt.block_kind == "bullet" and has_one_line_bullet_rule(prompt.constraints):
+            return [
+                _truncate_for_single_line(f"{cleaned}, emphasizing concise technical impact."),
+                _truncate_for_single_line(f"{cleaned}, with tighter, more specific wording."),
+            ]
+
         if prompt.block_kind == "bullet":
             return [
-                f"{cleaned}, with {base_suffix}{constraint_suffix}.",
-                f"{cleaned}, with {alternate_suffix}{constraint_suffix}.",
+                f"{cleaned}, with {base_suffix}.",
+                f"{cleaned}, with {alternate_suffix}.",
             ]
 
         return [
-            f"{cleaned} with {base_suffix}{constraint_suffix}.",
-            f"{cleaned} with {alternate_suffix}{constraint_suffix}.",
+            f"{cleaned} with {base_suffix}.",
+            f"{cleaned} with {alternate_suffix}.",
         ]
 
     def generate_review_rewrites(self, prompt: ReviewSuggestionPrompt) -> dict[str, list[str]]:
@@ -442,10 +449,13 @@ def _extract_emphasized_terms(job_description: str) -> list[str]:
     return [term for term in preferred_terms if term in lowered]
 
 
-def _constraint_suffix(constraints: list[str]) -> str:
-    if not constraints:
-        return ""
-    return f", while following constraints such as {constraints[0].rstrip('.')}"
+def _truncate_for_single_line(text: str, max_length: int = 92) -> str:
+    compact = " ".join(text.split())
+    if len(compact) <= max_length:
+        return compact
+
+    trimmed = compact[: max_length - 1].rsplit(" ", 1)[0].rstrip(",;:. ")
+    return f"{trimmed}."
 
 
 def _style_tone_suffix(style_examples: list[str]) -> str:
