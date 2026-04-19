@@ -8,6 +8,7 @@ from collections.abc import AsyncIterator
 from app.db.database import get_connection
 from app.models.schemas import ChatMessageDto, ChatResponseDto, ChatThreadDto, CreateChatMessageInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchSetDto
 from app.services.document_model import get_document_model_for_user
+from app.services.constraints import get_constraint_rules_for_user
 from app.services.edit_suggestions import generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
 from app.services.llm_provider import ChatConversationPrompt, get_edit_suggestion_provider
 from app.services.resumes import get_draft_for_user
@@ -103,7 +104,7 @@ async def stream_chat_message_for_user(user_id: str, resume_id: str, input_data:
     user_content = input_data.content.strip()
     resolved_intent = _resolve_chat_intent(user_content, thread.messages)
     patch_sets = _build_chat_patch_sets(user_id, resume_id, user_content, resolved_intent)
-    factual_answer = _build_factual_question_answer(user_id, resume_id, user_content, resolved_intent.intent)
+    factual_answer = _build_deterministic_question_answer(user_id, resume_id, user_content, resolved_intent.intent)
     prompt = _build_chat_prompt(user_id, resume_id, user_content, resolved_intent, patch_sets, thread.messages)
     provider = get_edit_suggestion_provider()
     assistant_chunks: list[str] = []
@@ -145,7 +146,7 @@ def _create_chat_response_for_user(user_id: str, resume_id: str, input_data: Cre
     user_content = input_data.content.strip()
     resolved_intent = _resolve_chat_intent(user_content, thread.messages)
     patch_sets = _build_chat_patch_sets(user_id, resume_id, user_content, resolved_intent)
-    factual_answer = _build_factual_question_answer(user_id, resume_id, user_content, resolved_intent.intent)
+    factual_answer = _build_deterministic_question_answer(user_id, resume_id, user_content, resolved_intent.intent)
     if factual_answer is not None:
         assistant_content = factual_answer
     else:
@@ -255,6 +256,7 @@ def _build_chat_prompt(
         target_text=content,
         preferred_kind="bullet",
     )
+    constraint_rules = get_constraint_rules_for_user(user_id, resume_id)
     return ChatConversationPrompt(
         user_message=content,
         detected_intent=resolved_intent.intent,
@@ -262,6 +264,7 @@ def _build_chat_prompt(
         recent_messages=_recent_messages_for_thread(thread_messages),
         editable_block_count=len(document_model.editableBlocks),
         resume_context_snippets=_build_resume_context_snippets(document_model.editableBlocks),
+        constraints=constraint_rules,
         style_examples=style_examples,
         patch_set_summary=_build_patch_set_summary(resolved_intent.intent, patch_sets),
         recent_feedback_summary=_get_recent_feedback_summary_for_resume(resume_id),
@@ -404,9 +407,13 @@ def _get_recent_feedback_summary_for_resume(resume_id: str) -> str | None:
     return ", ".join(parts)
 
 
-def _build_factual_question_answer(user_id: str, resume_id: str, content: str, chat_intent: ChatIntent) -> str | None:
+def _build_deterministic_question_answer(user_id: str, resume_id: str, content: str, chat_intent: ChatIntent) -> str | None:
     if chat_intent != "question":
         return None
+
+    constraint_answer = _build_constraint_question_answer(user_id, resume_id, content)
+    if constraint_answer is not None:
+        return constraint_answer
 
     extracted_term = _extract_count_query_term(content)
     if extracted_term is None:
@@ -418,6 +425,19 @@ def _build_factual_question_answer(user_id: str, resume_id: str, content: str, c
     quoted_term = normalized_term if normalized_term.startswith("\"") else normalized_term
     match_word = "time" if count == 1 else "times"
     return f'"{quoted_term}" appears {count} {match_word} in the current LaTeX resume source.'
+
+
+def _build_constraint_question_answer(user_id: str, resume_id: str, content: str) -> str | None:
+    lowered = content.lower()
+    if not any(marker in lowered for marker in ["constraint", "rule", "rules are", "constraints are", "what should you follow"]):
+        return None
+
+    rules = get_constraint_rules_for_user(user_id, resume_id)
+    if not rules:
+        return "There are no saved resume constraints yet."
+
+    joined_rules = "; ".join(rules)
+    return f"Current resume constraints: {joined_rules}."
 
 
 def _extract_count_query_term(content: str) -> str | None:

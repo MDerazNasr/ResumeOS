@@ -77,6 +77,25 @@ class ChatTests(unittest.TestCase):
         self.assertIn("appears", assistant_message)
         self.assertEqual(payload["patchSets"], [])
 
+    def test_constraint_question_is_answered_from_saved_rules(self) -> None:
+        constraints_response = self.client.patch(
+            f"/resumes/{self.resume_id}/constraints",
+            json={"rules": ["Keep each bullet to one line.", "Avoid first-person voice."]},
+        )
+        self.assertEqual(constraints_response.status_code, 200)
+
+        response = self.client.post(
+            f"/resumes/{self.resume_id}/chat/messages",
+            json={"content": "What constraints are active on this resume?"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        assistant_message = payload["thread"]["messages"][-1]["content"]
+        self.assertIn("Current resume constraints:", assistant_message)
+        self.assertIn("Keep each bullet to one line.", assistant_message)
+        self.assertEqual(payload["patchSets"], [])
+
     def test_chat_reply_receives_recent_message_history(self) -> None:
         self.client.post(
             f"/resumes/{self.resume_id}/chat/messages",
@@ -89,6 +108,7 @@ class ChatTests(unittest.TestCase):
             def generate_chat_reply(self, prompt):
                 captured_prompt["recent_messages"] = prompt.recent_messages
                 captured_prompt["resume_context_snippets"] = prompt.resume_context_snippets
+                captured_prompt["constraints"] = prompt.constraints
                 return "Stubbed follow-up reply."
 
         with patch("app.services.chat.get_edit_suggestion_provider", return_value=StubProvider()):
@@ -101,6 +121,7 @@ class ChatTests(unittest.TestCase):
         self.assertGreaterEqual(len(captured_prompt["recent_messages"]), 2)
         self.assertEqual(captured_prompt["recent_messages"][-1][0], "assistant")
         self.assertGreaterEqual(len(captured_prompt["resume_context_snippets"]), 1)
+        self.assertIsInstance(captured_prompt["constraints"], list)
 
     def test_follow_up_message_inherits_last_review_intent(self) -> None:
         self.client.post(

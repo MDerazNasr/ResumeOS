@@ -58,6 +58,7 @@ That means:
 - make those rules editable in the workspace
 - thread them into edit, review, holistic review, and tailor generation
 - surface rule influence inside patch review
+- thread constraints into chat grounding and deterministic question handling
 - preserve the existing patch-review safety model while expanding user control
 
 ## Definition of Success for the Current Slice
@@ -69,6 +70,7 @@ That means:
 - constraints are threaded into AI generation prompts
 - edit generation reflects stored constraints
 - patch sets expose applied constraints in the review UI
+- chat can explain active rules from stored resume constraints
 
 ## Known Risks
 

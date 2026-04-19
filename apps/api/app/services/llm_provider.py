@@ -38,6 +38,7 @@ class ChatConversationPrompt:
     recent_messages: list[tuple[str, str]]
     editable_block_count: int
     resume_context_snippets: list[str]
+    constraints: list[str]
     style_examples: list[str]
     patch_set_summary: str | None
     recent_feedback_summary: str | None
@@ -127,11 +128,12 @@ class MockEditSuggestionProvider(EditSuggestionProvider):
         context_hint = prompt.resume_context_snippets[0] if prompt.resume_context_snippets else "No specific resume excerpt was available."
         follow_up_hint = " I'm treating this as a follow-up to the recent conversation." if prompt.intent_source == "history" else ""
         feedback_hint = f" Recent accepted/rejected edits: {prompt.recent_feedback_summary}." if prompt.recent_feedback_summary else ""
+        constraint_hint = f" Active constraints: {', '.join(prompt.constraints[:3])}." if prompt.constraints else ""
         if prompt.detected_intent == "question":
             return (
                 f"Looking at the resume, one relevant part is: \"{context_hint}\".{follow_up_hint}"
                 f"{f' A related style pattern is: \"{style_hint}\".' if style_hint else ''}"
-                f"{feedback_hint} Ask me to review, tailor, or rewrite something if you want concrete edits."
+                f"{constraint_hint}{feedback_hint} Ask me to review, tailor, or rewrite something if you want concrete edits."
             )
 
         if prompt.detected_intent == "review":
@@ -347,6 +349,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                 "recent_messages": prompt.recent_messages,
                                 "editable_block_count": prompt.editable_block_count,
                                 "resume_context_snippets": prompt.resume_context_snippets,
+                                "constraints": prompt.constraints,
                                 "style_examples": prompt.style_examples,
                                 "patch_set_summary": prompt.patch_set_summary,
                                 "recent_feedback_summary": prompt.recent_feedback_summary,
@@ -395,6 +398,7 @@ class OpenAIEditSuggestionProvider(EditSuggestionProvider):
                                 "recent_messages": prompt.recent_messages,
                                 "editable_block_count": prompt.editable_block_count,
                                 "resume_context_snippets": prompt.resume_context_snippets,
+                                "constraints": prompt.constraints,
                                 "style_examples": prompt.style_examples,
                                 "patch_set_summary": prompt.patch_set_summary,
                                 "recent_feedback_summary": prompt.recent_feedback_summary,

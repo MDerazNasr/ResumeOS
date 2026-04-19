@@ -129,6 +129,28 @@ Verified:
 - backend test suite passes after the patch-set contract update
 - frontend production build still passes after the review panel change
 
+### 2026-04-19: Section 13 Rule-Aware Chat
+
+Extended the chat layer so it participates in the same persistent rule system as edit, review, and tailor generation.
+
+Added:
+
+- constraint grounding in chat prompts
+- deterministic chat answers for “what rules/constraints are active?” questions
+- a chat footer that now explicitly states replies are grounded in saved constraints
+- regression coverage for active-rule chat responses and prompt constraint threading
+
+Why this shape:
+
+- the chat layer should not contradict the rest of the AI system’s durable rules
+- deterministic answers are the right boundary for factual rule questions, just like deterministic source counts are the right boundary for factual resume questions
+- this keeps chat aligned with the product’s explicit-control model instead of becoming a separate fuzzy instruction path
+
+Verified:
+
+- backend test suite passes after rule-aware chat grounding was added
+- frontend production build still passes after the chat sidebar text update
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.

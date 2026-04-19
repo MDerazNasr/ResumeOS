@@ -167,7 +167,7 @@ export function ChatSidebar({ initialMessages, onPatchSetsGenerated, resumeId }:
       />
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
         <span style={{ color: error ? "var(--diff-remove-fg)" : "var(--muted)", fontSize: 12 }}>
-          {error ?? "Chat replies are grounded in the current draft and patch workflow."}
+          {error ?? "Chat replies are grounded in the current draft, saved constraints, and patch workflow."}
         </span>
         <button disabled={isSending} onClick={() => void handleSend()} style={buttonStyle} type="button">
           {isSending ? "Sending..." : "Send"}

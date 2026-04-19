@@ -25,6 +25,7 @@ Persist resume-level rules and apply them across AI generation flows.
 - [x] thread constraints into AI generation prompts
 - [x] add a workspace panel for editing constraints
 - [x] expose rule influence more explicitly inside patch review
+- [x] thread constraints into chat grounding and deterministic question handling
 
 ## Verification Checklist
 
@@ -34,3 +35,4 @@ Persist resume-level rules and apply them across AI generation flows.
 - [x] constraints apply to edit generation
 - [x] constraints are visible in the editor workspace
 - [x] patch sets show which constraints influenced generation
+- [x] chat can answer what rules are active on the current resume
