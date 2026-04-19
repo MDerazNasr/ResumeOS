@@ -151,6 +151,29 @@ Verified:
 - backend test suite passes after rule-aware chat grounding was added
 - frontend production build still passes after the chat sidebar text update
 
+### 2026-04-19: Section 14 Layout Heuristics
+
+Added the first constraint-aware layout logic so one-line bullet rules start behaving like product logic instead of only prompt text.
+
+Added:
+
+- rule-driven signals in holistic-review context
+- likely one-line bullet violation detection using conservative text-length heuristics
+- likely-violation labels in the holistic review panel
+- holistic-review block prioritization when the one-line bullet rule is active
+- regression coverage for rule-aware context and holistic-review generation
+
+Why this shape:
+
+- layout-sensitive rules need visible product behavior, not only prompt inheritance
+- a conservative heuristic is a valid first step before adding stronger PDF-side extraction
+- biasing holistic review toward the most likely violating bullets makes the AI system more useful immediately without changing the patch safety model
+
+Verified:
+
+- backend test suite passes after the layout-heuristic additions
+- frontend production build still passes after the holistic-review panel update
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.

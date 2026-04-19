@@ -81,6 +81,10 @@ def get_constraint_rules_for_user(user_id: str, resume_id: str) -> list[str]:
     return get_resume_constraints_for_user(user_id, resume_id).rules
 
 
+def has_one_line_bullet_rule(rules: list[str]) -> bool:
+    return any("one line" in rule.casefold() and "bullet" in rule.casefold() for rule in rules)
+
+
 def _normalize_rules(rules: list[str]) -> list[str]:
     normalized: list[str] = []
     seen: set[str] = set()

@@ -192,6 +192,8 @@ class HolisticReviewContextDto(BaseModel):
     pdfPageCount: int | None = None
     pdfSizeKb: int | None = None
     layoutSignals: list[str] = []
+    ruleSignals: list[str] = []
+    likelyViolationLabels: list[str] = []
     sourceLineCount: int
     editableBlockCount: int
     editableBlockLabels: list[str]

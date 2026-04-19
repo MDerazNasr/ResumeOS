@@ -180,6 +180,8 @@ export type HolisticReviewContextDto = {
   pdfPageCount: number | null;
   pdfSizeKb: number | null;
   layoutSignals: string[];
+  ruleSignals: string[];
+  likelyViolationLabels: string[];
   sourceLineCount: number;
   editableBlockCount: number;
   editableBlockLabels: string[];

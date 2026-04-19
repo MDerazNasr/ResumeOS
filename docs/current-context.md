@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 13: constraint and rule system
+- Section 14: constraint-aware layout heuristics
 
 ## Completed Milestones
 
@@ -23,6 +23,7 @@ Active milestone:
 - Section 10: inline patch review UX completed on a feature branch
 - Section 11: chat layer completed on a feature branch
 - Section 12: holistic PDF + LaTeX review completed on a feature branch
+- Section 13: constraint and rule system completed on a feature branch
 
 ## Current Constraints
 
@@ -50,27 +51,23 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Add durable resume rules that the AI must follow across generation modes.
+Turn layout-sensitive rules into visible product logic.
 
 That means:
 
-- persist per-resume rules
-- make those rules editable in the workspace
-- thread them into edit, review, holistic review, and tailor generation
-- surface rule influence inside patch review
-- thread constraints into chat grounding and deterministic question handling
-- preserve the existing patch-review safety model while expanding user control
+- derive rule-driven holistic-review signals
+- detect likely one-line bullet violations conservatively
+- surface likely violating blocks in the workspace
+- bias holistic review generation toward likely violating bullets
+- preserve the existing patch-review safety model while adding constraint-aware review logic
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- the backend exposes persistent resume constraints
-- the workspace lets the user edit those constraints
-- constraints are threaded into AI generation prompts
-- edit generation reflects stored constraints
-- patch sets expose applied constraints in the review UI
-- chat can explain active rules from stored resume constraints
+- holistic-review context exposes rule-driven signals
+- the workspace shows likely constraint-related layout issues
+- holistic review generation reflects an active one-line bullet rule
 
 ## Known Risks
 
@@ -84,10 +81,10 @@ That means:
 
 ## Next Planned Branch
 
-After persistent rules are in place, deepen rule-aware review quality.
+After the first rule-aware layout heuristics are in place, choose between merging the accumulated AI branches or deepening PDF-aware enforcement.
 
 That next slice should include:
 
 - stronger PDF-aware enforcement for layout-sensitive constraints
-- continued improvement of rendered-review quality
-- better rule-aware chat and holistic-review explanations
+- better rendered-layout extraction than the current heuristics
+- merge and stabilize the accumulated Section 11-14 work on top of `main`

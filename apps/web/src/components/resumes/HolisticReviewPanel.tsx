@@ -75,6 +75,23 @@ export function HolisticReviewPanel({ context }: HolisticReviewPanelProps) {
             </div>
           </div>
         ) : null}
+        {context.ruleSignals.length > 0 ? (
+          <div style={{ display: "grid", gap: 8 }}>
+            <span style={labelStyle}>Rule Signals</span>
+            <div style={chipWrapStyle}>
+              {context.ruleSignals.map((signal) => (
+                <span key={signal} style={chipStyle}>
+                  {signal}
+                </span>
+              ))}
+            </div>
+            {context.likelyViolationLabels.length > 0 ? (
+              <span style={valueHintStyle}>
+                Likely affected blocks: {context.likelyViolationLabels.join(", ")}.
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

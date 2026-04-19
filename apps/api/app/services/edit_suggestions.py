@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 from app.models.schemas import GenerateEditSuggestionsInput, GenerateHolisticReviewSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
-from app.services.constraints import get_constraint_rules_for_user
+from app.services.constraints import get_constraint_rules_for_user, has_one_line_bullet_rule
 from app.services.document_model import get_document_model_for_user
 from app.services.holistic_review import get_holistic_review_context_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
@@ -132,8 +132,8 @@ def _generate_review_suggestions_for_user(
 ) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     provider = get_edit_suggestion_provider()
-    selected_blocks = document_model.editableBlocks[:3]
     constraint_rules = get_constraint_rules_for_user(user_id, resume_id)
+    selected_blocks = _select_review_blocks(document_model.editableBlocks, constraint_rules, holistic_context)
 
     block_style_examples = {
         block.id: get_relevant_style_examples_for_user(
@@ -216,6 +216,19 @@ def _generate_review_suggestions_for_user(
             )
 
     return PatchSetListDto(items=suggestion_sets)
+
+
+def _select_review_blocks(editable_blocks, constraint_rules: list[str], holistic_context: str | None):
+    if holistic_context and has_one_line_bullet_rule(constraint_rules):
+        bullet_blocks = [block for block in editable_blocks if block.kind == "bullet"]
+        prioritized = sorted(
+            bullet_blocks,
+            key=lambda block: len(" ".join(block.text.split())),
+            reverse=True,
+        )
+        if prioritized:
+            return prioritized[:3]
+    return editable_blocks[:3]
 
 
 def generate_tailor_suggestions_for_user(

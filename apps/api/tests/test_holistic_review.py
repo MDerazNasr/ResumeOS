@@ -41,6 +41,19 @@ class HolisticReviewContextTests(unittest.TestCase):
         self.assertGreaterEqual(payload["pdfSizeKb"], 1)
         self.assertGreaterEqual(len(payload["layoutSignals"]), 1)
 
+    def test_context_reports_rule_driven_layout_signals(self) -> None:
+        constraints_response = self.client.patch(
+            f"/resumes/{self.resume_id}/constraints",
+            json={"rules": ["Keep each bullet to one line."]},
+        )
+        self.assertEqual(constraints_response.status_code, 200)
+
+        response = self.client.get(f"/resumes/{self.resume_id}/holistic-review/context")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("one-line-bullet-rule-active", payload["ruleSignals"])
+
 
 if __name__ == "__main__":
     unittest.main()
