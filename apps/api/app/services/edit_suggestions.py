@@ -1,7 +1,9 @@
 from fastapi import HTTPException, status
 
-from app.models.schemas import GenerateEditSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
+from app.models.schemas import GenerateEditSuggestionsInput, GenerateHolisticReviewSuggestionsInput, GenerateReviewSuggestionsInput, GenerateTailorSuggestionsInput, PatchHunkDto, PatchSetDto, PatchSetListDto, ValidatePatchInput
+from app.services.constraints import get_constraint_rules_for_user, has_one_line_bullet_rule
 from app.services.document_model import get_document_model_for_user
+from app.services.holistic_review import get_holistic_review_context_for_user
 from app.services.llm_provider import EditSuggestionPrompt, ReviewSuggestionPrompt, TailorSuggestionPrompt, get_edit_suggestion_provider
 from app.services.patch_validation import validate_patch_for_user
 from app.services.snapshots import create_automatic_snapshot_for_user
@@ -15,6 +17,7 @@ def generate_edit_suggestions_for_user(
 ) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     target_block = next((block for block in document_model.editableBlocks if block.id == input_data.targetBlockId), None)
+    constraint_rules = get_constraint_rules_for_user(user_id, resume_id)
 
     if target_block is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target editable block not found.")
@@ -35,6 +38,7 @@ def generate_edit_suggestions_for_user(
             instruction=input_data.instruction,
             text=target_block.text,
             style_examples=style_examples,
+            constraints=constraint_rules,
         )
     )
 
@@ -78,6 +82,7 @@ def generate_edit_suggestions_for_user(
                 title=f"Edit suggestions for {target_block.label}",
                 summary=input_data.instruction,
                 styleExamples=style_examples,
+                appliedConstraints=constraint_rules,
                 retrySeed=0,
                 items=proposals,
             )
@@ -90,15 +95,51 @@ def generate_review_suggestions_for_user(
     resume_id: str,
     input_data: GenerateReviewSuggestionsInput,
 ) -> PatchSetListDto:
+    return _generate_review_suggestions_for_user(user_id, resume_id, input_data.instruction, holistic_context=None)
+
+
+def generate_holistic_review_suggestions_for_user(
+    user_id: str,
+    resume_id: str,
+    input_data: GenerateHolisticReviewSuggestionsInput,
+) -> PatchSetListDto:
+    holistic_context = get_holistic_review_context_for_user(user_id, resume_id)
+    context_parts = [
+        f"latest compile status: {holistic_context.latestCompileStatus or 'missing'}",
+        f"pdf available: {'yes' if holistic_context.pdfUrl else 'no'}",
+        f"pdf page count: {holistic_context.pdfPageCount or 'unknown'}",
+        f"pdf size kb: {holistic_context.pdfSizeKb or 'unknown'}",
+        f"source lines: {holistic_context.sourceLineCount}",
+        f"editable blocks: {holistic_context.editableBlockCount}",
+    ]
+    if holistic_context.editableBlockLabels:
+        context_parts.append(f"focus areas: {', '.join(holistic_context.editableBlockLabels)}")
+    if holistic_context.layoutSignals:
+        context_parts.append(f"layout signals: {', '.join(holistic_context.layoutSignals)}")
+    return _generate_review_suggestions_for_user(
+        user_id,
+        resume_id,
+        input_data.instruction,
+        holistic_context="; ".join(context_parts),
+    )
+
+
+def _generate_review_suggestions_for_user(
+    user_id: str,
+    resume_id: str,
+    instruction: str,
+    holistic_context: str | None,
+) -> PatchSetListDto:
     document_model = get_document_model_for_user(user_id, resume_id)
     provider = get_edit_suggestion_provider()
-    selected_blocks = document_model.editableBlocks[:3]
+    constraint_rules = get_constraint_rules_for_user(user_id, resume_id)
+    selected_blocks = _select_review_blocks(document_model.editableBlocks, constraint_rules, holistic_context)
 
     block_style_examples = {
         block.id: get_relevant_style_examples_for_user(
             user_id,
             resume_id,
-            instruction=input_data.instruction,
+            instruction=instruction,
             target_text=block.text,
             preferred_kind=block.kind,
             exclude_texts={block.text},
@@ -108,14 +149,16 @@ def generate_review_suggestions_for_user(
 
     generated = provider.generate_review_rewrites(
         ReviewSuggestionPrompt(
-            instruction=input_data.instruction,
+            instruction=instruction,
+            holistic_context=holistic_context,
             blocks=[
                 EditSuggestionPrompt(
                     block_kind=block.kind,
                     block_label=block.label,
-                    instruction=input_data.instruction,
+                    instruction=instruction,
                     text=block.text,
                     style_examples=block_style_examples[block.id],
+                    constraints=constraint_rules,
                 )
                 for block in selected_blocks
             ],
@@ -153,7 +196,7 @@ def generate_review_suggestions_for_user(
                     endLine=block.endLine,
                     beforeText=block.text,
                     afterText=after_text,
-                    rationale=f'Review suggestion from instruction: "{input_data.instruction}"',
+                    rationale=f'Review suggestion from instruction: "{instruction}"',
                     validation=validation,
                 )
             )
@@ -163,15 +206,29 @@ def generate_review_suggestions_for_user(
                 PatchSetDto(
                     id=f"review-set-{block.id}",
                     mode="review",
-                    title=f"Review suggestions for {block.label}",
-                    summary=input_data.instruction,
+                    title=f"{'Holistic ' if holistic_context else ''}Review suggestions for {block.label}",
+                    summary=instruction,
                     styleExamples=block_style_examples[block.id],
+                    appliedConstraints=constraint_rules,
                     retrySeed=0,
                     items=proposals,
                 )
             )
 
     return PatchSetListDto(items=suggestion_sets)
+
+
+def _select_review_blocks(editable_blocks, constraint_rules: list[str], holistic_context: str | None):
+    if holistic_context and has_one_line_bullet_rule(constraint_rules):
+        bullet_blocks = [block for block in editable_blocks if block.kind == "bullet"]
+        prioritized = sorted(
+            bullet_blocks,
+            key=lambda block: len(" ".join(block.text.split())),
+            reverse=True,
+        )
+        if prioritized:
+            return prioritized[:3]
+    return editable_blocks[:3]
 
 
 def generate_tailor_suggestions_for_user(
@@ -188,6 +245,7 @@ def generate_tailor_suggestions_for_user(
     provider = get_edit_suggestion_provider()
     selected_blocks = document_model.editableBlocks[:3]
     theme_groups = _extract_tailor_theme_groups(input_data.jobDescription)
+    constraint_rules = get_constraint_rules_for_user(user_id, resume_id)
 
     block_style_examples = {
         block.id: get_relevant_style_examples_for_user(
@@ -212,6 +270,7 @@ def generate_tailor_suggestions_for_user(
                     instruction=input_data.instruction,
                     text=block.text,
                     style_examples=block_style_examples[block.id],
+                    constraints=constraint_rules,
                 )
                 for block in selected_blocks
             ],
@@ -268,6 +327,7 @@ def generate_tailor_suggestions_for_user(
                     title=theme["title"],
                     summary=theme["summary"],
                     styleExamples=style_examples,
+                    appliedConstraints=constraint_rules,
                     retrySeed=0,
                     items=proposals,
                 )

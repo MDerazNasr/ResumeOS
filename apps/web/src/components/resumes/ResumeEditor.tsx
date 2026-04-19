@@ -2,25 +2,34 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { applyPatch, compileDraft, generateEditSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
+import { applyPatch, compileDraft, generateEditSuggestions, generateHolisticReviewSuggestions, generateReviewSuggestions, generateTailorSuggestions, getDocumentModel, getHolisticReviewContext, getSeededPatchSets, getUserSettings, logFeedback, saveDraft, updateUserSettings } from "@/lib/api/client";
+import { ChatSidebar } from "@/components/resumes/ChatSidebar";
+import { ConstraintPanel } from "@/components/resumes/ConstraintPanel";
 import { DocumentModelPanel } from "@/components/resumes/DocumentModelPanel";
+import { HolisticReviewPanel } from "@/components/resumes/HolisticReviewPanel";
 import { LatexEditor } from "@/components/resumes/LatexEditor";
 import { PatchSetReviewPanel } from "@/components/resumes/PatchSetReviewPanel";
 import { SnapshotPanel } from "@/components/resumes/SnapshotPanel";
 import type {
+  ChatMessageDto,
   CompileResultDto,
   DocumentModelDto,
   EditableBlockDto,
+  HolisticReviewContextDto,
   PatchHunkDto,
   PatchSetDto,
+  ResumeConstraintsDto,
   ResumeDto,
   SnapshotDto,
   WorkingDraftDto,
 } from "@/lib/api/types";
 
 type ResumeEditorProps = {
+  constraints: ResumeConstraintsDto;
   documentModel: DocumentModelDto;
   draft: WorkingDraftDto;
+  holisticReviewContext: HolisticReviewContextDto;
+  initialChatMessages: ChatMessageDto[];
   initialSnapshots: SnapshotDto[];
   resume: ResumeDto;
 };
@@ -33,10 +42,14 @@ type PatchSetRequestContext =
 
 const EDITOR_MODE_STORAGE_KEY = "resumeos.editorMode";
 
-export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }: ResumeEditorProps) {
+export function ResumeEditor({ constraints, documentModel, draft, holisticReviewContext, initialChatMessages, initialSnapshots, resume }: ResumeEditorProps) {
+  const patchReviewRef = useRef<HTMLDivElement | null>(null);
   const [documentModelState, setDocumentModelState] = useState(documentModel);
+  const [holisticReviewContextState, setHolisticReviewContextState] = useState(holisticReviewContext);
   const [editorMode, setEditorMode] = useState<"standard" | "vim">("standard");
   const [patchSets, setPatchSets] = useState<PatchSetDto[]>([]);
+  const [dismissedPatchHunkIds, setDismissedPatchHunkIds] = useState<string[]>([]);
+  const [activePatchHunkId, setActivePatchHunkId] = useState<string | null>(null);
   const [seededPatchSetSeed, setSeededPatchSetSeed] = useState(0);
   const [persistedSourceTex, setPersistedSourceTex] = useState(draft.sourceTex);
   const [sourceTex, setSourceTex] = useState(draft.sourceTex);
@@ -45,8 +58,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const [isSaving, setIsSaving] = useState(false);
   const [isCompiling, setIsCompiling] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isHolisticReviewing, setIsHolisticReviewing] = useState(false);
   const [isTailoring, setIsTailoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activityMessage, setActivityMessage] = useState<string | null>(null);
   const [patchSetEmptyMessage, setPatchSetEmptyMessage] = useState<string | null>(null);
   const [compileResult, setCompileResult] = useState<CompileResultDto | null>(null);
   const [previewNonce, setPreviewNonce] = useState<number>(0);
@@ -60,6 +75,15 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   const versionRef = useRef(version);
 
   const isDirty = useMemo(() => sourceTex !== persistedSourceTex, [persistedSourceTex, sourceTex]);
+  const visiblePatchEntries = useMemo(
+    () =>
+      patchSets.flatMap((patchSet) =>
+        patchSet.items
+          .filter((hunk) => !dismissedPatchHunkIds.includes(hunk.id))
+          .map((hunk) => ({ patchSet, hunk })),
+      ),
+    [dismissedPatchHunkIds, patchSets],
+  );
 
   useEffect(() => {
     sourceTexRef.current = sourceTex;
@@ -72,6 +96,46 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   useEffect(() => {
     versionRef.current = version;
   }, [version]);
+
+  useEffect(() => {
+    const visibleHunks = patchSets.flatMap((patchSet) =>
+      patchSet.items.filter((hunk) => !dismissedPatchHunkIds.includes(hunk.id)),
+    );
+
+    if (visibleHunks.length === 0) {
+      if (activePatchHunkId !== null) {
+        setActivePatchHunkId(null);
+      }
+      return;
+    }
+
+    if (!activePatchHunkId || !visibleHunks.some((hunk) => hunk.id === activePatchHunkId)) {
+      setActivePatchHunkId(visibleHunks[0]?.id ?? null);
+    }
+  }, [activePatchHunkId, dismissedPatchHunkIds, patchSets]);
+
+  function focusPatchReview() {
+    patchReviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function buildPatchSetSummary(items: PatchSetDto[], emptyLabel: string) {
+    if (items.length === 0) {
+      return emptyLabel;
+    }
+
+    const hunkCount = items.reduce((total, patchSet) => total + patchSet.items.length, 0);
+    return `Loaded ${items.length} patch set${items.length === 1 ? "" : "s"} with ${hunkCount} hunk${hunkCount === 1 ? "" : "s"}.`;
+  }
+
+  function loadPatchSets(items: PatchSetDto[], emptyLabel: string | null = null, activityLabel: string | null = null) {
+    setPatchSets(items);
+    setDismissedPatchHunkIds([]);
+    setPatchSetEmptyMessage(emptyLabel);
+    if (activityLabel) {
+      setActivityMessage(activityLabel);
+    }
+    focusPatchReview();
+  }
 
   useEffect(() => {
     try {
@@ -119,6 +183,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
     setIsSaving(true);
     setError(null);
+    setActivityMessage(null);
 
     try {
       const savedDraft = await saveDraft(resume.id, {
@@ -136,6 +201,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       ]);
       setDocumentModelState(nextDocumentModel);
       setPatchSets(nextPatchSets.items);
+      setDismissedPatchHunkIds([]);
       setPatchSetEmptyMessage(null);
       setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       return savedDraft;
@@ -187,6 +253,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   async function handleCompile() {
     setIsCompiling(true);
     setError(null);
+    setActivityMessage(null);
 
     try {
       const draftReady = await ensureLatestDraftSaved();
@@ -199,7 +266,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         draftVersion: versionRef.current,
       });
       setCompileResult(result);
+      const nextHolisticReviewContext = await getHolisticReviewContext(resume.id);
+      setHolisticReviewContextState(nextHolisticReviewContext);
       setPreviewNonce(Date.now());
+      setActivityMessage(result.status === "success" ? "Compile succeeded. Preview updated." : "Compile returned errors.");
     } catch (compileError) {
       setError(compileError instanceof Error ? compileError.message : "Failed to compile draft.");
     } finally {
@@ -209,6 +279,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
   async function handleApplyPatchSetHunk(patchSet: PatchSetDto, hunk: PatchHunkDto) {
     setError(null);
+    setActivityMessage(null);
 
     try {
       const updatedDraft = await applyPatch(resume.id, {
@@ -234,14 +305,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       setVersion(updatedDraft.version);
       setUpdatedAt(updatedDraft.updatedAt);
       setCompileResult(null);
+      setDismissedPatchHunkIds((current) => (current.includes(hunk.id) ? current : [...current, hunk.id]));
 
-      const [nextDocumentModel, nextPatchSets] = await Promise.all([
-        getDocumentModel(resume.id),
-        getSeededPatchSets(resume.id, seededPatchSetSeed),
-      ]);
+      const nextDocumentModel = await getDocumentModel(resume.id);
       setDocumentModelState(nextDocumentModel);
-      setPatchSets(nextPatchSets.items);
       setPatchSetEmptyMessage(null);
+      setActivityMessage(`Applied "${hunk.label}" to the working draft.`);
       return true;
     } catch (applyError) {
       setError(applyError instanceof Error ? applyError.message : "Failed to apply patch.");
@@ -251,6 +320,8 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
   async function handleDismissPatchSetHunk(patchSet: PatchSetDto, hunk: PatchHunkDto) {
     try {
+      setError(null);
+      setActivityMessage(null);
       await logFeedback(resume.id, {
         suggestionMode: patchSet.mode,
         action: "dismiss",
@@ -258,6 +329,8 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         proposalId: hunk.id,
         targetBlockId: hunk.targetBlockId,
       });
+      setDismissedPatchHunkIds((current) => [...current, hunk.id]);
+      setActivityMessage(`Rejected "${hunk.label}".`);
       return true;
     } catch (dismissError) {
       setError(dismissError instanceof Error ? dismissError.message : "Failed to record suggestion feedback.");
@@ -272,10 +345,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     setUpdatedAt(restoredDraft.updatedAt);
     setCompileResult(null);
     setError(null);
+    setActivityMessage("Snapshot restored into the working draft.");
     void Promise.all([getDocumentModel(resume.id), getSeededPatchSets(resume.id, seededPatchSetSeed)])
       .then(([nextDocumentModel, nextPatchSets]) => {
         setDocumentModelState(nextDocumentModel);
         setPatchSets(nextPatchSets.items);
+        setDismissedPatchHunkIds([]);
         setPatchSetEmptyMessage(null);
         setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       })
@@ -286,6 +361,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     void getSeededPatchSets(resume.id, seededPatchSetSeed)
       .then((result) => {
         setPatchSets(result.items);
+        setDismissedPatchHunkIds([]);
         setPatchSetEmptyMessage(null);
         setLastPatchSetRequest({ mode: "mock", seed: seededPatchSetSeed });
       })
@@ -294,11 +370,14 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
   async function handleRetryPatchSet(patchSet: PatchSetDto) {
     setError(null);
+    setActivityMessage(null);
     setPatchSetEmptyMessage(null);
 
     if (patchSet.mode === "mock") {
       const nextSeed = patchSet.retrySeed;
       setSeededPatchSetSeed(nextSeed);
+      setActivityMessage("Loaded a new seeded patch set.");
+      focusPatchReview();
       return;
     }
 
@@ -308,9 +387,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           targetBlockId: lastPatchSetRequest.targetBlockId,
           instruction: lastPatchSetRequest.instruction,
         });
-        setPatchSets(generated.items);
-        setPatchSetEmptyMessage(
+        loadPatchSets(
+          generated.items,
           generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
+          buildPatchSetSummary(generated.items, "No valid edit suggestions were generated."),
         );
         return;
       }
@@ -319,9 +399,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         const generated = await generateReviewSuggestions(resume.id, {
           instruction: lastPatchSetRequest.instruction,
         });
-        setPatchSets(generated.items);
-        setPatchSetEmptyMessage(
+        loadPatchSets(
+          generated.items,
           generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
+          buildPatchSetSummary(generated.items, "No valid review suggestions were generated."),
         );
         return;
       }
@@ -331,9 +412,10 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           jobDescription: lastPatchSetRequest.jobDescription,
           instruction: lastPatchSetRequest.instruction,
         });
-        setPatchSets(generated.items);
-        setPatchSetEmptyMessage(
+        loadPatchSets(
+          generated.items,
           generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
+          buildPatchSetSummary(generated.items, "No valid tailoring suggestions were generated."),
         );
         setSnapshotRefreshToken((current) => current + 1);
       }
@@ -342,8 +424,73 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
     }
   }
 
+  function moveActivePatchHunk(direction: "previous" | "next") {
+    if (visiblePatchEntries.length === 0) {
+      return;
+    }
+
+    const currentIndex = visiblePatchEntries.findIndex(({ hunk }) => hunk.id === activePatchHunkId);
+    const nextIndex =
+      direction === "previous"
+        ? Math.max(0, (currentIndex === -1 ? 0 : currentIndex) - 1)
+        : Math.min(visiblePatchEntries.length - 1, (currentIndex === -1 ? 0 : currentIndex) + 1);
+
+    setActivePatchHunkId(visiblePatchEntries[nextIndex]?.hunk.id ?? null);
+  }
+
+  async function handleApplyAllVisiblePatchHunks() {
+    setError(null);
+    setActivityMessage(null);
+
+    const currentEntries = [...visiblePatchEntries];
+    if (currentEntries.length === 0) {
+      return;
+    }
+
+    let appliedCount = 0;
+
+    for (const entry of currentEntries) {
+      const applied = await handleApplyPatchSetHunk(entry.patchSet, entry.hunk);
+      if (!applied) {
+        break;
+      }
+      appliedCount += 1;
+    }
+
+    setActivePatchHunkId(null);
+    if (appliedCount > 0) {
+      setActivityMessage(`Approved ${appliedCount} hunk${appliedCount === 1 ? "" : "s"}.`);
+    }
+  }
+
+  async function handleRejectAllVisiblePatchHunks() {
+    setError(null);
+    setActivityMessage(null);
+
+    const currentEntries = [...visiblePatchEntries];
+    if (currentEntries.length === 0) {
+      return;
+    }
+
+    let rejectedCount = 0;
+
+    for (const entry of currentEntries) {
+      const dismissed = await handleDismissPatchSetHunk(entry.patchSet, entry.hunk);
+      if (!dismissed) {
+        break;
+      }
+      rejectedCount += 1;
+    }
+
+    setActivePatchHunkId(null);
+    if (rejectedCount > 0) {
+      setActivityMessage(`Rejected ${rejectedCount} hunk${rejectedCount === 1 ? "" : "s"}.`);
+    }
+  }
+
   async function handleSuggestEdit(block: EditableBlockDto, instruction: string) {
     setError(null);
+    setActivityMessage(null);
     setPatchSetEmptyMessage(null);
 
     try {
@@ -351,11 +498,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         targetBlockId: block.id,
         instruction,
       });
-      setPatchSets(generated.items);
-      setLastPatchSetRequest({ mode: "edit", targetBlockId: block.id, instruction });
-      setPatchSetEmptyMessage(
+      loadPatchSets(
+        generated.items,
         generated.items.length === 0 ? "No valid edit suggestions were generated for that block." : null,
+        buildPatchSetSummary(generated.items, "No valid edit suggestions were generated."),
       );
+      setLastPatchSetRequest({ mode: "edit", targetBlockId: block.id, instruction });
     } catch (suggestError) {
       setError(suggestError instanceof Error ? suggestError.message : "Failed to generate edit suggestions.");
     }
@@ -364,20 +512,49 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
   async function handleReviewResume() {
     setError(null);
     setIsReviewing(true);
+    setActivityMessage(null);
     setPatchSetEmptyMessage(null);
 
     try {
       const instruction = "Review the current resume and suggest stronger wording for the weakest editable blocks.";
       const generated = await generateReviewSuggestions(resume.id, { instruction });
-      setPatchSets(generated.items);
-      setLastPatchSetRequest({ mode: "review", instruction });
-      setPatchSetEmptyMessage(
+      loadPatchSets(
+        generated.items,
         generated.items.length === 0 ? "No valid review suggestions were generated for the current draft." : null,
+        buildPatchSetSummary(generated.items, "No valid review suggestions were generated."),
       );
+      setLastPatchSetRequest({ mode: "review", instruction });
     } catch (reviewError) {
       setError(reviewError instanceof Error ? reviewError.message : "Failed to generate review suggestions.");
     } finally {
       setIsReviewing(false);
+    }
+  }
+
+  async function handleHolisticReviewResume() {
+    setError(null);
+    setIsHolisticReviewing(true);
+    setActivityMessage(null);
+    setPatchSetEmptyMessage(null);
+
+    try {
+      const draftReady = await ensureLatestDraftSaved();
+      if (!draftReady) {
+        return;
+      }
+
+      const instruction = "Review the resume holistically for flow, density, structure, and wording weaknesses while keeping edits concise.";
+      const generated = await generateHolisticReviewSuggestions(resume.id, { instruction });
+      loadPatchSets(
+        generated.items,
+        generated.items.length === 0 ? "No valid holistic review suggestions were generated for the current draft." : null,
+        buildPatchSetSummary(generated.items, "No valid holistic review suggestions were generated."),
+      );
+      setLastPatchSetRequest({ mode: "review", instruction });
+    } catch (reviewError) {
+      setError(reviewError instanceof Error ? reviewError.message : "Failed to generate holistic review suggestions.");
+    } finally {
+      setIsHolisticReviewing(false);
     }
   }
 
@@ -386,11 +563,13 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
 
     if (trimmedDescription.length < 20) {
       setError("Job description must be at least 20 characters to generate tailoring suggestions.");
+      setActivityMessage(null);
       return;
     }
 
     setError(null);
     setIsTailoring(true);
+    setActivityMessage(null);
     setPatchSetEmptyMessage(null);
 
     try {
@@ -404,11 +583,12 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         jobDescription: trimmedDescription,
         instruction,
       });
-      setPatchSets(generated.items);
-      setLastPatchSetRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
-      setPatchSetEmptyMessage(
+      loadPatchSets(
+        generated.items,
         generated.items.length === 0 ? "No valid tailoring suggestions were generated for that job description." : null,
+        buildPatchSetSummary(generated.items, "No valid tailoring suggestions were generated."),
       );
+      setLastPatchSetRequest({ mode: "tailor", instruction, jobDescription: trimmedDescription });
       setSnapshotRefreshToken((current) => current + 1);
     } catch (tailorError) {
       setError(tailorError instanceof Error ? tailorError.message : "Failed to generate tailoring suggestions.");
@@ -427,7 +607,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
         <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
           <div style={{ display: "flex", gap: 10 }}>
             <button
-              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              disabled={isSaving || isCompiling || isReviewing || isHolisticReviewing || isTailoring}
               onClick={handleReviewResume}
               style={secondaryButtonStyle}
               type="button"
@@ -435,7 +615,15 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
               {isReviewing ? "Reviewing..." : "Review Resume"}
             </button>
             <button
-              disabled={isSaving || isCompiling || isReviewing || isTailoring}
+              disabled={isSaving || isCompiling || isReviewing || isHolisticReviewing || isTailoring}
+              onClick={handleHolisticReviewResume}
+              style={secondaryButtonStyle}
+              type="button"
+            >
+              {isHolisticReviewing ? "Reviewing..." : "Holistic Review"}
+            </button>
+            <button
+              disabled={isSaving || isCompiling || isReviewing || isHolisticReviewing || isTailoring}
               onClick={handleCompile}
               style={secondaryButtonStyle}
               type="button"
@@ -473,9 +661,50 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
           </div>
         </div>
       </div>
+      {error ? <div style={errorBannerStyle}>{error}</div> : null}
+      {!error && activityMessage ? <div style={activityBannerStyle}>{activityMessage}</div> : null}
       <div style={workspaceStyle}>
-        <LatexEditor editorMode={editorMode} onChange={setSourceTex} value={sourceTex} />
+        <LatexEditor
+          activeHunkId={activePatchHunkId}
+          dismissedHunkIds={dismissedPatchHunkIds}
+          editorMode={editorMode}
+          onApplyAll={handleApplyAllVisiblePatchHunks}
+          onApplyHunk={handleApplyPatchSetHunk}
+          onChange={setSourceTex}
+          onDismissAll={handleRejectAllVisiblePatchHunks}
+          onDismissHunk={handleDismissPatchSetHunk}
+          onNavigateHunk={moveActivePatchHunk}
+          onSelectHunk={setActivePatchHunkId}
+          patchSets={patchSets}
+          value={sourceTex}
+        />
         <aside style={panelStyle}>
+          <ChatSidebar
+            initialMessages={initialChatMessages}
+            onPatchSetsGenerated={(items) =>
+              loadPatchSets(
+                items,
+                items.length === 0 ? "Chat did not produce any valid patch sets." : null,
+                buildPatchSetSummary(items, "Chat did not produce any valid patch sets."),
+              )
+            }
+            resumeId={resume.id}
+          />
+          <ConstraintPanel initialConstraints={constraints} resumeId={resume.id} />
+          <HolisticReviewPanel context={holisticReviewContextState} />
+          <div ref={patchReviewRef}>
+            <PatchSetReviewPanel
+              activeHunkId={activePatchHunkId}
+              dismissedIds={dismissedPatchHunkIds}
+              emptyMessage={patchSetEmptyMessage}
+              isLoading={isReviewing || isTailoring}
+              onActiveHunkChange={setActivePatchHunkId}
+              onApply={handleApplyPatchSetHunk}
+              onDismiss={handleDismissPatchSetHunk}
+              onRetrySet={handleRetryPatchSet}
+              patchSets={patchSets}
+            />
+          </div>
           <div style={{ display: "grid", gap: 6 }}>
             <strong style={{ fontSize: 16 }}>Compile Panel</strong>
             <span style={{ color: "#9ba3b4", fontSize: 13 }}>
@@ -547,14 +776,6 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
             </button>
           </div>
           <DocumentModelPanel documentModel={documentModelState} onSuggestEdit={handleSuggestEdit} />
-          <PatchSetReviewPanel
-            emptyMessage={patchSetEmptyMessage}
-            isLoading={isReviewing || isTailoring}
-            onApply={handleApplyPatchSetHunk}
-            onDismiss={handleDismissPatchSetHunk}
-            onRetrySet={handleRetryPatchSet}
-            patchSets={patchSets}
-          />
           <SnapshotPanel
             currentSourceTex={sourceTex}
             ensureLatestDraft={ensureLatestDraftSaved}
@@ -567,7 +788,7 @@ export function ResumeEditor({ documentModel, draft, initialSnapshots, resume }:
       </div>
       <div style={footerStyle}>
         <span style={{ color: "var(--muted)", fontSize: 13 }}>Draft version {version}</span>
-        {error ? <span style={{ color: "#ff8d8d", fontSize: 13 }}>{error}</span> : null}
+        {activityMessage && !error ? <span style={{ color: "var(--muted)", fontSize: 13 }}>{activityMessage}</span> : null}
       </div>
     </section>
   );
@@ -710,4 +931,24 @@ const footerStyle: CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
   gap: 12
+};
+
+const errorBannerStyle: CSSProperties = {
+  padding: "12px 14px",
+  border: "1px solid #d58c8c",
+  borderRadius: 12,
+  background: "var(--diff-remove-bg)",
+  color: "var(--diff-remove-fg)",
+  fontSize: 14,
+  lineHeight: 1.5,
+};
+
+const activityBannerStyle: CSSProperties = {
+  padding: "12px 14px",
+  border: "1px solid var(--border-strong)",
+  borderRadius: 12,
+  background: "var(--surface)",
+  color: "var(--fg)",
+  fontSize: 14,
+  lineHeight: 1.5,
 };

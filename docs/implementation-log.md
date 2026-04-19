@@ -23,6 +23,356 @@ Examples:
 
 ## Completed Work
 
+### 2026-04-18: Section 12 Holistic Review Planning
+
+Opened the next branch to start the PDF plus LaTeX review foundation after the chat layer became functional.
+
+Planned scope:
+
+- add a holistic-review context endpoint
+- expose the latest compile artifact state alongside current source structure
+- surface that context directly in the editor workspace
+- keep the patch-review workflow as the only mutation path
+
+Why this shape:
+
+- the product vision needs AI that understands both the source and the rendered resume
+- the first correct move is to make compile artifacts and source structure available as one explicit boundary
+- this avoids pretending the model is PDF-aware before the context pipeline exists
+
+### 2026-04-18: Section 12 Holistic Review Generation
+
+Added the first dedicated holistic-review generation path on top of the new context boundary.
+
+Added:
+
+- a dedicated `holistic-review` suggestion endpoint
+- prompt wiring that passes compile/PDF availability and source-structure context into review generation
+- a workspace `Holistic Review` action separate from the baseline wording-only review button
+- regression coverage for validated patch-set generation through the new path
+
+Why this shape:
+
+- the product needs a distinct review mode for flow, density, and structure, not just generic wording feedback
+- a separate action keeps the baseline review path simple while making the broader review intent explicit
+- the output still flows through the same validated patch-set system, so safety and review ergonomics stay consistent
+
+Verified:
+
+- backend test suite passes after the holistic-review route and prompt wiring were added
+- frontend production build still passes after the new workspace action was added
+
+### 2026-04-18: Section 12 First Rendered Review Signals
+
+Extended the holistic-review context so it carries first-pass rendered-review signals from the compiled PDF artifact itself.
+
+Added:
+
+- PDF artifact size to the holistic-review context
+- best-effort page-count extraction without adding a new PDF dependency
+- first layout-signal flags such as compile availability, page-count availability, and dense artifact heuristics
+- workspace rendering for the new rendered-review signals
+- prompt wiring so holistic review generation can see those signals
+
+Why this shape:
+
+- the product needs to move from “PDF exists” to “the system can reason about rendered output”
+- a conservative signal layer is better than pretending to have full PDF understanding without the tooling
+- this keeps the next slice focused on improving review quality rather than inventing a second architecture
+
+Verified:
+
+- backend test suite passes after the rendered-review signal additions
+- frontend production build still passes after the holistic-review panel update
+
+### 2026-04-19: Section 13 Constraint System
+
+Added the first durable rule system so ResumeOS can carry user instructions across AI generation modes instead of only through one-off prompts.
+
+Added:
+
+- per-resume constraint persistence and routes
+- prompt wiring for edit, review, holistic review, and tailor generation
+- a workspace `Constraints` panel for editing one rule per line
+- regression coverage for constraint round-trip behavior and rule-aware edit generation
+
+Why this shape:
+
+- instructions like “keep each bullet to one line” should be durable product state, not transient chat text
+- resume-level rules are the smallest practical boundary because they map cleanly to how users think about a base resume
+- threading the rules into existing generation paths keeps the architecture consistent and avoids a second rule engine
+
+Verified:
+
+- backend test suite passes after the constraints system was added
+- frontend production build still passes after the new workspace panel and loader changes
+
+### 2026-04-19: Section 13 Constraint Visibility
+
+Extended the constraints system so rule influence is visible during patch review rather than hidden in backend prompts.
+
+Added:
+
+- `appliedConstraints` on patch sets
+- prompt-generation wiring so every patch set carries the rules that shaped it
+- patch-review UI chips showing the active rules for each generated set
+- regression assertions for the new patch-set contract field
+
+Why this shape:
+
+- durable rules are only trustworthy if the user can see where they are being applied
+- patch sets are the right visibility boundary because that is where the user reviews AI decisions
+- this keeps the review workflow transparent without complicating the underlying patch application model
+
+Verified:
+
+- backend test suite passes after the patch-set contract update
+- frontend production build still passes after the review panel change
+
+### 2026-04-19: Section 13 Rule-Aware Chat
+
+Extended the chat layer so it participates in the same persistent rule system as edit, review, and tailor generation.
+
+Added:
+
+- constraint grounding in chat prompts
+- deterministic chat answers for “what rules/constraints are active?” questions
+- a chat footer that now explicitly states replies are grounded in saved constraints
+- regression coverage for active-rule chat responses and prompt constraint threading
+
+Why this shape:
+
+- the chat layer should not contradict the rest of the AI system’s durable rules
+- deterministic answers are the right boundary for factual rule questions, just like deterministic source counts are the right boundary for factual resume questions
+- this keeps chat aligned with the product’s explicit-control model instead of becoming a separate fuzzy instruction path
+
+Verified:
+
+- backend test suite passes after rule-aware chat grounding was added
+- frontend production build still passes after the chat sidebar text update
+
+### 2026-04-19: Section 14 Layout Heuristics
+
+Added the first constraint-aware layout logic so one-line bullet rules start behaving like product logic instead of only prompt text.
+
+Added:
+
+- rule-driven signals in holistic-review context
+- likely one-line bullet violation detection using conservative text-length heuristics
+- likely-violation labels in the holistic review panel
+- holistic-review block prioritization when the one-line bullet rule is active
+- regression coverage for rule-aware context and holistic-review generation
+
+Why this shape:
+
+- layout-sensitive rules need visible product behavior, not only prompt inheritance
+- a conservative heuristic is a valid first step before adding stronger PDF-side extraction
+- biasing holistic review toward the most likely violating bullets makes the AI system more useful immediately without changing the patch safety model
+
+Verified:
+
+- backend test suite passes after the layout-heuristic additions
+- frontend production build still passes after the holistic-review panel update
+
+### 2026-04-12: Section 11 Chat Layer Planning
+
+Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.
+
+Planned scope:
+
+- add a persistent per-resume chat thread
+- ground assistant replies in the current draft and style-memory context
+- let chat responses produce patch sets through the existing validated review path
+- avoid direct document mutation from chat
+
+Why this shape:
+
+- the safe patch-review foundation already exists, so chat should plug into it rather than invent a second editing path
+- the first slice should make chat visible and persistent before adding richer conversational behaviors
+
+### 2026-04-12: Section 11 Chat Layer Implementation
+
+Implemented the first real conversational layer on top of the safe patch workflow.
+
+Added:
+
+- persistent per-resume chat threads and stored user/assistant messages
+- chat routes for fetching a thread and sending new messages
+- an `AI Chat` sidebar in the editor workspace
+- chat intent routing across question, edit, review, and tailor requests
+- per-turn linkage showing whether an assistant reply generated patch sets
+- recent-message grounding so follow-up replies can see short conversation history
+- provider-backed assistant replies so chat can use the same provider abstraction as patch generation
+
+Why this shape:
+
+- the product needs real back-and-forth interaction, but document mutation still has to flow through validated patch application
+- grounding replies in recent turns is the minimum needed to make the chat feel conversational instead of transactional
+- threading chat through the provider interface keeps the architecture consistent when switching from mock to OpenAI-backed behavior
+
+Verified:
+
+- backend test suite passes after chat persistence, routing, and provider integration
+- frontend production build passes after the chat sidebar and editor integration
+
+### 2026-04-15: Section 11 Follow-Up Intent Handling
+
+Extended the chat layer so short follow-up prompts behave more like a conversation instead of resetting to question mode.
+
+Added:
+
+- follow-up-aware intent resolution that can inherit the last actionable user intent
+- first-pass reuse of the previous tailor request when a follow-up is clearly continuing that tailoring thread
+- chat response metadata indicating whether the resolved intent came from the current message or recent history
+- UI badges showing when a reply was treated as a follow-up
+- backend regression coverage for inherited review intent
+
+Why this shape:
+
+- users should not need to restate “review this resume” or re-paste the whole JD on every follow-up
+- inheriting only clear, short follow-up turns keeps the behavior useful without making intent routing opaque
+- exposing follow-up resolution in the UI makes the conversational state auditable instead of implicit
+
+Verified:
+
+- backend test suite passes after follow-up intent handling was added
+- frontend production build still passes after the chat metadata and badge updates
+
+### 2026-04-15: Section 11 Response Formatting
+
+Improved how chat responses read and render so different AI actions do not feel like the same generic assistant message.
+
+Added:
+
+- mode-specific provider phrasing for question, review, edit, and tailor replies
+- assistant-card headings that distinguish context answers from patch-generating replies
+- follow-up support for continuing a prior tailoring request with a short second prompt
+- backend regression coverage for follow-up tailoring behavior
+
+Why this shape:
+
+- conversational UX was still too uniform even after the chat layer became provider-backed
+- users need to understand quickly whether a reply answered a question or loaded edits to review
+- tailoring follow-ups are a common case and should not require re-pasting the whole job description every time
+
+Verified:
+
+- backend test suite passes after mode-specific response formatting and tailor follow-up handling
+- frontend production build still passes after the chat card presentation updates
+
+### 2026-04-15: Section 11 Chat Streaming
+
+Added the first incremental chat rendering path so the assistant no longer appears only after the whole response is ready.
+
+Added:
+
+- a streaming chat endpoint that emits `start`, `delta`, and `complete` events
+- client-side NDJSON parsing for streamed chat events
+- optimistic user/assistant message insertion in the chat sidebar
+- incremental assistant text rendering while the request is in flight
+- backend regression coverage for the stream endpoint
+
+Why this shape:
+
+- the chat UI felt transactional because the assistant only appeared after the full response was computed
+- transport-level streaming improves the product feel immediately without forcing a risky provider-level rewrite
+- the final `complete` event still reuses the validated chat response shape, so the patch workflow remains consistent
+
+Verified:
+
+- backend test suite passes after adding the stream endpoint and event test
+- frontend production build still passes after the streaming client and optimistic sidebar updates
+
+### 2026-04-15: Section 11 Provider Streaming and Feedback Replay
+
+Replaced the fake post-hoc streaming path with provider-owned streaming and started feeding recent patch outcomes back into chat.
+
+Added:
+
+- provider-level `stream_chat_reply(...)` support with real OpenAI stream handling and mock fallback chunking
+- chat-prompt construction shared by both sync and streaming response paths
+- persistence after stream completion so stored chat messages still match the final assistant reply
+- recent feedback summary lookup from `feedback_events`
+- chat response metadata and UI display for recent apply/reject outcomes
+- regression coverage proving the stream endpoint uses the provider streaming path directly
+
+Why this shape:
+
+- transport-level streaming improved the feel, but it still streamed a fully generated reply
+- true provider-owned streaming is the correct boundary if the chat experience is going to feel genuinely live
+- feeding accepted/rejected outcomes back into the chat closes the loop between conversation and editing behavior
+
+Verified:
+
+- backend test suite passes after provider streaming and feedback replay were added
+- frontend production build still passes after the chat metadata/UI updates
+
+### 2026-04-18: Section 11 Gemini Provider and Grounded Factual Chat
+
+Extended the chat layer so local testing can use Gemini and factual question-style chat turns stop guessing when the answer is directly available in the resume source.
+
+Added:
+
+- Gemini provider selection through the existing provider abstraction using the OpenAI-compatible Gemini endpoint
+- README guidance for configuring Gemini locally
+- more conversational chat prompts grounded in real resume snippets instead of only metadata
+- deterministic handling for count-style factual questions such as how many times a term appears in the resume
+- shared factual-answer behavior across both synchronous and streaming chat paths
+- regression coverage for Gemini provider selection and grounded factual question answers
+
+Why this shape:
+
+- the chat layer needed to feel like a real model-backed assistant locally, not only a mock-backed orchestration layer
+- factual questions about the current resume should not depend on model recall when the answer can be computed exactly from the draft
+- grounding the assistant in real resume snippets makes conversational answers less robotic without weakening the safe patch workflow
+
+Verified:
+
+- backend test suite passes after Gemini support and grounded factual question handling were added
+- frontend production build still passes after the chat prompt and provider updates
+
+### 2026-04-12: Section 10 Inline Editor Review
+
+Moved the patch-review workflow into Monaco so the AI editing loop behaves more like an IDE.
+
+Added:
+
+- inline Monaco hunk highlighting tied to the active patch set state
+- an inline review widget for the active hunk with previous/next, accept/reject, and approve-all/reject-all controls
+- keyboard shortcuts for current-hunk and batch review actions
+- tighter editor-native styling so the review flow reads more like a code editor than a detached form
+
+Why this shape:
+
+- the backend patch workflow was already safe enough; the gap was product ergonomics
+- review should happen where the source is, not only in a sidebar
+- moving the active hunk state into the editor container made Monaco and the review panel share one coherent review state
+
+Verified:
+
+- backend test suite passes after the inline-review integration
+- frontend production build passes after the Monaco decoration and widget work
+
+### 2026-04-12: Section 10 Patch Visibility Fix
+
+Closed a real usability gap in the patch-review workflow.
+
+What changed:
+
+- moved the patch-review area to the top of the editor sidebar so generated edits are visible immediately
+- added top-level activity and error banners so failed tailor/edit actions are not hidden in the footer
+- auto-scrolls the workspace to the patch-review area after edit, review, and tailor generation
+
+Why:
+
+- generation was already wired and passing tests, but the UI made successful results easy to miss
+- the fix needed to improve visibility and navigation, not change the suggestion backend
+
+Verified:
+
+- backend test suite passes after the review-visibility update
+- frontend production build passes after the layout and status-message changes
+
 ### 2026-04-09: Section 6 Planning
 
 Opened the Section 6 branch from merged `main` after Section 5 was pushed and integrated.
@@ -281,6 +631,52 @@ Verified:
 - backend test suite passes after the Google auth runtime verification update
 - frontend production build passes
 - `bash scripts/verify_runtime.sh` passes against the live local API and frontend
+
+### 2026-04-11: Section 10 Planning
+
+Opened the next branch from merged `main` after Section 9 was integrated.
+
+Planned scope:
+
+- turn patch-set review into a stronger red/green diff workflow
+- add approve-all and reject-all actions
+- add next/previous hunk navigation
+- keep the existing safe patch-set contract and backend validation unchanged
+
+Primary planning file:
+
+- [section-10-patch-review-ux.md](/Users/mderaznasr/Documents/GitHub/ResumeOS/docs/tasks/section-10-patch-review-ux.md)
+
+### 2026-04-11: Section 10 Diff Review UX
+
+Upgraded the patch review surface so it behaves more like reviewing code changes instead of scanning generic patch cards.
+
+Added:
+
+- stronger red/green diff styling with line-by-line presentation
+- next/previous hunk navigation
+- approve-all and reject-all actions for visible hunks
+- clearer active-hunk focus styling in the review panel
+
+Verified:
+
+- backend test suite passes after the UI-only review upgrade
+- frontend production build passes with the new review workflow
+
+### 2026-04-12: Section 10 Review Flow Progression
+
+Refined the review flow so working through hunks feels more intentional instead of leaving navigation state ambiguous after actions.
+
+Added:
+
+- active-hunk auto-advance after approve/reject
+- per-set visible-hunk counts
+- clearer completion messaging after approve-all or reject-all
+
+Verified:
+
+- backend test suite still passes after the review-flow refinement
+- frontend production build still passes with the updated progression logic
 
 ### 2026-04-10: Section 9 Planning
 

@@ -23,6 +23,16 @@ class UpdateUserSettingsInput(BaseModel):
     themeMode: Literal["dark", "light"] | None = None
 
 
+class ResumeConstraintsDto(BaseModel):
+    resumeId: str
+    rules: list[str]
+    updatedAt: str
+
+
+class UpdateResumeConstraintsInput(BaseModel):
+    rules: list[str] = Field(default_factory=list, max_length=12)
+
+
 class ResumeDto(BaseModel):
     id: str
     title: str
@@ -106,6 +116,7 @@ class PatchSetDto(BaseModel):
     title: str
     summary: str
     styleExamples: list[str] = []
+    appliedConstraints: list[str] = []
     retrySeed: int
     items: list[PatchHunkDto]
 
@@ -139,6 +150,10 @@ class GenerateReviewSuggestionsInput(BaseModel):
     instruction: str = Field(min_length=1, max_length=300)
 
 
+class GenerateHolisticReviewSuggestionsInput(BaseModel):
+    instruction: str = Field(min_length=1, max_length=300)
+
+
 class GenerateTailorSuggestionsInput(BaseModel):
     jobDescription: str = Field(min_length=20, max_length=6000)
     instruction: str = Field(min_length=1, max_length=300)
@@ -168,6 +183,22 @@ class CompileResultDto(BaseModel):
     compiledAt: str
 
 
+class HolisticReviewContextDto(BaseModel):
+    resumeId: str
+    latestCompileStatus: Literal["success", "error"] | None = None
+    latestCompileDraftVersion: int | None = None
+    latestCompiledAt: str | None = None
+    pdfUrl: str | None = None
+    pdfPageCount: int | None = None
+    pdfSizeKb: int | None = None
+    layoutSignals: list[str] = []
+    ruleSignals: list[str] = []
+    likelyViolationLabels: list[str] = []
+    sourceLineCount: int
+    editableBlockCount: int
+    editableBlockLabels: list[str]
+
+
 class SnapshotDto(BaseModel):
     id: str
     resumeId: str
@@ -190,3 +221,30 @@ class CreateSnapshotInput(BaseModel):
 
 class RestoreSnapshotInput(BaseModel):
     snapshotId: str
+
+
+class ChatMessageDto(BaseModel):
+    id: str
+    role: Literal["user", "assistant"]
+    content: str
+    createdAt: str
+
+
+class ChatThreadDto(BaseModel):
+    id: str
+    resumeId: str
+    messages: list[ChatMessageDto]
+
+
+class CreateChatMessageInput(BaseModel):
+    content: str = Field(min_length=1, max_length=6000)
+
+
+class ChatResponseDto(BaseModel):
+    thread: ChatThreadDto
+    chatIntent: Literal["question", "edit", "review", "tailor"]
+    intentSource: Literal["message", "history"]
+    generatedPatchSetSummary: str | None = None
+    recentFeedbackSummary: str | None = None
+    assistantMessageId: str
+    patchSets: list[PatchSetDto] = []

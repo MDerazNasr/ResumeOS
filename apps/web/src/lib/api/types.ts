@@ -18,6 +18,16 @@ export type UpdateUserSettingsInput = {
   themeMode?: "dark" | "light";
 };
 
+export type ResumeConstraintsDto = {
+  resumeId: string;
+  rules: string[];
+  updatedAt: string;
+};
+
+export type UpdateResumeConstraintsInput = {
+  rules: string[];
+};
+
 export type ResumeDto = {
   id: string;
   title: string;
@@ -90,6 +100,7 @@ export type PatchSetDto = {
   title: string;
   summary: string;
   styleExamples: string[];
+  appliedConstraints: string[];
   retrySeed: number;
   items: PatchHunkDto[];
 };
@@ -120,6 +131,10 @@ export type GenerateEditSuggestionsInput = {
 };
 
 export type GenerateReviewSuggestionsInput = {
+  instruction: string;
+};
+
+export type GenerateHolisticReviewSuggestionsInput = {
   instruction: string;
 };
 
@@ -156,6 +171,22 @@ export type CompileResultDto = {
   compiledAt: string;
 };
 
+export type HolisticReviewContextDto = {
+  resumeId: string;
+  latestCompileStatus: "success" | "error" | null;
+  latestCompileDraftVersion: number | null;
+  latestCompiledAt: string | null;
+  pdfUrl: string | null;
+  pdfPageCount: number | null;
+  pdfSizeKb: number | null;
+  layoutSignals: string[];
+  ruleSignals: string[];
+  likelyViolationLabels: string[];
+  sourceLineCount: number;
+  editableBlockCount: number;
+  editableBlockLabels: string[];
+};
+
 export type SnapshotDto = {
   id: string;
   resumeId: string;
@@ -178,4 +209,31 @@ export type CreateSnapshotInput = {
 
 export type RestoreSnapshotInput = {
   snapshotId: string;
+};
+
+export type ChatMessageDto = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+};
+
+export type ChatThreadDto = {
+  id: string;
+  resumeId: string;
+  messages: ChatMessageDto[];
+};
+
+export type CreateChatMessageInput = {
+  content: string;
+};
+
+export type ChatResponseDto = {
+  thread: ChatThreadDto;
+  chatIntent: "question" | "edit" | "review" | "tailor";
+  intentSource: "message" | "history";
+  generatedPatchSetSummary: string | null;
+  recentFeedbackSummary: string | null;
+  assistantMessageId: string;
+  patchSets: PatchSetDto[];
 };

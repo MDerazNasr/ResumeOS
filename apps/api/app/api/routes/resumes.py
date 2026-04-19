@@ -1,18 +1,25 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 
 from app.models.schemas import (
     ApplyPatchInput,
+    ChatResponseDto,
+    ChatThreadDto,
     CompileRequestInput,
+    CreateChatMessageInput,
     CompileResultDto,
     CreateSnapshotInput,
     CreateResumeInput,
     DocumentModelDto,
     GenerateEditSuggestionsInput,
+    GenerateHolisticReviewSuggestionsInput,
     GenerateReviewSuggestionsInput,
     GenerateTailorSuggestionsInput,
+    HolisticReviewContextDto,
     LogFeedbackInput,
     PatchValidationResultDto,
     PatchSetListDto,
+    ResumeConstraintsDto,
     RestoreSnapshotInput,
     ResumeDto,
     ResumeListResponseDto,
@@ -20,6 +27,7 @@ from app.models.schemas import (
     SnapshotDetailDto,
     SnapshotListResponseDto,
     UpdateDraftInput,
+    UpdateResumeConstraintsInput,
     UserDto,
     ValidatePatchInput,
     WorkingDraftDto,
@@ -27,9 +35,17 @@ from app.models.schemas import (
 from app.services.compile import compile_resume_source_for_user
 from app.services.compile import get_latest_pdf_for_user
 from app.services.auth import get_current_user
+from app.services.chat import create_chat_message_for_user, get_chat_thread_for_user, stream_chat_message_for_user
+from app.services.constraints import get_resume_constraints_for_user, update_resume_constraints_for_user
 from app.services.document_model import get_document_model_for_user
-from app.services.edit_suggestions import generate_edit_suggestions_for_user, generate_review_suggestions_for_user, generate_tailor_suggestions_for_user
+from app.services.edit_suggestions import (
+    generate_edit_suggestions_for_user,
+    generate_holistic_review_suggestions_for_user,
+    generate_review_suggestions_for_user,
+    generate_tailor_suggestions_for_user,
+)
 from app.services.feedback import log_feedback_for_user
+from app.services.holistic_review import get_holistic_review_context_for_user
 from app.services.mock_patches import list_seeded_patch_sets_for_user
 from app.services.patch_apply import apply_patch_for_user
 from app.services.patch_validation import validate_patch_for_user
@@ -79,6 +95,31 @@ def get_document_model(resume_id: str, current_user: UserDto = Depends(get_curre
     return get_document_model_for_user(current_user.id, resume_id)
 
 
+@router.get("/{resume_id}/constraints", response_model=ResumeConstraintsDto)
+def get_resume_constraints(
+    resume_id: str,
+    current_user: UserDto = Depends(get_current_user),
+) -> ResumeConstraintsDto:
+    return get_resume_constraints_for_user(current_user.id, resume_id)
+
+
+@router.patch("/{resume_id}/constraints", response_model=ResumeConstraintsDto)
+def update_resume_constraints(
+    resume_id: str,
+    input_data: UpdateResumeConstraintsInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> ResumeConstraintsDto:
+    return update_resume_constraints_for_user(current_user.id, resume_id, input_data)
+
+
+@router.get("/{resume_id}/holistic-review/context", response_model=HolisticReviewContextDto)
+def get_holistic_review_context(
+    resume_id: str,
+    current_user: UserDto = Depends(get_current_user),
+) -> HolisticReviewContextDto:
+    return get_holistic_review_context_for_user(current_user.id, resume_id)
+
+
 @router.post("/{resume_id}/patches/validate", response_model=PatchValidationResultDto)
 def validate_patch(
     resume_id: str,
@@ -115,6 +156,15 @@ def generate_review_suggestions(
     return generate_review_suggestions_for_user(current_user.id, resume_id, input_data)
 
 
+@router.post("/{resume_id}/suggestions/holistic-review", response_model=PatchSetListDto)
+def generate_holistic_review_suggestions(
+    resume_id: str,
+    input_data: GenerateHolisticReviewSuggestionsInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> PatchSetListDto:
+    return generate_holistic_review_suggestions_for_user(current_user.id, resume_id, input_data)
+
+
 @router.post("/{resume_id}/suggestions/tailor", response_model=PatchSetListDto)
 def generate_tailor_suggestions(
     resume_id: str,
@@ -131,6 +181,35 @@ def apply_patch(
     current_user: UserDto = Depends(get_current_user),
 ) -> WorkingDraftDto:
     return apply_patch_for_user(current_user.id, resume_id, input_data)
+
+
+@router.get("/{resume_id}/chat", response_model=ChatThreadDto)
+def get_chat_thread(
+    resume_id: str,
+    current_user: UserDto = Depends(get_current_user),
+) -> ChatThreadDto:
+    return get_chat_thread_for_user(current_user.id, resume_id)
+
+
+@router.post("/{resume_id}/chat/messages", response_model=ChatResponseDto)
+def create_chat_message(
+    resume_id: str,
+    input_data: CreateChatMessageInput,
+    current_user: UserDto = Depends(get_current_user),
+) -> ChatResponseDto:
+    return create_chat_message_for_user(current_user.id, resume_id, input_data)
+
+
+@router.post("/{resume_id}/chat/messages/stream")
+async def stream_chat_message(
+    resume_id: str,
+    input_data: CreateChatMessageInput,
+    current_user: UserDto = Depends(get_current_user),
+):
+    return StreamingResponse(
+        stream_chat_message_for_user(current_user.id, resume_id, input_data),
+        media_type="application/x-ndjson",
+    )
 
 
 @router.post("/{resume_id}/feedback", status_code=204)

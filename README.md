@@ -128,3 +128,19 @@ export OPENAI_BASE_URL=https://api.openai.com/v1
 ```
 
 If `RESUMEOS_LLM_PROVIDER` is not set, ResumeOS uses the mock provider by default.
+
+To use Gemini instead, set:
+
+```bash
+export RESUMEOS_LLM_PROVIDER=gemini
+export GEMINI_API_KEY=your_gemini_key_here
+export RESUMEOS_GEMINI_MODEL=gemini-2.5-flash
+```
+
+Optional:
+
+```bash
+export GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+```
+
+ResumeOS uses Gemini through Google's OpenAI-compatible chat completions endpoint, so chat streaming and patch generation keep the same internal architecture.

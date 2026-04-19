@@ -4,7 +4,7 @@
 
 Active milestone:
 
-- Section 9: hardening
+- Section 14: constraint-aware layout heuristics
 
 ## Completed Milestones
 
@@ -19,6 +19,11 @@ Active milestone:
 - editor enhancement: Vim mode completed and merged into `main`
 - Section 7: auth and settings completed and merged into `main`
 - Section 8: UI preferences completed and merged into `main`
+- Section 9: hardening completed and merged into `main`
+- Section 10: inline patch review UX completed on a feature branch
+- Section 11: chat layer completed on a feature branch
+- Section 12: holistic PDF + LaTeX review completed on a feature branch
+- Section 13: constraint and rule system completed on a feature branch
 
 ## Current Constraints
 
@@ -38,7 +43,7 @@ Active milestone:
 
 - editor page is a two-pane workspace
 - left pane: Monaco-based LaTeX editor
-- right pane: compile status, real PDF preview, snapshots, document model summary, and suggestion review
+- right pane: AI chat, compile status, real PDF preview, snapshots, document model summary, and suggestion review
 - the review surface now speaks in terms of patch sets instead of generic suggestions
 - the workspace now also includes a first tailoring input for job descriptions
 - tailoring now creates a pre-tailor snapshot before suggestions are generated
@@ -46,23 +51,23 @@ Active milestone:
 
 ## Immediate Next Goal
 
-Close out the current hardening branch and decide whether to merge it before the next major section.
+Turn layout-sensitive rules into visible product logic.
 
 That means:
 
-- keep the stable local startup flow documented
-- keep the Tailwind config warning gone
-- keep a stable runtime verification path for auth and app-shell routes
-- keep that runtime verification aligned with the current Google-backed auth flow
+- derive rule-driven holistic-review signals
+- detect likely one-line bullet violations conservatively
+- surface likely violating blocks in the workspace
+- bias holistic review generation toward likely violating bullets
+- preserve the existing patch-review safety model while adding constraint-aware review logic
 
 ## Definition of Success for the Current Slice
 
 - backend tests pass
 - frontend production build passes
-- the known Tailwind build warning is gone
-- the local startup workflow in the README matches how the project is actually being run now
-- the stable runtime verification script passes against the live API and frontend
-- the runtime verification script reflects the current Google-backed auth behavior
+- holistic-review context exposes rule-driven signals
+- the workspace shows likely constraint-related layout issues
+- holistic review generation reflects an active one-line bullet rule
 
 ## Known Risks
 
@@ -73,3 +78,13 @@ That means:
 - auth changes touch every route through current-user resolution
 - cookie/session handling must work cleanly across the local frontend/backend split
 - the local Next runtime still behaves less reliably than the production build in this environment, so the docs need to steer people toward the stable workflow explicitly
+
+## Next Planned Branch
+
+After the first rule-aware layout heuristics are in place, choose between merging the accumulated AI branches or deepening PDF-aware enforcement.
+
+That next slice should include:
+
+- stronger PDF-aware enforcement for layout-sensitive constraints
+- better rendered-layout extraction than the current heuristics
+- merge and stabilize the accumulated Section 11-14 work on top of `main`
