@@ -11,7 +11,7 @@ export const metadata = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
-  const themeMode = user ? (await getUserSettings()).themeMode : "dark";
+  const themeMode = user ? (await getUserSettings()).themeMode : "light";
 
   return (
     <html data-theme={themeMode} lang="en">

@@ -47,6 +47,7 @@ export function LatexEditor({
   const mouseHandlerRef = useRef<{ dispose?: () => void } | null>(null);
   const keyHandlerRef = useRef<{ dispose?: () => void } | null>(null);
   const [vimStatus, setVimStatus] = useState("Standard editing");
+  const [themeMode, setThemeMode] = useState<"dark" | "light">("light");
   const visiblePatchEntries = useMemo(
     () =>
       patchSets.flatMap((patchSet) =>
@@ -103,6 +104,35 @@ export function LatexEditor({
       vimModeRef.current = null;
     };
   }, [editorMode]);
+
+  useEffect(() => {
+    const applyTheme = () => {
+      const nextTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+      setThemeMode(nextTheme);
+    };
+
+    applyTheme();
+
+    const observer = new MutationObserver(() => {
+      applyTheme();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+
+    if (!editor || !monaco) {
+      return;
+    }
+
+    monaco.editor.setTheme(themeMode === "light" ? "vs" : "vs-dark");
+  }, [themeMode]);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -399,7 +429,7 @@ export function LatexEditor({
           scrollBeyondLastLine: false,
           wordWrap: "on",
         }}
-        theme="vs-dark"
+        theme={themeMode === "light" ? "vs" : "vs-dark"}
         value={value}
       />
       <div style={statusBarStyle}>
@@ -413,9 +443,9 @@ export function LatexEditor({
 const editorShellStyle: CSSProperties = {
   display: "grid",
   overflow: "hidden",
-  border: "1px solid #262b36",
+  border: "1px solid var(--border-strong)",
   borderRadius: 16,
-  background: "#12151c",
+  background: "var(--surface)",
 };
 
 const statusBarStyle: CSSProperties = {
@@ -424,12 +454,12 @@ const statusBarStyle: CSSProperties = {
   alignItems: "center",
   gap: 12,
   padding: "10px 14px",
-  borderTop: "1px solid #262b36",
-  background: "#10141b",
+  borderTop: "1px solid var(--border-strong)",
+  background: "var(--surface-muted)",
 };
 
 const statusTextStyle: CSSProperties = {
-  color: "#9ba3b4",
+  color: "var(--muted)",
   fontSize: 12,
   fontFamily: "var(--font-geist-mono, monospace)",
   letterSpacing: "0.02em",
