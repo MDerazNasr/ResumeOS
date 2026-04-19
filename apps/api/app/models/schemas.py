@@ -178,6 +178,9 @@ class HolisticReviewContextDto(BaseModel):
     latestCompileDraftVersion: int | None = None
     latestCompiledAt: str | None = None
     pdfUrl: str | None = None
+    pdfPageCount: int | None = None
+    pdfSizeKb: int | None = None
+    layoutSignals: list[str] = []
     sourceLineCount: int
     editableBlockCount: int
     editableBlockLabels: list[str]

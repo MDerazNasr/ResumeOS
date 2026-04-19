@@ -38,6 +38,8 @@ class HolisticReviewContextTests(unittest.TestCase):
         self.assertEqual(payload["latestCompileStatus"], "success")
         self.assertEqual(payload["latestCompileDraftVersion"], self.draft["version"])
         self.assertTrue(payload["pdfUrl"].endswith("/compile/latest.pdf"))
+        self.assertGreaterEqual(payload["pdfSizeKb"], 1)
+        self.assertGreaterEqual(len(payload["layoutSignals"]), 1)
 
 
 if __name__ == "__main__":

@@ -62,6 +62,29 @@ Verified:
 - backend test suite passes after the holistic-review route and prompt wiring were added
 - frontend production build still passes after the new workspace action was added
 
+### 2026-04-18: Section 12 First Rendered Review Signals
+
+Extended the holistic-review context so it carries first-pass rendered-review signals from the compiled PDF artifact itself.
+
+Added:
+
+- PDF artifact size to the holistic-review context
+- best-effort page-count extraction without adding a new PDF dependency
+- first layout-signal flags such as compile availability, page-count availability, and dense artifact heuristics
+- workspace rendering for the new rendered-review signals
+- prompt wiring so holistic review generation can see those signals
+
+Why this shape:
+
+- the product needs to move from “PDF exists” to “the system can reason about rendered output”
+- a conservative signal layer is better than pretending to have full PDF understanding without the tooling
+- this keeps the next slice focused on improving review quality rather than inventing a second architecture
+
+Verified:
+
+- backend test suite passes after the rendered-review signal additions
+- frontend production build still passes after the holistic-review panel update
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.

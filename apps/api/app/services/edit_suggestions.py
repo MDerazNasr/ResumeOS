@@ -103,11 +103,15 @@ def generate_holistic_review_suggestions_for_user(
     context_parts = [
         f"latest compile status: {holistic_context.latestCompileStatus or 'missing'}",
         f"pdf available: {'yes' if holistic_context.pdfUrl else 'no'}",
+        f"pdf page count: {holistic_context.pdfPageCount or 'unknown'}",
+        f"pdf size kb: {holistic_context.pdfSizeKb or 'unknown'}",
         f"source lines: {holistic_context.sourceLineCount}",
         f"editable blocks: {holistic_context.editableBlockCount}",
     ]
     if holistic_context.editableBlockLabels:
         context_parts.append(f"focus areas: {', '.join(holistic_context.editableBlockLabels)}")
+    if holistic_context.layoutSignals:
+        context_parts.append(f"layout signals: {', '.join(holistic_context.layoutSignals)}")
     return _generate_review_suggestions_for_user(
         user_id,
         resume_id,

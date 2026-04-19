@@ -29,7 +29,7 @@ Build the first real PDF plus LaTeX review boundary for AI-assisted resume criti
 - [x] refresh the context after compile
 - [x] use the context inside model-backed review generation
 - [x] add a dedicated holistic-review action in the workspace
-- [ ] incorporate rendered-PDF review signals
+- [x] incorporate first rendered-PDF review signals
 
 ## Verification Checklist
 
@@ -39,3 +39,4 @@ Build the first real PDF plus LaTeX review boundary for AI-assisted resume criti
 - [ ] holistic-review context route reports the latest PDF after compile
 - [ ] workspace panel renders current holistic-review context
 - [ ] holistic-review action returns validated patch sets through the existing review workflow
+- [ ] holistic-review context exposes first rendered-review signals from the compiled artifact

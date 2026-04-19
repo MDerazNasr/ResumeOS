@@ -37,6 +37,13 @@ export function HolisticReviewPanel({ context }: HolisticReviewPanelProps) {
           <strong style={{ fontSize: 16 }}>{context.editableBlockCount}</strong>
           <span style={valueHintStyle}>Safe content blocks available for AI edits.</span>
         </div>
+        <div style={statCardStyle}>
+          <span style={labelStyle}>PDF Pages</span>
+          <strong style={{ fontSize: 16 }}>{context.pdfPageCount ?? "?"}</strong>
+          <span style={valueHintStyle}>
+            {context.pdfSizeKb ? `${context.pdfSizeKb} KB artifact` : "Compile to derive rendered review signals."}
+          </span>
+        </div>
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         <span style={labelStyle}>Reviewable Focus Areas</span>
@@ -56,6 +63,18 @@ export function HolisticReviewPanel({ context }: HolisticReviewPanelProps) {
             ? "A compiled PDF artifact is available, so the next slice can add rendered-review grounding."
             : "No compiled PDF artifact is available yet, so review is currently source-only."}
         </span>
+        {context.layoutSignals.length > 0 ? (
+          <div style={{ display: "grid", gap: 8 }}>
+            <span style={labelStyle}>Rendered Signals</span>
+            <div style={chipWrapStyle}>
+              {context.layoutSignals.map((signal) => (
+                <span key={signal} style={chipStyle}>
+                  {signal}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

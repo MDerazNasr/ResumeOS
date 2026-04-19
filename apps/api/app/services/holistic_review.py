@@ -1,3 +1,6 @@
+import re
+from pathlib import Path
+
 from app.db.database import get_connection
 from app.models.schemas import HolisticReviewContextDto
 from app.services.document_model import get_document_model_for_user
@@ -11,7 +14,7 @@ def get_holistic_review_context_for_user(user_id: str, resume_id: str) -> Holist
     with get_connection() as connection:
         latest_compile = connection.execute(
             """
-            SELECT c.status, c.draft_version, c.created_at, c.pdf_path
+            SELECT c.status, c.draft_version, c.created_at, c.pdf_path, c.log_text
             FROM compile_runs c
             JOIN resumes r ON r.id = c.resume_id
             WHERE c.resume_id = ? AND r.user_id = ?
@@ -21,13 +24,45 @@ def get_holistic_review_context_for_user(user_id: str, resume_id: str) -> Holist
             (resume_id, user_id),
         ).fetchone()
 
+    pdf_page_count = None
+    pdf_size_kb = None
+    layout_signals: list[str] = []
+
+    if latest_compile and latest_compile["pdf_path"]:
+        pdf_path = Path(latest_compile["pdf_path"])
+        if pdf_path.exists():
+            pdf_page_count = _extract_pdf_page_count(pdf_path)
+            pdf_size_kb = max(1, round(pdf_path.stat().st_size / 1024))
+            if pdf_page_count is not None:
+                layout_signals.append("single-page-likely" if pdf_page_count <= 1 else "multi-page")
+            else:
+                layout_signals.append("page-count-unavailable")
+            if pdf_size_kb >= 200:
+                layout_signals.append("dense-pdf-artifact")
+
+    if latest_compile and latest_compile["status"] == "error":
+        layout_signals.append("compile-errors-present")
+
     return HolisticReviewContextDto(
         resumeId=resume_id,
         latestCompileStatus=latest_compile["status"] if latest_compile else None,
         latestCompileDraftVersion=latest_compile["draft_version"] if latest_compile else None,
         latestCompiledAt=latest_compile["created_at"] if latest_compile else None,
         pdfUrl=f"/resumes/{resume_id}/compile/latest.pdf" if latest_compile and latest_compile["pdf_path"] else None,
+        pdfPageCount=pdf_page_count,
+        pdfSizeKb=pdf_size_kb,
+        layoutSignals=layout_signals,
         sourceLineCount=len(draft.sourceTex.splitlines()),
         editableBlockCount=len(document_model.editableBlocks),
         editableBlockLabels=[block.label for block in document_model.editableBlocks[:5]],
     )
+
+
+def _extract_pdf_page_count(pdf_path: Path) -> int | None:
+    try:
+        pdf_bytes = pdf_path.read_bytes()
+    except OSError:
+        return None
+
+    matches = re.findall(rb"/Type\s*/Page\b", pdf_bytes)
+    return len(matches) or None

@@ -57,6 +57,7 @@ That means:
 - connect that context to the current draft and editable-block structure
 - surface holistic review context visibly in the workspace
 - route a dedicated holistic-review action through the existing validated patch-set flow
+- derive first rendered-review signals from the compiled PDF artifact
 - preserve the existing patch-review safety model while expanding AI context
 
 ## Definition of Success for the Current Slice
@@ -65,6 +66,7 @@ That means:
 - frontend production build passes
 - the backend exposes holistic-review context for a resume
 - the context reports latest compile status and PDF availability
+- the context reports first rendered-review signals from the compiled artifact
 - the context reports current source-level structure such as editable block count
 - the workspace renders that context clearly
 - the holistic-review context refreshes after compile
@@ -82,10 +84,10 @@ That means:
 
 ## Next Planned Branch
 
-After the holistic review context is wired into review generation, add actual rendered-PDF review signals.
+After the first rendered-review signals are in place, deepen PDF-aware review quality.
 
 That next slice should include:
 
-- rendered-PDF review signals beyond metadata and compile availability
+- better rendered-PDF review signals beyond artifact-size and compile-derived heuristics
 - first PDF-aware review behavior behind the same patch-set workflow
 - user-visible handling for layout and density constraints

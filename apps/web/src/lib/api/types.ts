@@ -166,6 +166,9 @@ export type HolisticReviewContextDto = {
   latestCompileDraftVersion: number | null;
   latestCompiledAt: string | null;
   pdfUrl: string | null;
+  pdfPageCount: number | null;
+  pdfSizeKb: number | null;
+  layoutSignals: string[];
   sourceLineCount: number;
   editableBlockCount: number;
   editableBlockLabels: string[];
