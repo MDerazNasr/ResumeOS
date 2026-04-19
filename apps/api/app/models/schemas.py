@@ -116,6 +116,7 @@ class PatchSetDto(BaseModel):
     title: str
     summary: str
     styleExamples: list[str] = []
+    appliedConstraints: list[str] = []
     retrySeed: int
     items: list[PatchHunkDto]
 

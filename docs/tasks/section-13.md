@@ -24,7 +24,7 @@ Persist resume-level rules and apply them across AI generation flows.
 - [x] add get/update routes for constraints
 - [x] thread constraints into AI generation prompts
 - [x] add a workspace panel for editing constraints
-- [ ] expose rule influence more explicitly inside patch review
+- [x] expose rule influence more explicitly inside patch review
 
 ## Verification Checklist
 
@@ -33,3 +33,4 @@ Persist resume-level rules and apply them across AI generation flows.
 - [x] constraints can be created and read back
 - [x] constraints apply to edit generation
 - [x] constraints are visible in the editor workspace
+- [x] patch sets show which constraints influenced generation

@@ -42,6 +42,7 @@ class TailorSuggestionsTestCase(unittest.TestCase):
             )
             self.assertGreaterEqual(len(suggestion_set["items"]), 1)
             self.assertGreaterEqual(len(suggestion_set["styleExamples"]), 1)
+            self.assertIn("appliedConstraints", suggestion_set)
 
             for proposal in suggestion_set["items"]:
                 self.assertEqual(proposal["status"], "validated")

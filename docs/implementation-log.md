@@ -107,6 +107,28 @@ Verified:
 - backend test suite passes after the constraints system was added
 - frontend production build still passes after the new workspace panel and loader changes
 
+### 2026-04-19: Section 13 Constraint Visibility
+
+Extended the constraints system so rule influence is visible during patch review rather than hidden in backend prompts.
+
+Added:
+
+- `appliedConstraints` on patch sets
+- prompt-generation wiring so every patch set carries the rules that shaped it
+- patch-review UI chips showing the active rules for each generated set
+- regression assertions for the new patch-set contract field
+
+Why this shape:
+
+- durable rules are only trustworthy if the user can see where they are being applied
+- patch sets are the right visibility boundary because that is where the user reviews AI decisions
+- this keeps the review workflow transparent without complicating the underlying patch application model
+
+Verified:
+
+- backend test suite passes after the patch-set contract update
+- frontend production build still passes after the review panel change
+
 ### 2026-04-12: Section 11 Chat Layer Planning
 
 Opened a new branch for the first conversational AI slice after the inline editor review workflow was in place.

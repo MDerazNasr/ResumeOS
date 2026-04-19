@@ -82,6 +82,7 @@ def generate_edit_suggestions_for_user(
                 title=f"Edit suggestions for {target_block.label}",
                 summary=input_data.instruction,
                 styleExamples=style_examples,
+                appliedConstraints=constraint_rules,
                 retrySeed=0,
                 items=proposals,
             )
@@ -208,6 +209,7 @@ def _generate_review_suggestions_for_user(
                     title=f"{'Holistic ' if holistic_context else ''}Review suggestions for {block.label}",
                     summary=instruction,
                     styleExamples=block_style_examples[block.id],
+                    appliedConstraints=constraint_rules,
                     retrySeed=0,
                     items=proposals,
                 )
@@ -312,6 +314,7 @@ def generate_tailor_suggestions_for_user(
                     title=theme["title"],
                     summary=theme["summary"],
                     styleExamples=style_examples,
+                    appliedConstraints=constraint_rules,
                     retrySeed=0,
                     items=proposals,
                 )

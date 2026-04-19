@@ -100,6 +100,7 @@ export type PatchSetDto = {
   title: string;
   summary: string;
   styleExamples: string[];
+  appliedConstraints: string[];
   retrySeed: number;
   items: PatchHunkDto[];
 };

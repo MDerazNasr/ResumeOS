@@ -57,6 +57,7 @@ That means:
 - persist per-resume rules
 - make those rules editable in the workspace
 - thread them into edit, review, holistic review, and tailor generation
+- surface rule influence inside patch review
 - preserve the existing patch-review safety model while expanding user control
 
 ## Definition of Success for the Current Slice
@@ -67,6 +68,7 @@ That means:
 - the workspace lets the user edit those constraints
 - constraints are threaded into AI generation prompts
 - edit generation reflects stored constraints
+- patch sets expose applied constraints in the review UI
 
 ## Known Risks
 
@@ -85,5 +87,5 @@ After persistent rules are in place, deepen rule-aware review quality.
 That next slice should include:
 
 - stronger PDF-aware enforcement for layout-sensitive constraints
-- clearer display of which patch sets were influenced by which rules
 - continued improvement of rendered-review quality
+- better rule-aware chat and holistic-review explanations

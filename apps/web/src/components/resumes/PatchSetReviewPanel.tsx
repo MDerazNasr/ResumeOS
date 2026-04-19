@@ -267,6 +267,18 @@ export function PatchSetReviewPanel({
                   <span style={setMetaStyle}>
                     {patchSet.items.length} visible {patchSet.items.length === 1 ? "hunk" : "hunks"}
                   </span>
+                  {patchSet.appliedConstraints.length > 0 ? (
+                    <div style={constraintSectionStyle}>
+                      <span style={constraintLabelStyle}>Constraints</span>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {patchSet.appliedConstraints.map((constraint) => (
+                          <span key={constraint} style={constraintChipStyle}>
+                            {constraint}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                   {patchSet.styleExamples.length > 0 ? (
                     <div style={styleExamplesStyle}>
                       <span style={styleExamplesLabelStyle}>Style memory</span>
@@ -384,6 +396,28 @@ const setSummaryStyle: CSSProperties = {
 };
 
 const setMetaStyle: CSSProperties = {
+  color: "var(--muted)",
+  fontSize: 12,
+};
+
+const constraintSectionStyle: CSSProperties = {
+  display: "grid",
+  gap: 6,
+};
+
+const constraintLabelStyle: CSSProperties = {
+  color: "var(--muted)",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+};
+
+const constraintChipStyle: CSSProperties = {
+  padding: "4px 8px",
+  borderRadius: 999,
+  border: "1px solid var(--border-subtle)",
+  background: "var(--surface-muted)",
   color: "var(--muted)",
   fontSize: 12,
 };
